@@ -168,6 +168,30 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
             >
               {isSignUp ? '회원가입' : '로그인'}
             </Button>
+
+            {!isSignUp && (
+              <div className="text-center pt-2">
+                <Button 
+                  variant="link" 
+                  onClick={() => setIsSignUp(true)}
+                  className="text-black underline"
+                >
+                  회원가입하기
+                </Button>
+              </div>
+            )}
+
+            {isSignUp && (
+              <div className="text-center pt-2">
+                <Button 
+                  variant="link" 
+                  onClick={() => setIsSignUp(false)}
+                  className="text-black underline"
+                >
+                  로그인하기
+                </Button>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
