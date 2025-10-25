@@ -1,7 +1,9 @@
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Button } from "../ui/button";
 import { TeacherSidebar } from "./TeacherSidebar";
+import { Plus } from "lucide-react";
 
 interface StudentListPageProps {
   onNavigate: (page: string) => void;
@@ -51,8 +53,19 @@ export function StudentListPage({ onNavigate, onLogout }: StudentListPageProps) 
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
         <div className="border-b-2 border-gray-300 p-6">
-          <h1>학생 목록</h1>
-          <p className="text-gray-600 mt-1">중등 1반 - 총 {students.length}명</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1>학생 목록</h1>
+              <p className="text-gray-600 mt-1">중등 1반 - 총 {students.length}명</p>
+            </div>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white rounded-lg"
+              onClick={() => onNavigate('student-add')}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              학생 추가
+            </Button>
+          </div>
         </div>
 
         {/* Main Content */}
