@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
+import { ArrowLeft } from "lucide-react";
 
 interface TeacherLoginPageNewProps {
   onNavigate: (page: string) => void;
@@ -15,6 +16,15 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
           <CardTitle className="text-center">선생님 로그인</CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
+          <Button 
+            variant="outline"
+            className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+            onClick={() => window.history.back()}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            뒤로가기
+          </Button>
+          
           <div className="space-y-2">
             <Label htmlFor="teacher-id">아이디</Label>
             <Input 
