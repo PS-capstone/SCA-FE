@@ -229,6 +229,51 @@ export function StudentBattle({ user }: StudentBattleProps) {
         </CardContent>
       </Card>
 
+      {/* MVP 칭호 및 특별 보상 정보 */}
+      <Card className="border-2 border-gray-300">
+        <CardHeader>
+          <CardTitle className="text-black text-center">🏆 레이드 완료 시 보상</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* MVP 칭호 */}
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+              <h4 className="font-bold text-yellow-800 mb-2">🏆 MVP 칭호</h4>
+              <div className="space-y-2">
+                <div className="bg-yellow-100 rounded p-2">
+                  <p className="text-sm text-yellow-900">• 수학의 마스터</p>
+                </div>
+                <div className="bg-yellow-100 rounded p-2">
+                  <p className="text-sm text-yellow-900">• 문제 해결의 달인</p>
+                </div>
+                <div className="bg-yellow-100 rounded p-2">
+                  <p className="text-sm text-yellow-900">• 레이드의 영웅</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 특별 보상 */}
+            <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+              <h4 className="font-bold text-purple-800 mb-2">🎁 특별 보상</h4>
+              <div className="space-y-2">
+                <div className="bg-purple-100 rounded p-2">
+                  <p className="text-sm text-purple-900">• 황금 물고기</p>
+                </div>
+                <div className="bg-purple-100 rounded p-2">
+                  <p className="text-sm text-purple-900">• 전설의 펜</p>
+                </div>
+                <div className="bg-purple-100 rounded p-2">
+                  <p className="text-sm text-purple-900">• 지혜의 두루마리</p>
+                </div>
+                <div className="bg-purple-100 rounded p-2">
+                  <p className="text-sm text-purple-900">• 보너스 코랄 +500</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 레이드 로그 */}
       <Card className="border-2 border-gray-300">
         <CardHeader>
