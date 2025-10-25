@@ -25,7 +25,6 @@ import { StudentDetailPage } from "./components/teacher/StudentDetailPage";
 import { RaidManagePage } from "./components/teacher/RaidManagePage";
 import { TeacherProfilePage } from "./components/teacher/TeacherProfilePage";
 import { ClassCreatePage } from "./components/teacher/ClassCreatePage";
-import { StudentAddPage } from "./components/teacher/StudentAddPage";
 import { QuestTypeSelection } from "./components/teacher/QuestTypeSelection";
 import { IndividualQuestCreatePage } from "./components/teacher/IndividualQuestCreatePage";
 import { GroupQuestCreatePage } from "./components/teacher/GroupQuestCreatePage";
@@ -166,8 +165,6 @@ export default function App() {
       case "class-create":
         return <ClassCreatePage onNavigate={handleNavigate} onLogout={handleLogout} />;
       
-      case "student-add":
-        return <StudentAddPage onNavigate={handleNavigate} onLogout={handleLogout} />;
       
       default:
         return <RoleSelection onSelectRole={handleRoleSelection} />;
