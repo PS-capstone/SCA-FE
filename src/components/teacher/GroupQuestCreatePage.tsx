@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { ArrowLeft, Users, Plus, Calendar, Clock, Target } from "lucide-react";
+import { Users, Plus, Calendar, Clock, Target } from "lucide-react";
 import { TeacherSidebar } from "./TeacherSidebar";
 import { Switch } from "../ui/switch";
 
@@ -61,14 +61,6 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
         {/* Header */}
         <div className="border-b-2 border-gray-300 p-6">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="outline"
-              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              뒤로가기
-            </Button>
             <div>
               <h1 className="text-2xl font-bold text-black">단체 퀘스트 등록</h1>
               <p className="text-gray-600 mt-1">반 전체 학생에게 할당할 공통 퀘스트를 등록합니다</p>
