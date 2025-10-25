@@ -4,7 +4,6 @@ import { Input } from '../ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { ArrowLeft } from 'lucide-react';
 
 interface StudentUser {
   id: string;
@@ -98,16 +97,6 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
-          <Button 
-            variant="outline"
-            className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            뒤로가기
-          </Button>
-          
-
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <>
