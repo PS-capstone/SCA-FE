@@ -64,7 +64,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
             <Button 
               variant="outline"
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => onNavigate('quest-create-new')}
+              onClick={() => window.history.back()}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               뒤로가기

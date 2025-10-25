@@ -47,7 +47,7 @@ export function TeacherProfilePage({ onNavigate, onLogout }: TeacherProfilePageP
             <Button 
               variant="outline"
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => onNavigate('teacher-dashboard')}
+              onClick={() => window.history.back()}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               뒤로가기
