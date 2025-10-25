@@ -10,7 +10,6 @@ interface TeacherLoginPageNewProps {
 }
 
 export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
-  const [isSignUp, setIsSignUp] = useState(false);
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-2 border-gray-300">
@@ -29,24 +28,6 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
             뒤로가기
           </Button>
           
-          <div className="flex space-x-2">
-            <Button
-              type="button"
-              variant={!isSignUp ? "default" : "outline"}
-              onClick={() => setIsSignUp(false)}
-              className="flex-1 bg-black text-white border-gray-300"
-            >
-              로그인
-            </Button>
-            <Button
-              type="button"
-              variant={isSignUp ? "default" : "outline"}
-              onClick={() => setIsSignUp(true)}
-              className="flex-1 bg-black text-white border-gray-300"
-            >
-              회원가입
-            </Button>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="teacher-id">아이디</Label>

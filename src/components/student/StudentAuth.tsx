@@ -107,24 +107,6 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
             뒤로가기
           </Button>
           
-          <div className="flex space-x-2">
-            <Button
-              type="button"
-              variant={!isSignUp ? "default" : "outline"}
-              onClick={() => setIsSignUp(false)}
-              className="flex-1 bg-black text-white border-gray-300"
-            >
-              로그인
-            </Button>
-            <Button
-              type="button"
-              variant={isSignUp ? "default" : "outline"}
-              onClick={() => setIsSignUp(true)}
-              className="flex-1 bg-black text-white border-gray-300"
-            >
-              회원가입
-            </Button>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
