@@ -23,6 +23,9 @@ import { ClassManagePage } from "./components/teacher/ClassManagePage";
 import { StudentListPage } from "./components/teacher/StudentListPage";
 import { StudentDetailPage } from "./components/teacher/StudentDetailPage";
 import { RaidManagePage } from "./components/teacher/RaidManagePage";
+import { TeacherProfilePage } from "./components/teacher/TeacherProfilePage";
+import { ClassCreatePage } from "./components/teacher/ClassCreatePage";
+import { StudentAddPage } from "./components/teacher/StudentAddPage";
 
 interface StudentUser {
   id: string;
@@ -141,6 +144,15 @@ export default function App() {
       case "student-detail-3":
       case "student-detail-4":
         return <StudentDetailPage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      
+      case "teacher-profile":
+        return <TeacherProfilePage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      
+      case "class-create":
+        return <ClassCreatePage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      
+      case "student-add":
+        return <StudentAddPage onNavigate={handleNavigate} onLogout={handleLogout} />;
       
       default:
         return <RoleSelection onSelectRole={handleRoleSelection} />;

@@ -75,6 +75,13 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
               학생 목록 조회
             </Button>
             <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              onClick={() => onNavigate('class-create')}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              반 생성하기
+            </Button>
+            <Button 
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               variant="outline"
               onClick={() => onNavigate('quest-create-new')}
