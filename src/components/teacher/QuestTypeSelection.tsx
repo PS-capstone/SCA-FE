@@ -20,13 +20,7 @@ export function QuestTypeSelection({ onNavigate, onLogout }: QuestTypeSelectionP
             <Button 
               variant="outline"
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => {
-                if (window.history.length > 1) {
-                  window.history.back();
-                } else {
-                  onNavigate('teacher-dashboard');
-                }
-              }}
+              onClick={() => onNavigate('teacher-dashboard')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               뒤로가기
