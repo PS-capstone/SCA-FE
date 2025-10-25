@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { TeacherSidebar } from "./TeacherSidebar";
-import { ArrowLeft, Plus, Users, BookOpen, Calendar, Save } from "lucide-react";
+import { Plus, Users, BookOpen, Calendar, Save } from "lucide-react";
 import { useState } from "react";
 
 interface ClassCreatePageProps {
@@ -60,14 +60,6 @@ export function ClassCreatePage({ onNavigate, onLogout }: ClassCreatePageProps) 
         {/* Header */}
         <div className="border-b-2 border-gray-300 p-6">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="outline"
-              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              뒤로가기
-            </Button>
             <div>
               <h1 className="text-2xl font-bold text-black">새 반 만들기</h1>
               <p className="text-gray-600 mt-1">새로운 반을 생성하고 학생들을 초대하세요</p>
