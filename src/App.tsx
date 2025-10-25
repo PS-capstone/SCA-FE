@@ -26,6 +26,11 @@ import { RaidManagePage } from "./components/teacher/RaidManagePage";
 import { TeacherProfilePage } from "./components/teacher/TeacherProfilePage";
 import { ClassCreatePage } from "./components/teacher/ClassCreatePage";
 import { StudentAddPage } from "./components/teacher/StudentAddPage";
+import { QuestTypeSelection } from "./components/teacher/QuestTypeSelection";
+import { IndividualQuestCreatePage } from "./components/teacher/IndividualQuestCreatePage";
+import { GroupQuestCreatePage } from "./components/teacher/GroupQuestCreatePage";
+import { GroupQuestManagePage } from "./components/teacher/GroupQuestManagePage";
+import { GroupQuestDetailPage } from "./components/teacher/GroupQuestDetailPage";
 
 interface StudentUser {
   id: string;
@@ -121,7 +126,17 @@ export default function App() {
         return <TeacherDashboardNew onNavigate={handleNavigate} onLogout={handleLogout} />;
       
       case "quest-create-new":
-        return <QuestCreatePageNew onNavigate={handleNavigate} onLogout={handleLogout} />;
+        return <QuestTypeSelection onNavigate={handleNavigate} onLogout={handleLogout} />;
+      case "quest-create-individual":
+        return <IndividualQuestCreatePage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      case "quest-create-group":
+        return <GroupQuestCreatePage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      case "group-quest-manage":
+        return <GroupQuestManagePage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      case "group-quest-detail-1":
+      case "group-quest-detail-2":
+      case "group-quest-detail-3":
+        return <GroupQuestDetailPage onNavigate={handleNavigate} onLogout={handleLogout} />;
       case "quest-approval-new":
         return <QuestApprovalPageNew onNavigate={handleNavigate} onLogout={handleLogout} />;
       

@@ -72,7 +72,6 @@ export function StudentProfile({ user }: StudentProfileProps) {
   };
 
   const questCompletionRate = 85; // 85% 완료율
-  const battlePower = user.totalExplorationData + (user.totalCoral * 2); // 전투력 계산
 
   const getBadgeByType = (type: Achievement['type']) => {
     switch (type) {
@@ -118,21 +117,12 @@ export function StudentProfile({ user }: StudentProfileProps) {
       </Card>
 
       {/* 스탯 정보 */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="border-2 border-gray-300">
-          <CardContent className="p-4 text-center">
-            <p className="text-sm text-gray-600">내 전투력</p>
-            <p className="text-2xl font-medium text-black">{battlePower.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-2 border-gray-300">
-          <CardContent className="p-4 text-center">
-            <p className="text-sm text-gray-600">퀘스트 달성률</p>
-            <p className="text-2xl font-medium text-black">{questCompletionRate}%</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="border-2 border-gray-300">
+        <CardContent className="p-4 text-center">
+          <p className="text-sm text-gray-600">현재 퀘스트 달성률</p>
+          <p className="text-2xl font-medium text-black">{questCompletionRate}%</p>
+        </CardContent>
+      </Card>
 
       {/* 기여도 데이터 */}
       <Card className="border-2 border-gray-300">
