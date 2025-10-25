@@ -232,101 +232,100 @@ export function StudentBattle({ user }: StudentBattleProps) {
       {/* 레이드 로그 */}
       <Card className="border-2 border-gray-300">
         <CardHeader>
-          <CardTitle className="text-black flex items-center">
-            <span className="mr-2">📋</span>
+          <CardTitle className="text-black">
             레이드 로그
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="max-h-48 overflow-y-auto space-y-3">
+          <div className="max-h-64 overflow-y-auto space-y-3 border-2 border-gray-300 rounded-lg p-3">
             {/* 최근 활동들 */}
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r">
+            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-blue-800">김학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">김학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">2분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">2분 전</span>
               </div>
             </div>
             
-            <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-r">
+            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-green-800">이학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">이학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">5분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">5분 전</span>
               </div>
             </div>
             
-            <div className="bg-purple-50 border-l-4 border-purple-400 p-3 rounded-r">
+            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-purple-800">박학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">박학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">8분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">8분 전</span>
               </div>
             </div>
             
-            <div className="bg-orange-50 border-l-4 border-orange-400 p-3 rounded-r">
+            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-orange-800">최학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">최학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">12분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">12분 전</span>
               </div>
             </div>
             
-            <div className="bg-pink-50 border-l-4 border-pink-400 p-3 rounded-r">
+            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-pink-800">정학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">정학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded">15분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">15분 전</span>
               </div>
             </div>
             
-            <div className="bg-teal-50 border-l-4 border-teal-400 p-3 rounded-r">
+            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-teal-800">한학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">한학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-teal-600 bg-teal-100 px-2 py-1 rounded">18분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">18분 전</span>
               </div>
             </div>
             
-            <div className="bg-indigo-50 border-l-4 border-indigo-400 p-3 rounded-r">
+            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-indigo-800">조학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">조학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-indigo-600 bg-indigo-100 px-2 py-1 rounded">22분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">22분 전</span>
               </div>
             </div>
             
-            <div className="bg-cyan-50 border-l-4 border-cyan-400 p-3 rounded-r">
+            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-cyan-800">윤학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">윤학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-cyan-600 bg-cyan-100 px-2 py-1 rounded">25분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">25분 전</span>
               </div>
             </div>
             
-            <div className="bg-amber-50 border-l-4 border-amber-400 p-3 rounded-r">
+            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-amber-800">강학생님이 에너지를 주입했습니다</span>
+                  <span className="w-2 h-2 bg-black rounded-full"></span>
+                  <span className="text-sm font-medium text-black">강학생님이 에너지를 주입했습니다</span>
                 </div>
-                <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded">28분 전</span>
+                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">28분 전</span>
               </div>
             </div>
             

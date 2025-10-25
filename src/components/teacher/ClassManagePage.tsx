@@ -102,7 +102,16 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
           {/* Active Quests */}
           <Card className="border-2 border-gray-300 rounded-lg">
             <CardContent className="p-4">
-              <h3 className="mb-4">현재 진행 중인 그룹 퀘스트</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold">현재 진행 중인 단체 퀘스트</h3>
+                <button 
+                  className="bg-black text-white px-4 py-2 rounded-lg border-2 border-black font-semibold"
+                  onClick={() => onNavigate('group-quest-manage')}
+                  style={{ backgroundColor: '#000000', color: 'white' }}
+                >
+                  단체 퀘스트 관리
+                </button>
+              </div>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {activeQuests.map((quest) => (
                   <Card 

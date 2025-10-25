@@ -29,6 +29,8 @@ import { StudentAddPage } from "./components/teacher/StudentAddPage";
 import { QuestTypeSelection } from "./components/teacher/QuestTypeSelection";
 import { IndividualQuestCreatePage } from "./components/teacher/IndividualQuestCreatePage";
 import { GroupQuestCreatePage } from "./components/teacher/GroupQuestCreatePage";
+import { GroupQuestManagePage } from "./components/teacher/GroupQuestManagePage";
+import { GroupQuestDetailPage } from "./components/teacher/GroupQuestDetailPage";
 
 interface StudentUser {
   id: string;
@@ -129,6 +131,12 @@ export default function App() {
         return <IndividualQuestCreatePage onNavigate={handleNavigate} onLogout={handleLogout} />;
       case "quest-create-group":
         return <GroupQuestCreatePage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      case "group-quest-manage":
+        return <GroupQuestManagePage onNavigate={handleNavigate} onLogout={handleLogout} />;
+      case "group-quest-detail-1":
+      case "group-quest-detail-2":
+      case "group-quest-detail-3":
+        return <GroupQuestDetailPage onNavigate={handleNavigate} onLogout={handleLogout} />;
       case "quest-approval-new":
         return <QuestApprovalPageNew onNavigate={handleNavigate} onLogout={handleLogout} />;
       

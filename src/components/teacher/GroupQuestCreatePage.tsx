@@ -23,7 +23,6 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
     template: "출석 체크"
   });
 
-  const [autoApprove, setAutoApprove] = useState(true);
   const [useTemplate, setUseTemplate] = useState(true);
 
   // 단체 퀘스트 템플릿
@@ -31,7 +30,8 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
     { id: "attendance", name: "출석 체크", description: "수업 출석 확인" },
     { id: "homework", name: "과제 제출", description: "숙제 제출 확인" },
     { id: "participation", name: "수업 참여", description: "적극적인 수업 참여" },
-    { id: "quiz", name: "퀴즈 응시", description: "온라인 퀴즈 응시" },
+    { id: "exam", name: "학교 시험 점수", description: "학교 시험 점수 입력" },
+    { id: "other", name: "기타", description: "기타 퀘스트" },
   ];
 
   const handleTemplateSelect = (template: any) => {
@@ -177,27 +177,12 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
               </CardContent>
             </Card>
 
-            {/* 자동 승인 설정 */}
-            <Card className="border-2 border-gray-300">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-black">자동 승인</h3>
-                    <p className="text-sm text-gray-600">학생이 퀘스트를 완료하면 자동으로 승인됩니다</p>
-                  </div>
-                  <Switch
-                    checked={autoApprove}
-                    onCheckedChange={setAutoApprove}
-                  />
-                </div>
-              </CardContent>
-            </Card>
 
             {/* 액션 버튼들 */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-6 border-t-2 border-gray-300">
               <Button 
                 onClick={handleSubmit}
-                className="bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                className="bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 단체 퀘스트 등록

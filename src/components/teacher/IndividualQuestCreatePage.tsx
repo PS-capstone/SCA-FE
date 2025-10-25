@@ -17,7 +17,6 @@ interface IndividualQuestCreatePageProps {
 export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQuestCreatePageProps) {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [showRewardGuide, setShowRewardGuide] = useState(false);
-  const [autoApprove, setAutoApprove] = useState(false);
   const [questData, setQuestData] = useState({
     title: "",
     description: "",
@@ -119,6 +118,24 @@ export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQu
                       placeholder="예: 산호 50개"
                       className="border-2 border-gray-300 rounded-lg"
                     />
+                    <div className="flex gap-2">
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+                        onClick={() => setShowRewardGuide(true)}
+                      >
+                        보상 가이드
+                      </Button>
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+                        onClick={() => alert("AI 보상 추천 기능은 준비 중입니다!")}
+                      >
+                        AI 보상 추천받기
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -178,27 +195,12 @@ export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQu
               </CardContent>
             </Card>
 
-            {/* 자동 승인 설정 */}
-            <Card className="border-2 border-gray-300">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-black">자동 승인</h3>
-                    <p className="text-sm text-gray-600">학생이 퀘스트를 완료하면 자동으로 승인됩니다</p>
-                  </div>
-                  <Switch
-                    checked={autoApprove}
-                    onCheckedChange={setAutoApprove}
-                  />
-                </div>
-              </CardContent>
-            </Card>
 
             {/* 액션 버튼들 */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-6 border-t-2 border-gray-300">
               <Button 
                 onClick={handleSubmit}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                className="bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 개인 퀘스트 등록
@@ -214,6 +216,42 @@ export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQu
           </div>
         </div>
       </div>
+
+      {/* 보상 가이드 모달 */}
+      <Dialog open={showRewardGuide} onOpenChange={setShowRewardGuide}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-black">보상 가이드</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-gray-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-black mb-2">기본 보상 기준</h3>
+              <ul className="space-y-1 text-sm text-gray-700">
+                <li>• 쉬운 퀘스트: 산호 10-20개</li>
+                <li>• 보통 퀘스트: 산호 30-50개</li>
+                <li>• 어려운 퀘스트: 산호 60-100개</li>
+                <li>• 특별 퀘스트: 산호 100개 이상</li>
+              </ul>
+            </div>
+            <div className="bg-gray-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-black mb-2">추가 보상 아이템</h3>
+              <ul className="space-y-1 text-sm text-gray-700">
+                <li>• 탐사데이터: 5-20개</li>
+                <li>• 특별 칭호: 퀘스트 완료 시</li>
+                <li>• 경험치: 레벨업에 도움</li>
+              </ul>
+            </div>
+            <div className="flex justify-end">
+              <Button 
+                onClick={() => setShowRewardGuide(false)}
+                className="bg-black hover:bg-gray-800 text-white rounded-lg"
+              >
+                확인
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
