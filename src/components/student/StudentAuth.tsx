@@ -101,7 +101,7 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
           <Button 
             variant="outline"
             className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-            onClick={() => window.history.back()}
+            onClick={() => window.location.href = '/'}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             뒤로가기
