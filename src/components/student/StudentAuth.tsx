@@ -98,14 +98,16 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
-          <Button 
-            variant="outline"
-            className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            뒤로가기
-          </Button>
+          {!isSignUp && (
+            <Button 
+              variant="outline"
+              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+              onClick={() => window.location.href = '/'}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              뒤로가기
+            </Button>
+          )}
           
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
