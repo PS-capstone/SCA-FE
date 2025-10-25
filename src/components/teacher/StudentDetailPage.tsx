@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Plus, CheckCircle } from "lucide-react";
 import { TeacherSidebar } from "./TeacherSidebar";
 import { Progress } from "../ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { useState, useEffect } from "react";
 
 interface StudentDetailPageProps {
   onNavigate: (page: string) => void;
@@ -12,20 +14,58 @@ interface StudentDetailPageProps {
 }
 
 export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPageProps) {
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<{[key: number]: string}>({});
+
   const student = {
     name: "김학생",
     avatar: "김",
     coral: 45,
     explorationData: 320,
-    attendance: 95,
     questCompletion: 82,
   };
 
   const ongoingQuests = [
-    { id: 1, title: "rpm 100문제 풀기", progress: 75, deadline: "2025.10.05" },
-    { id: 2, title: "영어 단어 20개 암기", progress: 100, deadline: "2025.10.04" },
-    { id: 3, title: "수학 모의고사 80점", progress: 30, deadline: "2025.10.10" },
+    { id: 1, title: "rpm 100문제 풀기", deadline: "2025-10-05T23:59:59" },
+    { id: 2, title: "영어 단어 20개 암기", deadline: "2025-10-04T23:59:59" },
+    { id: 3, title: "수학 모의고사 80점", deadline: "2025-10-10T23:59:59" },
   ];
+
+  // 실시간 마감 시간 계산
+  useEffect(() => {
+    const updateTimeLeft = () => {
+      const now = new Date();
+      const newTimeLeft: {[key: number]: string} = {};
+      
+      ongoingQuests.forEach(quest => {
+        const deadline = new Date(quest.deadline);
+        const diff = deadline.getTime() - now.getTime();
+        
+        if (diff <= 0) {
+          newTimeLeft[quest.id] = "마감됨";
+        } else {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          if (days > 0) {
+            newTimeLeft[quest.id] = `${days}일 ${hours}시간 남음`;
+          } else if (hours > 0) {
+            newTimeLeft[quest.id] = `${hours}시간 ${minutes}분 남음`;
+          } else {
+            newTimeLeft[quest.id] = `${minutes}분 남음`;
+          }
+        }
+      });
+      
+      setTimeLeft(newTimeLeft);
+    };
+
+    updateTimeLeft();
+    const interval = setInterval(updateTimeLeft, 60000); // 1분마다 업데이트
+
+    return () => clearInterval(interval);
+  }, []);
 
   const pendingApprovals = [
     { 
@@ -78,7 +118,7 @@ export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPagePro
           <Card className="border-2 border-gray-300 rounded-lg">
             <CardContent className="p-4">
               <h3 className="mb-4">학생 스테이터스</h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="text-center border-2 border-gray-300 p-3">
                   <p className="text-sm text-gray-600 mb-1">코랄</p>
                   <h3>{student.coral}</h3>
@@ -86,10 +126,6 @@ export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPagePro
                 <div className="text-center border-2 border-gray-300 p-3">
                   <p className="text-sm text-gray-600 mb-1">탐사데이터</p>
                   <h3>{student.explorationData}</h3>
-                </div>
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">출석률</p>
-                  <h3>{student.attendance}%</h3>
                 </div>
                 <div className="text-center border-2 border-gray-300 p-3">
                   <p className="text-sm text-gray-600 mb-1">퀘스트 달성률</p>
@@ -120,7 +156,7 @@ export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPagePro
                         <Button 
                           size="sm"
                           className="bg-black text-white hover:bg-gray-800 rounded-lg"
-                          onClick={() => onNavigate('quest-approval-new')}
+                          onClick={() => setShowApprovalModal(true)}
                         >
                           <CheckCircle className="w-3 h-3 mr-1" />
                           승인
@@ -146,21 +182,11 @@ export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPagePro
                 {ongoingQuests.map((quest) => (
                   <Card key={quest.id} className="border-2 border-gray-300 rounded-lg">
                     <CardContent className="p-3">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between">
                         <h4>{quest.title}</h4>
-                        <span className="text-sm text-gray-600">마감: {quest.deadline}</span>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">진행률</span>
-                          <span>{quest.progress}%</span>
-                        </div>
-                        <div className="border-2 border-gray-300 h-4 overflow-hidden">
-                          <div 
-                            className="h-full bg-black transition-all"
-                            style={{ width: `${quest.progress}%` }}
-                          />
-                        </div>
+                        <span className={`text-sm ${timeLeft[quest.id] === "마감됨" ? "text-red-600" : "text-gray-600"}`}>
+                          {timeLeft[quest.id] || "로딩 중..."}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -170,6 +196,28 @@ export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPagePro
           </Card>
         </div>
       </div>
+
+      {/* 승인 모달 */}
+      <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
+        <DialogContent className="border-2 border-gray-300">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold text-black">
+              승인되었습니다
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-4">
+            <p className="text-gray-600">퀘스트가 성공적으로 승인되었습니다.</p>
+          </div>
+          <div className="flex justify-center">
+            <Button 
+              className="bg-black text-white hover:bg-gray-800 rounded-lg"
+              onClick={() => setShowApprovalModal(false)}
+            >
+              확인
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
