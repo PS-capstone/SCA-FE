@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
@@ -39,6 +39,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
   const [submitText, setSubmitText] = useState('');
+  const [timeLeft, setTimeLeft] = useState<{[key: string]: string}>({});
   
   const quests: Quest[] = [
     {
@@ -67,6 +68,42 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       rewards: { coral: 5, explorationData: 80 }
     }
   ];
+
+  // 실시간 마감 시간 계산
+  useEffect(() => {
+    const updateTimeLeft = () => {
+      const now = new Date();
+      const newTimeLeft: {[key: string]: string} = {};
+      
+      quests.forEach(quest => {
+        const due = new Date(quest.dueDate);
+        const diff = due.getTime() - now.getTime();
+        
+        if (diff <= 0) {
+          newTimeLeft[quest.id] = "마감됨";
+        } else {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          if (days > 0) {
+            newTimeLeft[quest.id] = `${days}일 ${hours}시간 남음`;
+          } else if (hours > 0) {
+            newTimeLeft[quest.id] = `${hours}시간 ${minutes}분 남음`;
+          } else {
+            newTimeLeft[quest.id] = `${minutes}분 남음`;
+          }
+        }
+      });
+      
+      setTimeLeft(newTimeLeft);
+    };
+
+    updateTimeLeft();
+    const interval = setInterval(updateTimeLeft, 60000); // 1분마다 업데이트
+
+    return () => clearInterval(interval);
+  }, []);
 
   const formatTimeLeft = (dueDate: string) => {
     const now = new Date();
@@ -150,8 +187,8 @@ export function StudentQuests({ user }: StudentQuestsProps) {
                       <h3 className="font-medium text-black line-clamp-1 mb-1">{quest.title}</h3>
                       <div className="flex items-center space-x-2 text-sm">
                         {getStatusBadge(quest.status)}
-                        <span className="text-gray-600">
-                          마감: {formatTimeLeft(quest.dueDate)}
+                        <span className={`text-sm ${timeLeft[quest.id] === "마감됨" ? "text-red-600" : "text-gray-600"}`}>
+                          {timeLeft[quest.id] || "로딩 중..."}
                         </span>
                       </div>
                     </div>
@@ -169,15 +206,6 @@ export function StudentQuests({ user }: StudentQuestsProps) {
                     <span className="text-black">코랄 {quest.rewards.coral}</span>
                     <span className="text-black">탐사데이터 {quest.rewards.explorationData}</span>
                   </div>
-
-                  {quest.progress && (
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-black h-2 rounded-full transition-all"
-                        style={{ width: `${quest.progress}%` }}
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
             </CardContent>
