@@ -7,6 +7,7 @@ import { TeacherSidebar } from "./TeacherSidebar";
 import { Progress } from "../ui/progress";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SectionCard } from "../common/SectionCard";
 
 export function ClassManagePage() {
   const navigate = useNavigate();
@@ -97,41 +98,40 @@ export function ClassManagePage() {
           </div>
 
           {/* Active Quests */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">현재 진행 중인 단체 퀘스트</h3>
-                <button 
-                  className="bg-black text-white px-4 py-2 rounded-lg border-2 border-black font-semibold"
-                  onClick={() => navigate('/teacher/quest/group/manage')}
-                  style={{ backgroundColor: '#000000', color: 'white' }}
+          <SectionCard 
+            title="현재 진행 중인 단체 퀘스트"
+            headerAction={
+              <button 
+                className="bg-black text-white px-4 py-2 rounded-lg border-2 border-black font-semibold"
+                onClick={() => navigate('/teacher/quest/group/manage')}
+                style={{ backgroundColor: '#000000', color: 'white' }}
+              >
+                단체 퀘스트 관리
+              </button>
+            }
+          >
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {activeQuests.map((quest) => (
+                <Card 
+                  key={quest.id} 
+                  className="border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
                 >
-                  단체 퀘스트 관리
-                </button>
-              </div>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {activeQuests.map((quest) => (
-                  <Card 
-                    key={quest.id} 
-                    className="border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4>{quest.title}</h4>
-                        <Badge variant="outline" className="border-2 border-gray-300 rounded-lg">
-                          {quest.completed}/{quest.participants}
-                        </Badge>
-                      </div>
-                      <Progress 
-                        value={(quest.completed / quest.participants) * 100} 
-                        className="h-2"
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4>{quest.title}</h4>
+                      <Badge variant="outline" className="border-2 border-gray-300 rounded-lg">
+                        {quest.completed}/{quest.participants}
+                      </Badge>
+                    </div>
+                    <Progress 
+                      value={(quest.completed / quest.participants) * 100} 
+                      className="h-2"
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </SectionCard>
 
           {/* Active Raid */}
           <Card className="border-2 border-gray-300 rounded-lg">

@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { StudentListItem } from "../common/StudentListItem";
 
 export function StudentListPage() {
   const navigate = useNavigate();
@@ -153,40 +154,16 @@ export function StudentListPage() {
         <div className="p-6 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
             {students.map((student) => (
-              <Card 
+              <StudentListItem
                 key={student.id}
-                className="border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => handleStudentClick(student)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3 mb-4">
-                    <Avatar className="w-12 h-12 border-2 border-gray-300">
-                      <AvatarFallback className="bg-gray-200 text-black">
-                        {student.avatar}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h4>{student.name}</h4>
-                      {student.pendingQuests > 0 && (
-                        <Badge className="mt-1 bg-black text-white rounded-lg">
-                          승인 요청 {student.pendingQuests}건
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 text-sm border-t-2 border-gray-300 pt-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">코랄</span>
-                      <span>{student.coral}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">탐사데이터</span>
-                      <span>{student.explorationData}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                id={student.id}
+                name={student.name}
+                avatar={student.avatar}
+                pendingQuests={student.pendingQuests}
+                coral={student.coral}
+                explorationData={student.explorationData}
+                onClick={handleStudentClick}
+              />
             ))}
           </div>
         </div>

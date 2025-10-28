@@ -4,6 +4,7 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Plus, Settings, Users } from "lucide-react";
 import { TeacherSidebar } from "./TeacherSidebar";
+import { ClassCard } from "../common/ClassCard";
 
 export function TeacherDashboardNew() {
   const navigate = useNavigate();
@@ -52,25 +53,14 @@ export function TeacherDashboardNew() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
             {classes.map((classItem) => (
-              <Card 
+              <ClassCard
                 key={classItem.id}
-                className="border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                id={classItem.id}
+                name={classItem.name}
+                studentCount={classItem.studentCount}
+                activeQuests={classItem.activeQuests}
                 onClick={() => navigate(`/teacher/class`)}
-              >
-                <CardContent className="p-6">
-                  <h3 className="mb-4">{classItem.name}</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between border-b border-gray-300 pb-2">
-                      <span className="text-gray-600">학생 수</span>
-                      <span className="font-medium">{classItem.studentCount}명</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">진행 중인 퀘스트</span>
-                      <span className="font-medium">{classItem.activeQuests}개</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              />
             ))}
           </div>
         </div>
