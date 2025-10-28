@@ -59,10 +59,10 @@ export function ClassManagePage() {
         </div>
 
         {/* Main Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Quick Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button 
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               variant="outline"

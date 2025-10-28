@@ -6,7 +6,7 @@ export function RoleSelection() {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             학습 관리 시스템
@@ -16,7 +16,7 @@ export function RoleSelection() {
           </p>
         </div>
         
-        <div className="flex justify-center gap-8 items-stretch">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-stretch">
           {/* 학생 선택 카드 */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-800 max-w-md h-full flex flex-col" onClick={() => navigate('/student/auth')}>
             <CardHeader className="text-center">

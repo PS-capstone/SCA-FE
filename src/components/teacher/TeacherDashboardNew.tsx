@@ -21,7 +21,7 @@ export function TeacherDashboardNew() {
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
         <div className="border-b-2 border-gray-300 p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-col sm:flex-row gap-3">
             <div>
               <h1>대시보드</h1>
               <p className="text-gray-600 mt-1">선생님 이름</p>
@@ -38,7 +38,7 @@ export function TeacherDashboardNew() {
         </div>
 
         {/* Main Content */}
-        <div className="p-6">
+        <div className="p-6 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <h2>반 목록</h2>
             <Button 
@@ -50,7 +50,7 @@ export function TeacherDashboardNew() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
             {classes.map((classItem) => (
               <Card 
                 key={classItem.id}

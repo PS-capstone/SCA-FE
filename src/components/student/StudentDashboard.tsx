@@ -89,7 +89,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen pb-20">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-screen pb-20 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* 상단 고정 배너 */}
       <Card className="border-2 border-gray-300">
         <CardContent className="p-6">
@@ -135,7 +135,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           </div>
 
           {/* 레이드 정보 */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="text-center p-4 bg-gray-100 rounded-lg border-2 border-gray-300">
               <span className="text-sm text-gray-600 font-medium">남은 시간</span>
               <p className="text-lg text-black font-bold mt-1">{currentRaid.timeLeft}</p>
