@@ -1,29 +1,20 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { ArrowLeft } from 'lucide-react';
+import { useAuth, StudentUser } from '../../contexts/AppContext';
+import { useNotifications } from '../../contexts/AppContext';
 
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
-
-interface StudentAuthProps {
-  onLogin: (user: StudentUser) => void;
-}
-
-export function StudentAuth({ onLogin }: StudentAuthProps) {
+export function StudentAuth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const { addNotification } = useNotifications();
   const [formData, setFormData] = useState({
     realName: '',
     username: '',
@@ -68,7 +59,14 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
         mainFish: '기본 물고기'
       };
       
-      onLogin(user);
+      // Context API를 사용하여 로그인 상태 저장
+      login(user, 'student');
+      addNotification({
+        type: 'success',
+        title: '로그인 성공',
+        message: `${user.realName}님, 환영합니다!`
+      });
+      navigate('/student/dashboard');
     }
   };
 
@@ -86,7 +84,14 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
     };
     
     setShowWelcomeModal(false);
-    onLogin(user);
+    // Context API를 사용하여 로그인 상태 저장
+    login(user, 'student');
+    addNotification({
+      type: 'success',
+      title: '회원가입 완료',
+      message: `${user.realName}님, 가입을 환영합니다!`
+    });
+    navigate('/student/dashboard');
   };
 
   return (
@@ -102,7 +107,7 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
             <Button 
               variant="outline"
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => window.location.href = '/'}
+              onClick={() => navigate('/')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               뒤로가기

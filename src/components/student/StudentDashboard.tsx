@@ -3,23 +3,29 @@ import { Progress } from '../ui/progress';
 import { Badge } from '../ui/badge';
 import { useState } from 'react';
 import { QuestDetailPage } from './QuestDetailPage';
-
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
+import { useAuth, StudentUser } from '../../contexts/AppContext';
 
 interface StudentDashboardProps {
-  user: StudentUser;
+  user?: StudentUser; // Make user prop optional for backward compatibility
 }
 
 export function StudentDashboard({ user }: StudentDashboardProps) {
+  const { user: contextUser, userType } = useAuth();
+  
+  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
+  const defaultUser: StudentUser = {
+    id: '1',
+    realName: '학생',
+    username: 'student',
+    classCode: 'CLASS001',
+    totalCoral: 50,
+    currentCoral: 50,
+    totalExplorationData: 100,
+    mainFish: '기본 물고기'
+  };
+
+  // Use context user if available, otherwise fall back to prop or default
+  const currentUser = (contextUser as StudentUser) || user || defaultUser;
   const [selectedQuest, setSelectedQuest] = useState<typeof groupQuests[0] | null>(null);
   const currentRaid = {
     name: '중간고사 대비 레이드',
@@ -76,14 +82,14 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
     return (
       <QuestDetailPage 
         quest={selectedQuest}
-        user={user}
+        user={currentUser}
         onBack={() => setSelectedQuest(null)}
       />
     );
   }
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen pb-20">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-screen pb-20 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* 상단 고정 배너 */}
       <Card className="border-2 border-gray-300">
         <CardContent className="p-6">
@@ -129,7 +135,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           </div>
 
           {/* 레이드 정보 */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="text-center p-4 bg-gray-100 rounded-lg border-2 border-gray-300">
               <span className="text-sm text-gray-600 font-medium">남은 시간</span>
               <p className="text-lg text-black font-bold mt-1">{currentRaid.timeLeft}</p>
@@ -185,11 +191,11 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="text-center p-3 border-2 border-gray-300 rounded">
               <p className="text-sm text-gray-600">코랄</p>
-              <p className="text-xl font-medium text-black">{user.currentCoral}</p>
+              <p className="text-xl font-medium text-black">{currentUser.currentCoral}</p>
             </div>
             <div className="text-center p-3 border-2 border-gray-300 rounded">
               <p className="text-sm text-gray-600">탐사데이터</p>
-              <p className="text-xl font-medium text-black">{user.totalExplorationData}</p>
+              <p className="text-xl font-medium text-black">{currentUser.totalExplorationData}</p>
             </div>
           </div>
 

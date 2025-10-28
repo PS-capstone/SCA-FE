@@ -7,20 +7,17 @@ import { Textarea } from "../ui/textarea";
 import { TeacherSidebar } from "./TeacherSidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { useNavigate } from "react-router-dom";
 
-interface RaidCreatePageNewProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function RaidCreatePageNew({ onNavigate, onLogout }: RaidCreatePageNewProps) {
+export function RaidCreatePageNew() {
+  const navigate = useNavigate();
   const [storyType, setStoryType] = useState<string>("helix");
   const [difficulty, setDifficulty] = useState<string>("medium");
 
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="raid-create-new" onNavigate={onNavigate} onLogout={onLogout} />
+      <TeacherSidebar currentPage="raid-create-new" />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

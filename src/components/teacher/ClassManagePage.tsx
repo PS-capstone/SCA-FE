@@ -6,13 +6,11 @@ import { Plus, Users, Copy, Sword, Trophy } from "lucide-react";
 import { TeacherSidebar } from "./TeacherSidebar";
 import { Progress } from "../ui/progress";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { SectionCard } from "../common/SectionCard";
 
-interface ClassManagePageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) {
+export function ClassManagePage() {
+  const navigate = useNavigate();
   const [isRaidModalOpen, setIsRaidModalOpen] = useState(false);
 
   const classInfo = {
@@ -38,7 +36,7 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="class-list" onNavigate={onNavigate} onLogout={onLogout} />
+      <TeacherSidebar currentPage="class-list" />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
@@ -62,21 +60,21 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
         </div>
 
         {/* Main Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Quick Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button 
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               variant="outline"
-              onClick={() => onNavigate('student-list')}
+              onClick={() => navigate('/teacher/students')}
             >
               <Users className="w-4 h-4 mr-2" />
               학생 목록 조회
             </Button>
             <Button 
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-              onClick={() => onNavigate('class-create')}
+              onClick={() => navigate('/teacher/class/create')}
             >
               <Plus className="w-4 h-4 mr-2" />
               반 생성하기
@@ -84,7 +82,7 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
             <Button 
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               variant="outline"
-              onClick={() => onNavigate('quest-create-new')}
+              onClick={() => navigate('/teacher/quest')}
             >
               <Plus className="w-4 h-4 mr-2" />
               퀘스트 등록
@@ -92,7 +90,7 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
             <Button 
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               variant="outline"
-              onClick={() => onNavigate('raid-create-new')}
+              onClick={() => navigate('/teacher/raid/create')}
             >
               <Plus className="w-4 h-4 mr-2" />
               레이드 등록
@@ -100,41 +98,40 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
           </div>
 
           {/* Active Quests */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">현재 진행 중인 단체 퀘스트</h3>
-                <button 
-                  className="bg-black text-white px-4 py-2 rounded-lg border-2 border-black font-semibold"
-                  onClick={() => onNavigate('group-quest-manage')}
-                  style={{ backgroundColor: '#000000', color: 'white' }}
+          <SectionCard 
+            title="현재 진행 중인 단체 퀘스트"
+            headerAction={
+              <button 
+                className="bg-black text-white px-4 py-2 rounded-lg border-2 border-black font-semibold"
+                onClick={() => navigate('/teacher/quest/group/manage')}
+                style={{ backgroundColor: '#000000', color: 'white' }}
+              >
+                단체 퀘스트 관리
+              </button>
+            }
+          >
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {activeQuests.map((quest) => (
+                <Card 
+                  key={quest.id} 
+                  className="border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
                 >
-                  단체 퀘스트 관리
-                </button>
-              </div>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {activeQuests.map((quest) => (
-                  <Card 
-                    key={quest.id} 
-                    className="border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4>{quest.title}</h4>
-                        <Badge variant="outline" className="border-2 border-gray-300 rounded-lg">
-                          {quest.completed}/{quest.participants}
-                        </Badge>
-                      </div>
-                      <Progress 
-                        value={(quest.completed / quest.participants) * 100} 
-                        className="h-2"
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4>{quest.title}</h4>
+                      <Badge variant="outline" className="border-2 border-gray-300 rounded-lg">
+                        {quest.completed}/{quest.participants}
+                      </Badge>
+                    </div>
+                    <Progress 
+                      value={(quest.completed / quest.participants) * 100} 
+                      className="h-2"
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </SectionCard>
 
           {/* Active Raid */}
           <Card className="border-2 border-gray-300 rounded-lg">
@@ -185,7 +182,7 @@ export function ClassManagePage({ onNavigate, onLogout }: ClassManagePageProps) 
                   <Button 
                     variant="outline"
                     className="mt-4 border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-                    onClick={() => onNavigate('raid-create-new')}
+                    onClick={() => navigate('/teacher/raid/create')}
                   >
                     레이드 시작하기
                   </Button>

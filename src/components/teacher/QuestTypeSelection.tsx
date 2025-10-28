@@ -2,16 +2,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { TeacherSidebar } from "./TeacherSidebar";
 import { Users, User, Plus } from "lucide-react";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-interface QuestTypeSelectionProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
+export function QuestTypeSelection() {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-export function QuestTypeSelection({ onNavigate, onLogout }: QuestTypeSelectionProps) {
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'individual') {
+      navigate('/teacher/quest/individual', { replace: true });
+    } else if (tab === 'group') {
+      navigate('/teacher/quest/group', { replace: true });
+    }
+  }, [location.search, navigate]);
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="quest-create-new" onNavigate={onNavigate} onLogout={onLogout} />
+      <TeacherSidebar currentPage="quest-create-new" />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
@@ -47,7 +56,7 @@ export function QuestTypeSelection({ onNavigate, onLogout }: QuestTypeSelectionP
                 </ul>
                 <Button 
                   className="w-full bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
-                  onClick={() => onNavigate('quest-create-individual')}
+                  onClick={() => navigate('/teacher/quest/individual')}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   개인 퀘스트 등록
@@ -75,7 +84,7 @@ export function QuestTypeSelection({ onNavigate, onLogout }: QuestTypeSelectionP
                 </ul>
                 <Button 
                   className="w-full bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
-                  onClick={() => onNavigate('quest-create-group')}
+                  onClick={() => navigate('/teacher/quest/group')}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   단체 퀘스트 등록

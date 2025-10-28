@@ -1,16 +1,16 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useAuth, TeacherUser } from "../../contexts/AppContext";
 
-interface TeacherLoginPageNewProps {
-  onNavigate: (page: string) => void;
-}
-
-export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
+export function TeacherLoginPageNew() {
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -25,7 +25,7 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
             <Button 
               variant="outline"
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => window.location.href = '/'}
+              onClick={() => navigate('/')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               뒤로가기
@@ -54,12 +54,23 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
                 />
               </div>
 
-              <Button 
-                className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
-                onClick={() => onNavigate('teacher-dashboard-new')}
-              >
-                로그인
-              </Button>
+                          <Button
+                            className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
+                            onClick={() => {
+                              // 임시 선생님 사용자 데이터
+                              const teacherUser: TeacherUser = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                realName: '선생님',
+                                username: 'teacher',
+                                email: 'teacher@example.com',
+                                classes: ['CLASS001', 'CLASS002']
+                              };
+                              login(teacherUser, 'teacher');
+                              navigate('/teacher/dashboard');
+                            }}
+                          >
+                            로그인
+                          </Button>
 
               <div className="text-center pt-2">
                 <Button 
@@ -102,12 +113,23 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
                 />
               </div>
 
-              <Button 
-                className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
-                onClick={() => onNavigate('teacher-dashboard-new')}
-              >
-                회원가입
-              </Button>
+                          <Button
+                            className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
+                            onClick={() => {
+                              // 임시 선생님 사용자 데이터
+                              const teacherUser: TeacherUser = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                realName: '선생님',
+                                username: 'teacher',
+                                email: 'teacher@example.com',
+                                classes: ['CLASS001', 'CLASS002']
+                              };
+                              login(teacherUser, 'teacher');
+                              navigate('/teacher/dashboard');
+                            }}
+                          >
+                            회원가입
+                          </Button>
 
               <div className="text-center pt-2">
                 <Button 

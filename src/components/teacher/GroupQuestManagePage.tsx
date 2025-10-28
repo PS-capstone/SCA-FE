@@ -4,13 +4,10 @@ import { Badge } from "../ui/badge";
 import { TeacherSidebar } from "./TeacherSidebar";
 import { ArrowLeft, Users, Target, CheckCircle, Award, Calendar, Plus } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-interface GroupQuestManagePageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManagePageProps) {
+export function GroupQuestManagePage() {
+  const navigate = useNavigate();
   const [activeQuests] = useState([
     {
       id: 1,
@@ -82,7 +79,7 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="group-quest-manage" onNavigate={onNavigate} onLogout={onLogout} />
+      <TeacherSidebar currentPage="group-quest-manage" />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
@@ -94,7 +91,7 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
             </div>
             <Button 
               className="bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
-              onClick={() => onNavigate('quest-create-group')}
+              onClick={() => navigate('/teacher/quest/group')}
             >
               <Plus className="w-4 h-4 mr-2" />
               단체 퀘스트 등록
@@ -168,7 +165,7 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
                       <Button 
                         variant="outline"
                         className="flex-1 border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-                        onClick={() => onNavigate(`group-quest-detail-${quest.id}`)}
+                        onClick={() => navigate(`/teacher/quest/group/detail/${quest.id}`)}
                       >
                         <Target className="w-4 h-4 mr-2" />
                         달성률 체크

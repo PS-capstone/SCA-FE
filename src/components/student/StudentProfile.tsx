@@ -33,10 +33,23 @@ interface ContributionData {
 }
 
 interface StudentProfileProps {
-  user: StudentUser;
+  user?: StudentUser;
 }
 
 export function StudentProfile({ user }: StudentProfileProps) {
+  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
+  const defaultUser: StudentUser = {
+    id: '1',
+    realName: '학생',
+    username: 'student',
+    classCode: 'CLASS001',
+    totalCoral: 50,
+    currentCoral: 50,
+    totalExplorationData: 100,
+    mainFish: '기본 물고기'
+  };
+
+  const currentUser = user || defaultUser;
   const [showTitleLog, setShowTitleLog] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
@@ -101,9 +114,9 @@ export function StudentProfile({ user }: StudentProfileProps) {
             
             {/* 사용자 정보 */}
             <div>
-              <h2 className="text-xl font-medium text-black">{user.realName}</h2>
-              <p className="text-gray-600">@{user.username}</p>
-              <p className="text-gray-600">{user.classCode}</p>
+              <h2 className="text-xl font-medium text-black">{currentUser.realName}</h2>
+              <p className="text-gray-600">@{currentUser.username}</p>
+              <p className="text-gray-600">{currentUser.classCode}</p>
             </div>
 
             {/* 대표 칭호 */}

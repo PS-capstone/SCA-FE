@@ -36,10 +36,23 @@ interface StudentUser {
 }
 
 interface StudentCollectionProps {
-  user: StudentUser;
+  user?: StudentUser;
 }
 
 export function StudentCollection({ user }: StudentCollectionProps) {
+  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
+  const defaultUser: StudentUser = {
+    id: '1',
+    realName: '학생',
+    username: 'student',
+    classCode: 'CLASS001',
+    totalCoral: 50,
+    currentCoral: 50,
+    totalExplorationData: 100,
+    mainFish: '기본 물고기'
+  };
+
+  const currentUser = user || defaultUser;
   const [selectedFish, setSelectedFish] = useState<Fish | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
