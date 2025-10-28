@@ -1,11 +1,9 @@
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { useNavigate } from "react-router-dom";
 
-interface RoleSelectionProps {
-  onSelectRole: (role: 'student' | 'teacher') => void;
-}
-
-export function RoleSelection({ onSelectRole }: RoleSelectionProps) {
+export function RoleSelection() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
@@ -20,7 +18,7 @@ export function RoleSelection({ onSelectRole }: RoleSelectionProps) {
         
         <div className="flex justify-center gap-8 items-stretch">
           {/* 학생 선택 카드 */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-800 max-w-md h-full flex flex-col" onClick={() => onSelectRole('student')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-800 max-w-md h-full flex flex-col" onClick={() => navigate('/student/auth')}>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl text-gray-800">학생</CardTitle>
               <CardDescription className="text-gray-600">
@@ -38,7 +36,7 @@ export function RoleSelection({ onSelectRole }: RoleSelectionProps) {
           </Card>
 
           {/* 선생님 선택 카드 */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-800 max-w-md h-full flex flex-col" onClick={() => onSelectRole('teacher')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-gray-800 max-w-md h-full flex flex-col" onClick={() => navigate('/teacher/login')}>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl text-gray-800">선생님</CardTitle>
               <CardDescription className="text-gray-600">

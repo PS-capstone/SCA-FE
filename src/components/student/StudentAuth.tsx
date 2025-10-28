@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -17,13 +18,10 @@ interface StudentUser {
   mainFish: string;
 }
 
-interface StudentAuthProps {
-  onLogin: (user: StudentUser) => void;
-}
-
-export function StudentAuth({ onLogin }: StudentAuthProps) {
+export function StudentAuth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     realName: '',
     username: '',
@@ -68,7 +66,7 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
         mainFish: '기본 물고기'
       };
       
-      onLogin(user);
+      navigate('/student/dashboard');
     }
   };
 
@@ -86,7 +84,7 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
     };
     
     setShowWelcomeModal(false);
-    onLogin(user);
+    navigate('/student/dashboard');
   };
 
   return (
@@ -102,7 +100,7 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
             <Button 
               variant="outline"
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => window.location.href = '/'}
+              onClick={() => navigate('/')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               뒤로가기

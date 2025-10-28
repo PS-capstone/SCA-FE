@@ -1,16 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
 
-interface TeacherLoginPageNewProps {
-  onNavigate: (page: string) => void;
-}
-
-export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
+export function TeacherLoginPageNew() {
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -25,7 +23,7 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
             <Button 
               variant="outline"
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => window.location.href = '/'}
+              onClick={() => navigate('/')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               뒤로가기
@@ -56,7 +54,7 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
 
               <Button 
                 className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
-                onClick={() => onNavigate('teacher-dashboard-new')}
+                onClick={() => navigate('/teacher/dashboard')}
               >
                 로그인
               </Button>
@@ -104,7 +102,7 @@ export function TeacherLoginPageNew({ onNavigate }: TeacherLoginPageNewProps) {
 
               <Button 
                 className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
-                onClick={() => onNavigate('teacher-dashboard-new')}
+                onClick={() => navigate('/teacher/dashboard')}
               >
                 회원가입
               </Button>

@@ -1,4 +1,5 @@
 import { Button } from "../ui/button";
+import { useNavigate } from "react-router-dom";
 import { 
   Home, 
   Plus, 
@@ -12,12 +13,11 @@ import { useState } from "react";
 
 interface TeacherSidebarProps {
   currentPage: string;
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
 }
 
-export function TeacherSidebar({ currentPage, onNavigate, onLogout }: TeacherSidebarProps) {
+export function TeacherSidebar({ currentPage }: TeacherSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
 
   // 홈 페이지에서는 홈만 표시
   const homeNavItems = [
@@ -26,11 +26,11 @@ export function TeacherSidebar({ currentPage, onNavigate, onLogout }: TeacherSid
 
   // 다른 페이지에서는 모든 메뉴 표시
   const allNavItems = [
-    { id: 'dashboard', label: '홈', icon: Home },
-    { id: 'quest-create-new', label: '퀘스트 등록', icon: Plus },
-    { id: 'class-list', label: '반 관리', icon: Users },
-    { id: 'raid-create-new', label: '레이드 등록', icon: Swords },
-    { id: 'quest-approval-new', label: '퀘스트 승인', icon: CheckCircle },
+    { id: '/teacher/dashboard', label: '홈', icon: Home },
+    { id: '/teacher/quest', label: '퀘스트 등록', icon: Plus },
+    { id: '/teacher/class', label: '반 관리', icon: Users },
+    { id: '/teacher/raid/create', label: '레이드 등록', icon: Swords },
+    { id: '/teacher/quest/approval', label: '퀘스트 승인', icon: CheckCircle },
   ];
 
   // 현재 페이지에 따라 네비게이션 아이템 결정
@@ -56,8 +56,7 @@ export function TeacherSidebar({ currentPage, onNavigate, onLogout }: TeacherSid
         <nav className="p-4 space-y-2 flex-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPage === item.id || 
-                            (item.id === 'dashboard' && currentPage.includes('teacher-dashboard'));
+            const isActive = location.pathname === item.id;
             
             return (
               <Button
@@ -68,7 +67,7 @@ export function TeacherSidebar({ currentPage, onNavigate, onLogout }: TeacherSid
                     ? 'bg-black text-white hover:bg-gray-800' 
                     : 'hover:bg-gray-100 border border-transparent hover:border-gray-300'
                 }`}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => navigate(item.id)}
               >
                 <Icon className="w-4 h-4 mr-2" />
                 {!collapsed && item.label}
@@ -78,18 +77,16 @@ export function TeacherSidebar({ currentPage, onNavigate, onLogout }: TeacherSid
         </nav>
         
         {/* Logout Button at Bottom */}
-        {onLogout && (
-          <div className="p-4 border-t-2 border-gray-300">
-            <Button
-              variant="ghost"
-              className="w-full justify-start rounded-none text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-300"
-              onClick={onLogout}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              {!collapsed && "로그아웃"}
-            </Button>
-          </div>
-        )}
+        <div className="p-4 border-t-2 border-gray-300">
+          <Button
+            variant="ghost"
+            className="w-full justify-start rounded-none text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-300"
+            onClick={() => navigate('/')}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            {!collapsed && "로그아웃"}
+          </Button>
+        </div>
       </div>
     </div>
   );

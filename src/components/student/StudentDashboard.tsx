@@ -16,10 +16,23 @@ interface StudentUser {
 }
 
 interface StudentDashboardProps {
-  user: StudentUser;
+  user?: StudentUser;
 }
 
 export function StudentDashboard({ user }: StudentDashboardProps) {
+  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
+  const defaultUser: StudentUser = {
+    id: '1',
+    realName: '학생',
+    username: 'student',
+    classCode: 'CLASS001',
+    totalCoral: 50,
+    currentCoral: 50,
+    totalExplorationData: 100,
+    mainFish: '기본 물고기'
+  };
+
+  const currentUser = user || defaultUser;
   const [selectedQuest, setSelectedQuest] = useState<typeof groupQuests[0] | null>(null);
   const currentRaid = {
     name: '중간고사 대비 레이드',
@@ -76,7 +89,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
     return (
       <QuestDetailPage 
         quest={selectedQuest}
-        user={user}
+        user={currentUser}
         onBack={() => setSelectedQuest(null)}
       />
     );
@@ -185,11 +198,11 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="text-center p-3 border-2 border-gray-300 rounded">
               <p className="text-sm text-gray-600">코랄</p>
-              <p className="text-xl font-medium text-black">{user.currentCoral}</p>
+              <p className="text-xl font-medium text-black">{currentUser.currentCoral}</p>
             </div>
             <div className="text-center p-3 border-2 border-gray-300 rounded">
               <p className="text-sm text-gray-600">탐사데이터</p>
-              <p className="text-xl font-medium text-black">{user.totalExplorationData}</p>
+              <p className="text-xl font-medium text-black">{currentUser.totalExplorationData}</p>
             </div>
           </div>
 

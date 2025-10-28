@@ -23,10 +23,23 @@ interface StudentUser {
 }
 
 interface StudentGachaProps {
-  user: StudentUser;
+  user?: StudentUser;
 }
 
 export function StudentGacha({ user }: StudentGachaProps) {
+  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
+  const defaultUser: StudentUser = {
+    id: '1',
+    realName: '학생',
+    username: 'student',
+    classCode: 'CLASS001',
+    totalCoral: 50,
+    currentCoral: 50,
+    totalExplorationData: 100,
+    mainFish: '기본 물고기'
+  };
+
+  const currentUser = user || defaultUser;
   const [isResultOpen, setIsResultOpen] = useState(false);
   const [isProbabilityOpen, setIsProbabilityOpen] = useState(false);
   const [resultFish, setResultFish] = useState<Fish | null>(null);
@@ -63,7 +76,7 @@ export function StudentGacha({ user }: StudentGachaProps) {
   ];
 
   const drawGacha = () => {
-    if (user.currentCoral < gachaCost) {
+    if (currentUser.currentCoral < gachaCost) {
       alert('코랄이 부족합니다!');
       return;
     }
@@ -123,7 +136,7 @@ export function StudentGacha({ user }: StudentGachaProps) {
           {/* 현재 코랄 */}
           <div className="text-center mb-4">
             <p className="text-sm text-gray-600">보유 코랄</p>
-            <p className="text-2xl font-medium text-black">{user.currentCoral}</p>
+            <p className="text-2xl font-medium text-black">{currentUser.currentCoral}</p>
           </div>
 
           {/* 필요 코랄 */}
@@ -135,10 +148,10 @@ export function StudentGacha({ user }: StudentGachaProps) {
           {/* 가챠 버튼 */}
           <Button
             onClick={drawGacha}
-            disabled={user.currentCoral < gachaCost}
+            disabled={currentUser.currentCoral < gachaCost}
             className="w-full bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500"
           >
-            {user.currentCoral < gachaCost ? '코랄 부족' : '가챠 뽑기'}
+            {currentUser.currentCoral < gachaCost ? '코랄 부족' : '가챠 뽑기'}
           </Button>
         </CardContent>
       </Card>

@@ -4,15 +4,13 @@ import { Badge } from "../ui/badge";
 import { TeacherSidebar } from "./TeacherSidebar";
 import { ArrowLeft, CheckCircle, X, Users, Award, Calendar, Target } from "lucide-react";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 
-interface GroupQuestDetailPageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function GroupQuestDetailPage({ onNavigate, onLogout }: GroupQuestDetailPageProps) {
+export function GroupQuestDetailPage() {
+  const { id } = useParams();
+  const questId = Number(id);
   const [questInfo] = useState({
-    id: 1,
+    id: questId,
     title: "출석 체크",
     description: "모든 학생이 수업시간 전까지 폰 10개를 제출해야 보상 지급",
     type: "단체 보상형",
@@ -63,8 +61,6 @@ export function GroupQuestDetailPage({ onNavigate, onLogout }: GroupQuestDetailP
     return completedCount >= questInfo.completionCondition.requiredStudents;
   };
 
-
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "완료": return "bg-green-100 text-green-800 border-green-200";
@@ -81,7 +77,7 @@ export function GroupQuestDetailPage({ onNavigate, onLogout }: GroupQuestDetailP
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="group-quest-manage" onNavigate={onNavigate} onLogout={onLogout} />
+      <TeacherSidebar currentPage="group-quest-manage" />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

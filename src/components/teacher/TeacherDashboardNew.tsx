@@ -1,15 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Plus, Settings, Users } from "lucide-react";
 import { TeacherSidebar } from "./TeacherSidebar";
 
-interface TeacherDashboardNewProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function TeacherDashboardNew({ onNavigate, onLogout }: TeacherDashboardNewProps) {
+export function TeacherDashboardNew() {
+  const navigate = useNavigate();
   const classes = [
     { id: 1, name: "중등 1반", studentCount: 15, activeQuests: 3 },
     { id: 2, name: "중등 2반", studentCount: 12, activeQuests: 2 },
@@ -19,7 +16,7 @@ export function TeacherDashboardNew({ onNavigate, onLogout }: TeacherDashboardNe
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="dashboard" onNavigate={onNavigate} onLogout={onLogout} />
+      <TeacherSidebar currentPage="dashboard" />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
@@ -32,7 +29,7 @@ export function TeacherDashboardNew({ onNavigate, onLogout }: TeacherDashboardNe
             <Button 
               variant="outline" 
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              onClick={() => onNavigate('teacher-profile')}
+              onClick={() => navigate('/teacher/profile')}
             >
               <Settings className="w-4 h-4 mr-2" />
               회원정보 수정
@@ -46,7 +43,7 @@ export function TeacherDashboardNew({ onNavigate, onLogout }: TeacherDashboardNe
             <h2>반 목록</h2>
             <Button 
               className="bg-black hover:bg-gray-800 text-white rounded-lg"
-              onClick={() => onNavigate('class-create')}
+              onClick={() => navigate('/teacher/class/create')}
             >
               <Plus className="w-4 h-4 mr-2" />
               반 생성하기
@@ -58,7 +55,7 @@ export function TeacherDashboardNew({ onNavigate, onLogout }: TeacherDashboardNe
               <Card 
                 key={classItem.id}
                 className="border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => onNavigate(`class-manage-${classItem.id}`)}
+                onClick={() => navigate(`/teacher/class`)}
               >
                 <CardContent className="p-6">
                   <h3 className="mb-4">{classItem.name}</h3>

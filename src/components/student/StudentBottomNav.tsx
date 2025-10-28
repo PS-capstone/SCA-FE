@@ -1,22 +1,19 @@
 import React from 'react';
 import { Home, BookOpen, Gamepad2, Book, User, MapPin, Sword, LogOut } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type StudentScreen = 'dashboard' | 'quest' | 'gacha' | 'collection' | 'profile' | 'battle';
 
-interface StudentBottomNavProps {
-  currentScreen: StudentScreen;
-  onNavigate: (screen: StudentScreen) => void;
-  onLogout?: () => void;
-}
-
-export function StudentBottomNav({ currentScreen, onNavigate, onLogout }: StudentBottomNavProps) {
+export function StudentBottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const navItems = [
-    { id: 'dashboard' as StudentScreen, label: '홈', icon: Home },
-    { id: 'quest' as StudentScreen, label: '퀘스트', icon: BookOpen },
-    { id: 'gacha' as StudentScreen, label: '가챠', icon: Gamepad2 },
-    { id: 'collection' as StudentScreen, label: '도감', icon: Book },
-    { id: 'profile' as StudentScreen, label: '내정보', icon: User },
-    { id: 'battle' as StudentScreen, label: '전투', icon: Sword },
+    { id: 'dashboard' as StudentScreen, label: '홈', icon: Home, path: '/student/dashboard' },
+    { id: 'quest' as StudentScreen, label: '퀘스트', icon: BookOpen, path: '/student/quests' },
+    { id: 'gacha' as StudentScreen, label: '가챠', icon: Gamepad2, path: '/student/gacha' },
+    { id: 'collection' as StudentScreen, label: '도감', icon: Book, path: '/student/collection' },
+    { id: 'profile' as StudentScreen, label: '내정보', icon: User, path: '/student/profile' },
+    { id: 'battle' as StudentScreen, label: '전투', icon: Sword, path: '/student/battle' },
   ];
 
 
@@ -26,12 +23,12 @@ export function StudentBottomNav({ currentScreen, onNavigate, onLogout }: Studen
         <div className="flex gap-1 p-2 overflow-x-auto">
           {navItems.map((item) => {
             const IconComponent = item.icon;
-            const isActive = currentScreen === item.id;
+            const isActive = location.pathname === item.path;
             
             return (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => navigate(item.path)}
                 className={`flex flex-col items-center justify-center py-2 px-3 rounded transition-all whitespace-nowrap ${
                   isActive
                     ? 'bg-black text-white'
@@ -46,7 +43,7 @@ export function StudentBottomNav({ currentScreen, onNavigate, onLogout }: Studen
           
           {/* 로그아웃 버튼 */}
           <button
-            onClick={() => onLogout && onLogout()}
+            onClick={() => navigate('/')}
             className="flex flex-col items-center justify-center py-2 px-3 rounded transition-all text-gray-600 hover:bg-red-100 hover:text-red-600 whitespace-nowrap"
           >
             <LogOut size={20} />
