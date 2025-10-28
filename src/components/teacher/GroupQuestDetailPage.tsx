@@ -19,7 +19,11 @@ export function GroupQuestDetailPage({ onNavigate, onLogout }: GroupQuestDetailP
     reward: "산호 30개",
     deadline: "2025-01-31",
     participants: 15,
-    completed: 12
+    completed: 12,
+    completionCondition: {
+      totalStudents: 15,
+      requiredStudents: 12
+    }
   });
 
   const [students, setStudents] = useState([
@@ -43,15 +47,20 @@ export function GroupQuestDetailPage({ onNavigate, onLogout }: GroupQuestDetailP
     );
     setStudents(updatedStudents);
     
-    // 모든 학생이 완료했는지 확인
-    const allCompleted = updatedStudents.every(s => s.status === "완료");
-    const allApproved = updatedStudents.filter(s => s.status === "완료").every(s => s.approved);
+    // 완료 조건 확인
+    const completedCount = updatedStudents.filter(s => s.status === "완료" && s.approved).length;
+    const canComplete = completedCount >= questInfo.completionCondition.requiredStudents;
     
-    if (allCompleted && allApproved) {
-      alert("🎉 모든 학생이 조건을 만족했습니다! 단체 보상이 지급됩니다!");
+    if (canComplete) {
+      alert(`🎉 완료 조건을 만족했습니다! (${completedCount}/${questInfo.completionCondition.requiredStudents}명) 단체 보상이 지급됩니다!`);
     } else {
-      alert(`${students.find(s => s.id === studentId)?.name} 학생이 확인되었습니다!`);
+      alert(`${students.find(s => s.id === studentId)?.name} 학생이 확인되었습니다!\n현재 완료: ${completedCount}/${questInfo.completionCondition.requiredStudents}명`);
     }
+  };
+
+  const canCompleteQuest = () => {
+    const completedCount = students.filter(s => s.status === "완료" && s.approved).length;
+    return completedCount >= questInfo.completionCondition.requiredStudents;
   };
 
 
@@ -125,11 +134,13 @@ export function GroupQuestDetailPage({ onNavigate, onLogout }: GroupQuestDetailP
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Users className="w-5 h-5 text-blue-600" />
-                    <span className="font-semibold text-blue-800">단체 보상 시스템</span>
+                    <span className="font-semibold text-blue-800">완료 조건</span>
                   </div>
                   <p className="text-sm text-blue-700">
-                    모든 학생이 조건을 만족해야만 보상이 지급됩니다. 
-                    한 명이라도 미완료하면 전체 학생이 보상을 받을 수 없습니다.
+                    {questInfo.completionCondition.requiredStudents}명 이상 완료 시 보상 지급
+                    {canCompleteQuest() && (
+                      <span className="text-green-600 font-medium ml-2">✓ 조건 달성</span>
+                    )}
                   </p>
                 </div>
               </div>

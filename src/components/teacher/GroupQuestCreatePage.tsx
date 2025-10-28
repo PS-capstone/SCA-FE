@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -20,7 +20,11 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
     reward: "",
     deadline: "",
     category: "출석",
-    template: "출석 체크"
+    template: "출석 체크",
+    completionCondition: {
+      totalStudents: 30,
+      requiredStudents: 30
+    }
   });
 
   const [useTemplate, setUseTemplate] = useState(true);
@@ -49,7 +53,12 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
       return;
     }
     
-    alert(`단체 퀘스트가 등록되었습니다!\n제목: ${questData.title}\n대상: 반 전체 학생`);
+    if (questData.completionCondition.requiredStudents > questData.completionCondition.totalStudents) {
+      alert("필요 완료 학생 수는 전체 학생 수보다 많을 수 없습니다.");
+      return;
+    }
+    
+    alert(`단체 퀘스트가 등록되었습니다!\n제목: ${questData.title}\n대상: 반 전체 학생\n완료 조건: ${questData.completionCondition.requiredStudents}/${questData.completionCondition.totalStudents}명`);
     onNavigate('teacher-dashboard');
   };
 
@@ -169,6 +178,71 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
               </CardContent>
             </Card>
 
+            {/* 완료 조건 설정 */}
+            <Card className="border-2 border-gray-300">
+              <CardHeader>
+                <CardTitle className="text-black flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  완료 조건 설정
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-3">
+                    몇 명의 학생이 완료해야 퀘스트를 완료 처리할지 설정하세요.
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="totalStudents" className="text-black font-medium">전체 학생 수</Label>
+                      <Input
+                        id="totalStudents"
+                        type="number"
+                        value={questData.completionCondition.totalStudents}
+                        onChange={(e) => setQuestData({
+                          ...questData,
+                          completionCondition: {
+                            ...questData.completionCondition,
+                            totalStudents: parseInt(e.target.value) || 0
+                          }
+                        })}
+                        min="1"
+                        max="50"
+                        className="border-2 border-gray-300 rounded-lg"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="requiredStudents" className="text-black font-medium">필요 완료 학생 수</Label>
+                      <Input
+                        id="requiredStudents"
+                        type="number"
+                        value={questData.completionCondition.requiredStudents}
+                        onChange={(e) => setQuestData({
+                          ...questData,
+                          completionCondition: {
+                            ...questData.completionCondition,
+                            requiredStudents: parseInt(e.target.value) || 0
+                          }
+                        })}
+                        min="1"
+                        max={questData.completionCondition.totalStudents}
+                        className="border-2 border-gray-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>완료 조건:</strong> {questData.completionCondition.requiredStudents}명 / {questData.completionCondition.totalStudents}명 이상 완료 시 퀘스트 완료 처리
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      완료율: {Math.round((questData.completionCondition.requiredStudents / questData.completionCondition.totalStudents) * 100)}%
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* 액션 버튼들 */}
             <div className="flex gap-3 pt-6 border-t-2 border-gray-300">

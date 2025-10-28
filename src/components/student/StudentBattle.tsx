@@ -40,9 +40,8 @@ export function StudentBattle({ user }: StudentBattleProps) {
     total: number;
     diceResult: number;
   } | null>(null);
-  const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
-  const [diceResult, setDiceResult] = useState<number | null>(null);
   const [isDiceRolling, setIsDiceRolling] = useState(false);
+  const [diceResult, setDiceResult] = useState<number | null>(null);
 
   const raidData: RaidData = {
     name: '레이드: 중간고사 마왕',
@@ -55,7 +54,6 @@ export function StudentBattle({ user }: StudentBattleProps) {
     skillReady: true
   };
 
-  const skillGaugeNeeded = raidData.maxSkillGauge - raidData.skillGauge;
 
   const handleEnergyContribute = () => {
     if (contributeAmount <= 0 || contributeAmount > user.totalExplorationData) {
@@ -63,50 +61,46 @@ export function StudentBattle({ user }: StudentBattleProps) {
       return;
     }
 
-    // 주사위 보너스 계산 (1-6)
-    const diceResult = Math.floor(Math.random() * 6) + 1;
-    const bonusMultiplier = diceResult / 6; // 0.16 ~ 1.0
-    const bonus = Math.floor(contributeAmount * bonusMultiplier);
-    const total = contributeAmount + bonus;
-
-    setLastContributeResult({
-      base: contributeAmount,
-      bonus: bonus,
-      total: total,
-      diceResult: diceResult
-    });
-
-    // 실제로는 API 호출
-    console.log('Energy contribution:', {
-      userId: user.id,
-      baseAmount: contributeAmount,
-      bonusAmount: bonus,
-      totalAmount: total,
-      diceResult: diceResult
-    });
-
-    setIsContributeOpen(false);
-    setContributeAmount(0);
+    // 주사위 굴리기 애니메이션 시작
+    setIsDiceRolling(true);
+    setDiceResult(null);
     
-    alert(`기여 완료! 기본 ${contributeAmount} + 보너스 ${bonus} = 총 ${total} 기여`);
+    // 주사위 굴리기 애니메이션 (2초)
+    setTimeout(() => {
+      const diceResult = Math.floor(Math.random() * 6) + 1;
+      const bonusMultiplier = diceResult / 6; // 0.16 ~ 1.0
+      const bonus = Math.floor(contributeAmount * bonusMultiplier);
+      const total = contributeAmount + bonus;
+
+      setDiceResult(diceResult);
+      setIsDiceRolling(false);
+
+      setLastContributeResult({
+        base: contributeAmount,
+        bonus: bonus,
+        total: total,
+        diceResult: diceResult
+      });
+
+      // 실제로는 API 호출
+      console.log('Energy contribution:', {
+        userId: user.id,
+        baseAmount: contributeAmount,
+        bonusAmount: bonus,
+        totalAmount: total,
+        diceResult: diceResult
+      });
+
+      setIsContributeOpen(false);
+      setContributeAmount(0);
+      
+      alert(`기여 완료! 기본 ${contributeAmount} + 보너스 ${bonus} = 총 ${total} 기여`);
+    }, 2000);
   };
 
   const formatTime = (timeString: string) => {
     const [hours, minutes] = timeString.split(':');
     return `${hours}시간 ${minutes}분`;
-  };
-
-  const handleSkillAttack = () => {
-    setIsDiceModalOpen(true);
-    setIsDiceRolling(true);
-    setDiceResult(null);
-    
-    // 주사위 굴리기 애니메이션
-    setTimeout(() => {
-      const result = Math.floor(Math.random() * 6) + 1;
-      setDiceResult(result);
-      setIsDiceRolling(false);
-    }, 2000);
   };
 
   return (
@@ -134,7 +128,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
           </div>
 
           {/* 보스 HP 바 */}
-          <div className="space-y-2 mb-4">
+          <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-black font-medium">보스 HP</span>
               <span className="text-black">
@@ -150,24 +144,6 @@ export function StudentBattle({ user }: StudentBattleProps) {
               } as React.CSSProperties}
             />
           </div>
-
-          {/* 필살기 게이지 */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-black font-medium">필살기 게이지</span>
-              <span className="text-black">
-                {raidData.skillGauge} / {raidData.maxSkillGauge}
-              </span>
-            </div>
-            <Progress 
-              value={(raidData.skillGauge / raidData.maxSkillGauge) * 100} 
-              className="h-4 bg-gray-200"
-              style={{
-                '--progress-background': '#3b82f6',
-                '--progress-foreground': '#2563eb'
-              } as React.CSSProperties}
-            />
-          </div>
         </CardContent>
       </Card>
 
@@ -178,14 +154,10 @@ export function StudentBattle({ user }: StudentBattleProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* 보유 자원 및 상태 */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="text-center p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">보유 탐사데이터</p>
               <p className="text-xl font-medium text-black">{user.totalExplorationData}</p>
-            </div>
-            <div className="text-center p-3 border border-gray-200 rounded">
-              <p className="text-sm text-gray-600">필살기까지</p>
-              <p className="text-xl font-medium text-black">{skillGaugeNeeded}</p>
             </div>
           </div>
 
@@ -197,13 +169,6 @@ export function StudentBattle({ user }: StudentBattleProps) {
               disabled={user.totalExplorationData <= 0}
             >
               에너지 주입
-            </Button>
-            
-            <Button
-              onClick={handleSkillAttack}
-              className="w-full h-12 bg-gray-600 text-white hover:bg-gray-700"
-            >
-              필살기 발사
             </Button>
           </div>
 
@@ -409,9 +374,19 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 기본 기여량 + 주사위 보너스(1-6) = 최종 기여량
               </p>
               <div className="flex items-center justify-center">
-                <div className="w-12 h-12 border-2 border-gray-300 rounded bg-white flex items-center justify-center text-xs">
-                  주사위
-                </div>
+                {isDiceRolling ? (
+                  <div className="w-12 h-12 border-2 border-gray-300 rounded bg-gray-400 flex items-center justify-center animate-spin">
+                    <span className="text-white text-xs">🎲</span>
+                  </div>
+                ) : diceResult ? (
+                  <div className="w-12 h-12 border-2 border-gray-300 rounded bg-gray-600 flex items-center justify-center">
+                    <span className="text-white text-lg font-bold">{diceResult}</span>
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 border-2 border-gray-300 rounded bg-white flex items-center justify-center text-xs">
+                    주사위
+                  </div>
+                )}
               </div>
             </div>
 
@@ -419,58 +394,15 @@ export function StudentBattle({ user }: StudentBattleProps) {
               <Button
                 onClick={handleEnergyContribute}
                 className="flex-1 bg-black text-white"
-                disabled={contributeAmount <= 0 || contributeAmount > user.totalExplorationData}
+                disabled={contributeAmount <= 0 || contributeAmount > user.totalExplorationData || isDiceRolling}
               >
-                기여하기
+                {isDiceRolling ? '주사위 굴리는 중...' : '기여하기'}
               </Button>
               <Button
                 onClick={() => setIsContributeOpen(false)}
                 className="flex-1 bg-white text-black border border-gray-300"
               >
                 취소
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 주사위 모달 */}
-      <Dialog open={isDiceModalOpen} onOpenChange={setIsDiceModalOpen}>
-        <DialogContent className="bg-white border-2 border-gray-300">
-          <DialogHeader>
-            <DialogTitle className="text-black text-center">필살기 발사!</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-center">
-              <p className="text-gray-600 mb-4">주사위를 굴려서 데미지를 결정합니다</p>
-              
-              {isDiceRolling ? (
-                <div className="flex justify-center">
-                  <div className="w-16 h-16 bg-gray-400 rounded-lg flex items-center justify-center animate-spin">
-                    <span className="text-white text-xl">🎲</span>
-                  </div>
-                </div>
-              ) : diceResult ? (
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <div className="w-16 h-16 bg-gray-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-2xl font-bold">{diceResult}</span>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-lg font-medium text-black">데미지: {diceResult * 100}</p>
-                    <p className="text-sm text-gray-600">주사위 결과 × 100</p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button
-                onClick={() => setIsDiceModalOpen(false)}
-                className="flex-1 bg-gray-600 text-white hover:bg-gray-700"
-              >
-                닫기
               </Button>
             </div>
           </div>

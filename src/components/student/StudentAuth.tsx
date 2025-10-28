@@ -64,7 +64,7 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
         classCode: formData.classCode || 'CLASS001',
         totalCoral: 50,
         currentCoral: 50,
-        totalExplorationData: 0,
+        totalExplorationData: 100,
         mainFish: '기본 물고기'
       };
       
@@ -81,7 +81,7 @@ export function StudentAuth({ onLogin }: StudentAuthProps) {
       classCode: formData.classCode,
       totalCoral: 50,
       currentCoral: 50,
-      totalExplorationData: 0,
+      totalExplorationData: 100,
       mainFish: '기본 물고기'
     };
     

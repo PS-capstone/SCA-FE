@@ -29,7 +29,8 @@ export function QuestApprovalPageNew({ onNavigate, onLogout }: QuestApprovalPage
       coral: 2,
       explorationData: 50,
       hasAttachment: true,
-      submittedAt: "2025.10.04 14:30"
+      submittedAt: "2025.10.04 14:30",
+      studentComment: "RPM 100문제를 모두 풀었습니다. 처음에는 어려웠지만 차근차근 풀어가니 실력이 늘어나는 것 같습니다. 특히 곱셈과 나눗셈 부분에서 많이 향상되었어요!"
     },
     {
       id: 2,
@@ -41,7 +42,8 @@ export function QuestApprovalPageNew({ onNavigate, onLogout }: QuestApprovalPage
       coral: 5,
       explorationData: 100,
       hasAttachment: false,
-      submittedAt: "2025.10.04 13:15"
+      submittedAt: "2025.10.04 13:15",
+      studentComment: "모의고사에서 85점을 받았습니다. 기하 부분에서 실수가 있었지만 대수 부분은 잘 풀었습니다. 다음에는 더 신중하게 풀어보겠습니다."
     },
   ];
 
@@ -167,6 +169,16 @@ export function QuestApprovalPageNew({ onNavigate, onLogout }: QuestApprovalPage
                       <span className="text-gray-600">제출 시간</span>
                       <p>{selectedQuest.submittedAt}</p>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Student Comment */}
+              <Card className="border-2 border-gray-300 rounded-lg">
+                <CardContent className="p-4">
+                  <p className="text-sm text-gray-600 mb-2">학생 수행내용</p>
+                  <div className="border-2 border-gray-300 p-3 bg-gray-50 rounded">
+                    <p className="text-sm text-black">{selectedQuest.studentComment}</p>
                   </div>
                 </CardContent>
               </Card>

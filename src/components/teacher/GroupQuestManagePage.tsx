@@ -21,7 +21,11 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
       completed: 12,
       reward: "산호 30개",
       deadline: "2025-01-31",
-      status: "진행중"
+      status: "진행중",
+      completionCondition: {
+        totalStudents: 15,
+        requiredStudents: 12
+      }
     },
     {
       id: 2,
@@ -32,7 +36,11 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
       completed: 8,
       reward: "산호 50개",
       deadline: "2025-02-15",
-      status: "진행중"
+      status: "진행중",
+      completionCondition: {
+        totalStudents: 15,
+        requiredStudents: 10
+      }
     },
     {
       id: 3,
@@ -43,7 +51,11 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
       completed: 15,
       reward: "산호 20개",
       deadline: "2025-01-25",
-      status: "완료"
+      status: "완료",
+      completionCondition: {
+        totalStudents: 15,
+        requiredStudents: 15
+      }
     }
   ]);
 
@@ -62,6 +74,10 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
       case "목표 달성형": return "bg-black text-white border-black";
       default: return "bg-gray-100 text-black border-gray-300";
     }
+  };
+
+  const canCompleteQuest = (quest: any) => {
+    return quest.completed >= quest.completionCondition.requiredStudents;
   };
 
   return (
@@ -125,6 +141,12 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
                           style={{ width: `${(quest.completed / quest.participants) * 100}%` }}
                         />
                       </div>
+                      <div className="text-xs text-gray-500">
+                        완료 조건: {quest.completionCondition.requiredStudents}명 이상
+                        {canCompleteQuest(quest) && (
+                          <span className="text-green-600 font-medium ml-2">✓ 조건 달성</span>
+                        )}
+                      </div>
                     </div>
 
                     {/* 보상 정보 */}
@@ -153,11 +175,22 @@ export function GroupQuestManagePage({ onNavigate, onLogout }: GroupQuestManageP
                       </Button>
                       {quest.status === "진행중" && (
                         <Button 
-                          className="bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-black"
-                          onClick={() => alert(`${quest.title} 퀘스트를 완료 처리합니다.`)}
+                          className={`rounded-lg border-2 ${
+                            canCompleteQuest(quest)
+                              ? "bg-black hover:bg-gray-800 text-white border-black"
+                              : "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed"
+                          }`}
+                          onClick={() => {
+                            if (canCompleteQuest(quest)) {
+                              alert(`${quest.title} 퀘스트를 완료 처리합니다.\n완료 조건: ${quest.completed}/${quest.completionCondition.requiredStudents}명 달성`);
+                            } else {
+                              alert(`완료 조건을 만족하지 않습니다.\n현재: ${quest.completed}명 / 필요: ${quest.completionCondition.requiredStudents}명`);
+                            }
+                          }}
+                          disabled={!canCompleteQuest(quest)}
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
-                          완료
+                          {canCompleteQuest(quest) ? "완료" : "조건 미달"}
                         </Button>
                       )}
                     </div>
