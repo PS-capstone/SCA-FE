@@ -5,10 +5,12 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useAuth, TeacherUser } from "../../contexts/AppContext";
 
 export function TeacherLoginPageNew() {
   const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -52,12 +54,23 @@ export function TeacherLoginPageNew() {
                 />
               </div>
 
-              <Button 
-                className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
-                onClick={() => navigate('/teacher/dashboard')}
-              >
-                로그인
-              </Button>
+                          <Button
+                            className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
+                            onClick={() => {
+                              // 임시 선생님 사용자 데이터
+                              const teacherUser: TeacherUser = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                realName: '선생님',
+                                username: 'teacher',
+                                email: 'teacher@example.com',
+                                classes: ['CLASS001', 'CLASS002']
+                              };
+                              login(teacherUser, 'teacher');
+                              navigate('/teacher/dashboard');
+                            }}
+                          >
+                            로그인
+                          </Button>
 
               <div className="text-center pt-2">
                 <Button 
@@ -100,12 +113,23 @@ export function TeacherLoginPageNew() {
                 />
               </div>
 
-              <Button 
-                className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
-                onClick={() => navigate('/teacher/dashboard')}
-              >
-                회원가입
-              </Button>
+                          <Button
+                            className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
+                            onClick={() => {
+                              // 임시 선생님 사용자 데이터
+                              const teacherUser: TeacherUser = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                realName: '선생님',
+                                username: 'teacher',
+                                email: 'teacher@example.com',
+                                classes: ['CLASS001', 'CLASS002']
+                              };
+                              login(teacherUser, 'teacher');
+                              navigate('/teacher/dashboard');
+                            }}
+                          >
+                            회원가입
+                          </Button>
 
               <div className="text-center pt-2">
                 <Button 

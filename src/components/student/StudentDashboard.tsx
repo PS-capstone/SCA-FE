@@ -3,23 +3,15 @@ import { Progress } from '../ui/progress';
 import { Badge } from '../ui/badge';
 import { useState } from 'react';
 import { QuestDetailPage } from './QuestDetailPage';
-
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
+import { useAuth, StudentUser } from '../../contexts/AppContext';
 
 interface StudentDashboardProps {
-  user?: StudentUser;
+  user?: StudentUser; // Make user prop optional for backward compatibility
 }
 
 export function StudentDashboard({ user }: StudentDashboardProps) {
+  const { user: contextUser, userType } = useAuth();
+  
   // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
   const defaultUser: StudentUser = {
     id: '1',
@@ -32,7 +24,8 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
     mainFish: '기본 물고기'
   };
 
-  const currentUser = user || defaultUser;
+  // Use context user if available, otherwise fall back to prop or default
+  const currentUser = (contextUser as StudentUser) || user || defaultUser;
   const [selectedQuest, setSelectedQuest] = useState<typeof groupQuests[0] | null>(null);
   const currentRaid = {
     name: '중간고사 대비 레이드',

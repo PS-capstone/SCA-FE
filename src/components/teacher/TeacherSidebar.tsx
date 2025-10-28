@@ -10,6 +10,7 @@ import {
   LogOut
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../../contexts/AppContext";
 
 interface TeacherSidebarProps {
   currentPage: string;
@@ -18,6 +19,7 @@ interface TeacherSidebarProps {
 export function TeacherSidebar({ currentPage }: TeacherSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // 홈 페이지에서는 홈만 표시
   const homeNavItems = [
@@ -78,14 +80,17 @@ export function TeacherSidebar({ currentPage }: TeacherSidebarProps) {
         
         {/* Logout Button at Bottom */}
         <div className="p-4 border-t-2 border-gray-300">
-          <Button
-            variant="ghost"
-            className="w-full justify-start rounded-none text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-300"
-            onClick={() => navigate('/')}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            {!collapsed && "로그아웃"}
-          </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start rounded-none text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-300"
+                        onClick={() => {
+                          logout();
+                          navigate('/');
+                        }}
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        {!collapsed && "로그아웃"}
+                      </Button>
         </div>
       </div>
     </div>
