@@ -39,10 +39,23 @@ interface StudentUser {
 }
 
 interface StudentQuestsProps {
-  user: StudentUser;
+  user?: StudentUser;
 }
 
 export function StudentQuests({ user }: StudentQuestsProps) {
+  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
+  const defaultUser: StudentUser = {
+    id: '1',
+    realName: '학생',
+    username: 'student',
+    classCode: 'CLASS001',
+    totalCoral: 50,
+    currentCoral: 50,
+    totalExplorationData: 100,
+    mainFish: '기본 물고기'
+  };
+
+  const currentUser = user || defaultUser;
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
@@ -262,8 +275,8 @@ export function StudentQuests({ user }: StudentQuestsProps) {
   };
 
   const totalEarned = {
-    coral: user.totalCoral - user.currentCoral,
-    explorationData: user.totalExplorationData
+    coral: currentUser.totalCoral - currentUser.currentCoral,
+    explorationData: currentUser.totalExplorationData
   };
 
   return (

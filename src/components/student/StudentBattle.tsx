@@ -28,10 +28,23 @@ interface RaidData {
 }
 
 interface StudentBattleProps {
-  user: StudentUser;
+  user?: StudentUser;
 }
 
 export function StudentBattle({ user }: StudentBattleProps) {
+  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
+  const defaultUser: StudentUser = {
+    id: '1',
+    realName: '학생',
+    username: 'student',
+    classCode: 'CLASS001',
+    totalCoral: 50,
+    currentCoral: 50,
+    totalExplorationData: 100,
+    mainFish: '기본 물고기'
+  };
+
+  const currentUser = user || defaultUser;
   const [isContributeOpen, setIsContributeOpen] = useState(false);
   const [contributeAmount, setContributeAmount] = useState(0);
   const [lastContributeResult, setLastContributeResult] = useState<{
@@ -56,7 +69,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
 
 
   const handleEnergyContribute = () => {
-    if (contributeAmount <= 0 || contributeAmount > user.totalExplorationData) {
+    if (contributeAmount <= 0 || contributeAmount > currentUser.totalExplorationData) {
       alert('올바른 기여량을 입력해주세요.');
       return;
     }
@@ -84,7 +97,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
 
       // 실제로는 API 호출
       console.log('Energy contribution:', {
-        userId: user.id,
+        userId: currentUser.id,
         baseAmount: contributeAmount,
         bonusAmount: bonus,
         totalAmount: total,
@@ -157,7 +170,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
           <div className="grid grid-cols-1 gap-4">
             <div className="text-center p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">보유 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{user.totalExplorationData}</p>
+              <p className="text-xl font-medium text-black">{currentUser.totalExplorationData}</p>
             </div>
           </div>
 
@@ -166,7 +179,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
             <Button
               onClick={() => setIsContributeOpen(true)}
               className="w-full bg-black text-white hover:bg-gray-800 h-12"
-              disabled={user.totalExplorationData <= 0}
+              disabled={currentUser.totalExplorationData <= 0}
             >
               에너지 주입
             </Button>
@@ -355,13 +368,13 @@ export function StudentBattle({ user }: StudentBattleProps) {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-600 mb-2">
-                보유 탐사데이터: {user.totalExplorationData}
+                보유 탐사데이터: {currentUser.totalExplorationData}
               </p>
               <input
                 type="number"
                 value={contributeAmount}
                 onChange={(e) => setContributeAmount(Number(e.target.value))}
-                max={user.totalExplorationData}
+                max={currentUser.totalExplorationData}
                 min={1}
                 className="w-full p-3 border border-gray-300 rounded bg-white text-black"
                 placeholder="기여할 양을 입력하세요"
@@ -394,7 +407,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
               <Button
                 onClick={handleEnergyContribute}
                 className="flex-1 bg-black text-white"
-                disabled={contributeAmount <= 0 || contributeAmount > user.totalExplorationData || isDiceRolling}
+                disabled={contributeAmount <= 0 || contributeAmount > currentUser.totalExplorationData || isDiceRolling}
               >
                 {isDiceRolling ? '주사위 굴리는 중...' : '기여하기'}
               </Button>
