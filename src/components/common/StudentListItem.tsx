@@ -1,3 +1,4 @@
+import React, { useCallback } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
@@ -13,7 +14,7 @@ interface StudentListItemProps {
   className?: string;
 }
 
-export function StudentListItem({ 
+function StudentListItemInner({ 
   id, 
   name, 
   avatar, 
@@ -23,9 +24,9 @@ export function StudentListItem({
   onClick,
   className = ""
 }: StudentListItemProps) {
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     onClick?.({ id, name, avatar, pendingQuests, coral, explorationData });
-  };
+  }, [id, name, avatar, pendingQuests, coral, explorationData, onClick]);
 
   return (
     <Card 
@@ -63,3 +64,4 @@ export function StudentListItem({
     </Card>
   );
 }
+export const StudentListItem = React.memo(StudentListItemInner);

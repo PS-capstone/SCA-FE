@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent } from "../ui/card";
 
 interface ClassCardProps {
@@ -9,7 +10,7 @@ interface ClassCardProps {
   className?: string;
 }
 
-export function ClassCard({ 
+function ClassCardInner({ 
   id, 
   name, 
   studentCount, 
@@ -38,3 +39,5 @@ export function ClassCard({
     </Card>
   );
 }
+
+export const ClassCard = React.memo(ClassCardInner);

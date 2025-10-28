@@ -1,36 +1,36 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 // Components
 import { RoleSelection } from '../components/RoleSelection';
 
 // Student components
-import { StudentAuth } from '../components/student/StudentAuth';
-import { StudentDashboard } from '../components/student/StudentDashboard';
-import { StudentQuests } from '../components/student/StudentQuests';
-import { StudentGacha } from '../components/student/StudentGacha';
-import { StudentCollection } from '../components/student/StudentCollection';
-import { StudentProfile } from '../components/student/StudentProfile';
-import { StudentBattle } from '../components/student/StudentBattle';
+const StudentAuth = lazy(() => import('../components/student/StudentAuth').then(m => ({ default: m.StudentAuth })));
+const StudentDashboard = lazy(() => import('../components/student/StudentDashboard').then(m => ({ default: m.StudentDashboard })));
+const StudentQuests = lazy(() => import('../components/student/StudentQuests').then(m => ({ default: m.StudentQuests })));
+const StudentGacha = lazy(() => import('../components/student/StudentGacha').then(m => ({ default: m.StudentGacha })));
+const StudentCollection = lazy(() => import('../components/student/StudentCollection').then(m => ({ default: m.StudentCollection })));
+const StudentProfile = lazy(() => import('../components/student/StudentProfile').then(m => ({ default: m.StudentProfile })));
+const StudentBattle = lazy(() => import('../components/student/StudentBattle').then(m => ({ default: m.StudentBattle })));
 import { StudentBottomNav } from '../components/student/StudentBottomNav';
 
 // Teacher components
-import { TeacherLoginPageNew } from '../components/teacher/TeacherLoginPageNew';
-import { TeacherSignupPageNew } from '../components/teacher/TeacherSignupPageNew';
-import { TeacherDashboardNew } from '../components/teacher/TeacherDashboardNew';
-import { QuestTypeSelection } from '../components/teacher/QuestTypeSelection';
-import { IndividualQuestCreatePage } from '../components/teacher/IndividualQuestCreatePage';
-import { GroupQuestCreatePage } from '../components/teacher/GroupQuestCreatePage';
-import { GroupQuestManagePage } from '../components/teacher/GroupQuestManagePage';
-import { GroupQuestDetailPage } from '../components/teacher/GroupQuestDetailPage';
-import { QuestApprovalPageNew } from '../components/teacher/QuestApprovalPageNew';
-import { RaidCreatePageNew } from '../components/teacher/RaidCreatePageNew';
-import { RaidManagePage } from '../components/teacher/RaidManagePage';
-import { ClassManagePage } from '../components/teacher/ClassManagePage';
-import { StudentListPage } from '../components/teacher/StudentListPage';
-import { StudentDetailPage } from '../components/teacher/StudentDetailPage';
-import { TeacherProfilePage } from '../components/teacher/TeacherProfilePage';
-import { ClassCreatePage } from '../components/teacher/ClassCreatePage';
+const TeacherLoginPageNew = lazy(() => import('../components/teacher/TeacherLoginPageNew').then(m => ({ default: m.TeacherLoginPageNew })));
+const TeacherSignupPageNew = lazy(() => import('../components/teacher/TeacherSignupPageNew').then(m => ({ default: m.TeacherSignupPageNew })));
+const TeacherDashboardNew = lazy(() => import('../components/teacher/TeacherDashboardNew').then(m => ({ default: m.TeacherDashboardNew })));
+const QuestTypeSelection = lazy(() => import('../components/teacher/QuestTypeSelection').then(m => ({ default: m.QuestTypeSelection })));
+const IndividualQuestCreatePage = lazy(() => import('../components/teacher/IndividualQuestCreatePage').then(m => ({ default: m.IndividualQuestCreatePage })));
+const GroupQuestCreatePage = lazy(() => import('../components/teacher/GroupQuestCreatePage').then(m => ({ default: m.GroupQuestCreatePage })));
+const GroupQuestManagePage = lazy(() => import('../components/teacher/GroupQuestManagePage').then(m => ({ default: m.GroupQuestManagePage })));
+const GroupQuestDetailPage = lazy(() => import('../components/teacher/GroupQuestDetailPage').then(m => ({ default: m.GroupQuestDetailPage })));
+const QuestApprovalPageNew = lazy(() => import('../components/teacher/QuestApprovalPageNew').then(m => ({ default: m.QuestApprovalPageNew })));
+const RaidCreatePageNew = lazy(() => import('../components/teacher/RaidCreatePageNew').then(m => ({ default: m.RaidCreatePageNew })));
+const RaidManagePage = lazy(() => import('../components/teacher/RaidManagePage').then(m => ({ default: m.RaidManagePage })));
+const ClassManagePage = lazy(() => import('../components/teacher/ClassManagePage').then(m => ({ default: m.ClassManagePage })));
+const StudentListPage = lazy(() => import('../components/teacher/StudentListPage').then(m => ({ default: m.StudentListPage })));
+const StudentDetailPage = lazy(() => import('../components/teacher/StudentDetailPage').then(m => ({ default: m.StudentDetailPage })));
+const TeacherProfilePage = lazy(() => import('../components/teacher/TeacherProfilePage').then(m => ({ default: m.TeacherProfilePage })));
+const ClassCreatePage = lazy(() => import('../components/teacher/ClassCreatePage').then(m => ({ default: m.ClassCreatePage })));
 
 // Student Layout Component
 const StudentLayout: React.FC = () => {
@@ -68,6 +68,7 @@ const StudentLayout: React.FC = () => {
 // Main Routes Component
 export const AppRoutes: React.FC = () => {
   return (
+    <Suspense fallback={<div className="p-6">로딩중...</div>}>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<RoleSelection />} />
@@ -116,5 +117,6 @@ export const AppRoutes: React.FC = () => {
       {/* Fallback Route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 };
