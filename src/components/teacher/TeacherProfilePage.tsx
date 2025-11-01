@@ -2,9 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
 import { TeacherSidebar } from "./TeacherSidebar";
-import { Save, User, Mail, Phone, MapPin } from "lucide-react";
+import { Save, User, Mail } from "lucide-react";
 import { useState } from "react";
 
 interface TeacherProfilePageProps {
@@ -17,12 +16,7 @@ export function TeacherProfilePage({ onNavigate, onLogout }: TeacherProfilePageP
   const [profile, setProfile] = useState({
     name: "김선생",
     email: "teacher@sca.com",
-    phone: "010-1234-5678",
-    school: "SCA 수학학원",
-    subject: "수학",
-    experience: "5년",
-    address: "서울시 강남구 테헤란로 123",
-    bio: "열정적인 수학 선생님입니다. 학생들의 성장을 돕는 것이 제 일입니다."
+    password: ""
   });
 
   const handleSave = () => {
@@ -61,25 +55,8 @@ export function TeacherProfilePage({ onNavigate, onLogout }: TeacherProfilePageP
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* 프로필 이미지 */}
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-gray-200 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                  <User className="w-8 h-8 text-gray-600" />
-                </div>
-                <div>
-                  <Button 
-                    variant="outline"
-                    className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-                    disabled={!isEditing}
-                  >
-                    사진 변경
-                  </Button>
-                  <p className="text-sm text-gray-600 mt-1">JPG, PNG 파일만 업로드 가능</p>
-                </div>
-              </div>
-
               {/* 기본 정보 폼 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-black font-medium">이름</Label>
                   <Input
@@ -104,73 +81,17 @@ export function TeacherProfilePage({ onNavigate, onLogout }: TeacherProfilePageP
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-black font-medium">전화번호</Label>
+                  <Label htmlFor="password" className="text-black font-medium">비밀번호</Label>
                   <Input
-                    id="phone"
-                    value={profile.phone}
-                    onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                    id="password"
+                    type="password"
+                    value={profile.password}
+                    onChange={(e) => setProfile({...profile, password: e.target.value})}
                     disabled={!isEditing}
                     className="border-2 border-gray-300 rounded-lg"
+                    placeholder={isEditing ? "비밀번호를 입력하세요" : "••••••••"}
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="school" className="text-black font-medium">소속 학원</Label>
-                  <Input
-                    id="school"
-                    value={profile.school}
-                    onChange={(e) => setProfile({...profile, school: e.target.value})}
-                    disabled={!isEditing}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subject" className="text-black font-medium">담당 과목</Label>
-                  <Input
-                    id="subject"
-                    value={profile.subject}
-                    onChange={(e) => setProfile({...profile, subject: e.target.value})}
-                    disabled={!isEditing}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="experience" className="text-black font-medium">경력</Label>
-                  <Input
-                    id="experience"
-                    value={profile.experience}
-                    onChange={(e) => setProfile({...profile, experience: e.target.value})}
-                    disabled={!isEditing}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* 주소 */}
-              <div className="space-y-2">
-                <Label htmlFor="address" className="text-black font-medium">주소</Label>
-                <Input
-                  id="address"
-                  value={profile.address}
-                  onChange={(e) => setProfile({...profile, address: e.target.value})}
-                  disabled={!isEditing}
-                  className="border-2 border-gray-300 rounded-lg"
-                />
-              </div>
-
-              {/* 자기소개 */}
-              <div className="space-y-2">
-                <Label htmlFor="bio" className="text-black font-medium">자기소개</Label>
-                <Textarea
-                  id="bio"
-                  value={profile.bio}
-                  onChange={(e) => setProfile({...profile, bio: e.target.value})}
-                  disabled={!isEditing}
-                  className="border-2 border-gray-300 rounded-lg min-h-24"
-                  placeholder="자기소개를 입력해주세요"
-                />
               </div>
 
               {/* 액션 버튼들 */}

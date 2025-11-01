@@ -10,7 +10,6 @@ const StudentDashboard = lazy(() => import('../components/student/StudentDashboa
 const StudentQuests = lazy(() => import('../components/student/StudentQuests').then(m => ({ default: m.StudentQuests })));
 const StudentGacha = lazy(() => import('../components/student/StudentGacha').then(m => ({ default: m.StudentGacha })));
 const StudentCollection = lazy(() => import('../components/student/StudentCollection').then(m => ({ default: m.StudentCollection })));
-const StudentProfile = lazy(() => import('../components/student/StudentProfile').then(m => ({ default: m.StudentProfile })));
 const StudentBattle = lazy(() => import('../components/student/StudentBattle').then(m => ({ default: m.StudentBattle })));
 import { StudentBottomNav } from '../components/student/StudentBottomNav';
 
@@ -47,7 +46,6 @@ const StudentLayout: React.FC = () => {
       quests: '/student/quests',
       gacha: '/student/gacha',
       collection: '/student/collection',
-      profile: '/student/profile',
       battle: '/student/battle',
     };
 
@@ -84,7 +82,6 @@ export const AppRoutes: React.FC = () => {
         <Route path="quests" element={<StudentQuests />} />
         <Route path="gacha" element={<StudentGacha />} />
         <Route path="collection" element={<StudentCollection />} />
-        <Route path="profile" element={<StudentProfile />} />
         <Route path="battle" element={<StudentBattle />} />
       </Route>
       

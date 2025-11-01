@@ -229,7 +229,6 @@ export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQu
               <h3 className="font-semibold text-black mb-2">추가 보상 아이템</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>• 탐사데이터: 5-20개</li>
-                <li>• 특별 칭호: 퀘스트 완료 시</li>
                 <li>• 경험치: 레벨업에 도움</li>
               </ul>
             </div>

@@ -213,15 +213,9 @@ export function StudentBattle({ user }: StudentBattleProps) {
           <CardTitle className="text-black text-center">레이드 완료 시 보상</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 border border-gray-200 rounded">
-              <p className="text-sm text-gray-600 mb-1">MVP 칭호</p>
-              <p className="text-lg font-medium text-black">수학의 마스터</p>
-            </div>
-            <div className="text-center p-3 border border-gray-200 rounded">
-              <p className="text-sm text-gray-600 mb-1">특별 보상</p>
-              <p className="text-lg font-medium text-black">아이스크림</p>
-            </div>
+          <div className="text-center p-3 border border-gray-200 rounded">
+            <p className="text-sm text-gray-600 mb-1">특별 보상</p>
+            <p className="text-lg font-medium text-black">아이스크림</p>
           </div>
         </CardContent>
       </Card>
