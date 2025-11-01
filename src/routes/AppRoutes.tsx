@@ -67,12 +67,22 @@ const StudentLayout: React.FC = () => {
 
 // Main Routes Component
 export const AppRoutes: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleRoleSelection = (role: 'student' | 'teacher') => {
+    if (role === 'student') {
+      navigate('/student/auth');
+    } else {
+      navigate('/teacher/login');
+    }
+  };
+
   return (
     <Suspense fallback={<div className="p-6">로딩중...</div>}>
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<RoleSelection />} />
-      <Route path="/role-selection" element={<RoleSelection />} />
+      <Route path="/" element={<RoleSelection onSelectRole={handleRoleSelection} />} />
+      <Route path="/role-selection" element={<RoleSelection onSelectRole={handleRoleSelection} />} />
       
       {/* Student Routes */}
       <Route path="/student/auth" element={<StudentAuth />} />
