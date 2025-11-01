@@ -24,14 +24,9 @@ function StudentListItemInner({
   onClick,
   className = ""
 }: StudentListItemProps) {
-  const handleClick = useCallback(() => {
-    onClick?.({ id, name, avatar, pendingQuests, coral, explorationData });
-  }, [id, name, avatar, pendingQuests, coral, explorationData, onClick]);
-
   return (
     <Card 
-      className={`border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${className}`}
-      onClick={handleClick}
+      className={`border-2 border-gray-300 rounded-lg cursor-default ${className}`}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3 mb-4">

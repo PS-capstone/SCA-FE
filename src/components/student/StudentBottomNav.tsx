@@ -1,9 +1,8 @@
 import React from 'react';
-import { Home, BookOpen, Gamepad2, Book, User, MapPin, Sword, LogOut } from 'lucide-react';
+import { Home, BookOpen, Gamepad2, Book, Sword, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ThemeToggle } from '../common/ThemeToggle';
 
-type StudentScreen = 'dashboard' | 'quest' | 'gacha' | 'collection' | 'profile' | 'battle';
+type StudentScreen = 'dashboard' | 'quest' | 'gacha' | 'collection' | 'battle';
 
 export function StudentBottomNav() {
   const navigate = useNavigate();
@@ -13,7 +12,6 @@ export function StudentBottomNav() {
     { id: 'quest' as StudentScreen, label: '퀘스트', icon: BookOpen, path: '/student/quests' },
     { id: 'gacha' as StudentScreen, label: '가챠', icon: Gamepad2, path: '/student/gacha' },
     { id: 'collection' as StudentScreen, label: '도감', icon: Book, path: '/student/collection' },
-    { id: 'profile' as StudentScreen, label: '내정보', icon: User, path: '/student/profile' },
     { id: 'battle' as StudentScreen, label: '전투', icon: Sword, path: '/student/battle' },
   ];
 
@@ -41,11 +39,6 @@ export function StudentBottomNav() {
               </button>
             );
           })}
-          
-          {/* 테마 토글 버튼 */}
-          <div className="flex flex-col items-center justify-center py-2 px-3">
-            <ThemeToggle />
-          </div>
           
           {/* 로그아웃 버튼 */}
           <button

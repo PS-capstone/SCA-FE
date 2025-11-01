@@ -16,20 +16,11 @@ interface StudentUser {
   mainFish: string;
 }
 
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  earnedDate: string;
-  type: 'contribution' | 'first' | 'last' | 'dice' | 'other';
-}
-
 interface ContributionData {
   totalContribution: number;
   rank: number;
   totalParticipants: number;
   weeklyContribution: number;
-  achievements: Achievement[];
 }
 
 interface StudentProfileProps {
@@ -50,7 +41,6 @@ export function StudentProfile({ user }: StudentProfileProps) {
   };
 
   const currentUser = user || defaultUser;
-  const [showTitleLog, setShowTitleLog] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
   // 예시 데이터
@@ -58,48 +48,10 @@ export function StudentProfile({ user }: StudentProfileProps) {
     totalContribution: 1250,
     rank: 3,
     totalParticipants: 45,
-    weeklyContribution: 280,
-    achievements: [
-      {
-        id: '1',
-        title: '첫 기여자',
-        description: '레이드에 첫 번째로 기여한 사용자',
-        earnedDate: '2024-03-10',
-        type: 'first'
-      },
-      {
-        id: '2',
-        title: '주사위 행운아',
-        description: '주사위에서 6이 나온 사용자',
-        earnedDate: '2024-03-12',
-        type: 'dice'
-      },
-      {
-        id: '3',
-        title: '열심히 공부하는 학생',
-        description: '일주일 동안 매일 퀘스트 완료',
-        earnedDate: '2024-03-15',
-        type: 'other'
-      }
-    ]
+    weeklyContribution: 280
   };
 
   const questCompletionRate = 85; // 85% 완료율
-
-  const getBadgeByType = (type: Achievement['type']) => {
-    switch (type) {
-      case 'contribution':
-        return <Badge className="bg-gray-400">기여도</Badge>;
-      case 'first':
-        return <Badge className="bg-gray-400">선발대</Badge>;
-      case 'last':
-        return <Badge className="bg-gray-400">막차</Badge>;
-      case 'dice':
-        return <Badge className="bg-gray-400">행운</Badge>;
-      default:
-        return <Badge className="bg-gray-400">특별</Badge>;
-    }
-  };
 
   return (
     <div className="p-4 space-y-4 bg-white min-h-screen pb-20">
@@ -117,13 +69,6 @@ export function StudentProfile({ user }: StudentProfileProps) {
               <h2 className="text-xl font-medium text-black">{currentUser.realName}</h2>
               <p className="text-gray-600">@{currentUser.username}</p>
               <p className="text-gray-600">{currentUser.classCode}</p>
-            </div>
-
-            {/* 대표 칭호 */}
-            <div>
-              <Badge className="bg-black text-white">
-                {contributionData.achievements[0]?.title || '새내기 학습자'}
-              </Badge>
             </div>
           </div>
         </CardContent>
@@ -166,33 +111,6 @@ export function StudentProfile({ user }: StudentProfileProps) {
         </CardContent>
       </Card>
 
-      {/* 칭호 로그 */}
-      <Card className="border-2 border-gray-300">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-black">획득한 칭호</CardTitle>
-          <Button
-            onClick={() => setShowTitleLog(true)}
-            className="bg-white text-black border border-gray-300 hover:bg-gray-100"
-            size="sm"
-          >
-            전체 보기
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {contributionData.achievements.slice(0, 3).map((achievement) => (
-              <div key={achievement.id} className="flex items-center justify-between p-2 border border-gray-200 rounded">
-                <div className="flex items-center space-x-2">
-                  {getBadgeByType(achievement.type)}
-                  <span className="text-black">{achievement.title}</span>
-                </div>
-                <span className="text-xs text-gray-500">{achievement.earnedDate}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* 액션 버튼들 */}
       <div className="space-y-3">
         <Button
@@ -203,29 +121,6 @@ export function StudentProfile({ user }: StudentProfileProps) {
         </Button>
         
       </div>
-
-      {/* 칭호 로그 모달 */}
-      <Dialog open={showTitleLog} onOpenChange={setShowTitleLog}>
-        <DialogContent className="bg-white border-2 border-gray-300">
-          <DialogHeader>
-            <DialogTitle className="text-black">획득한 칭호 목록</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {contributionData.achievements.map((achievement) => (
-              <div key={achievement.id} className="p-3 border border-gray-200 rounded">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    {getBadgeByType(achievement.type)}
-                    <span className="font-medium text-black">{achievement.title}</span>
-                  </div>
-                  <span className="text-xs text-gray-500">{achievement.earnedDate}</span>
-                </div>
-                <p className="text-sm text-gray-600">{achievement.description}</p>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* 도감 모달 (간단한 버전) */}
       <Dialog open={showCollection} onOpenChange={setShowCollection}>

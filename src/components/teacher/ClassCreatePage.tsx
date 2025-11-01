@@ -18,10 +18,6 @@ export function ClassCreatePage({ onNavigate, onLogout }: ClassCreatePageProps) 
     grade: "",
     subject: "수학",
     description: "",
-    maxStudents: 20,
-    startDate: "",
-    endDate: "",
-    schedule: "",
     inviteCode: ""
   });
 
@@ -110,54 +106,6 @@ export function ClassCreatePage({ onNavigate, onLogout }: ClassCreatePageProps) 
                     className="border-2 border-gray-300 rounded-lg"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maxStudents" className="text-black font-medium">최대 학생 수</Label>
-                  <Input
-                    id="maxStudents"
-                    type="number"
-                    value={classInfo.maxStudents}
-                    onChange={(e) => setClassInfo({...classInfo, maxStudents: parseInt(e.target.value)})}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* 기간 정보 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="startDate" className="text-black font-medium">시작일</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={classInfo.startDate}
-                    onChange={(e) => setClassInfo({...classInfo, startDate: e.target.value})}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="endDate" className="text-black font-medium">종료일</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={classInfo.endDate}
-                    onChange={(e) => setClassInfo({...classInfo, endDate: e.target.value})}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* 수업 일정 */}
-              <div className="space-y-2">
-                <Label htmlFor="schedule" className="text-black font-medium">수업 일정</Label>
-                <Input
-                  id="schedule"
-                  value={classInfo.schedule}
-                  onChange={(e) => setClassInfo({...classInfo, schedule: e.target.value})}
-                  placeholder="예: 월, 수, 금 오후 3시"
-                  className="border-2 border-gray-300 rounded-lg"
-                />
               </div>
 
               {/* 반 설명 */}

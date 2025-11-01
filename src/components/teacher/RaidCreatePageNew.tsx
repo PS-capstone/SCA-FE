@@ -140,14 +140,6 @@ export function RaidCreatePageNew() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">MVP 칭호</Label>
-                    <Input 
-                      placeholder="예: 레이드 선봉장"
-                      className="border-2 border-gray-300 rounded-lg"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
                     <Label className="text-sm">특별 보상 (선택)</Label>
                     <Input 
                       placeholder="예: 전설 스킨, 아이스크림 파티"

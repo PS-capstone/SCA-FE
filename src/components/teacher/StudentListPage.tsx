@@ -14,6 +14,25 @@ export function StudentListPage() {
   const location = useLocation();
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  
+  const handleNavigate = (page: string) => {
+    const pageMap: Record<string, string> = {
+      'quest-create-new': '/teacher/quest/individual',
+      'class-manage': '/teacher/class',
+      'class-list': '/teacher/students',
+      'quest-approval': '/teacher/quest/approval',
+      'raid-manage': '/teacher/raid/manage',
+      'profile': '/teacher/profile',
+      'dashboard': '/teacher/dashboard',
+    };
+    
+    const targetPath = pageMap[page] || '/teacher/dashboard';
+    navigate(targetPath);
+  };
+  
+  const handleLogout = () => {
+    navigate('/teacher/login');
+  };
   const students = [
     { 
       id: 1, 
@@ -118,9 +137,8 @@ export function StudentListPage() {
     if (student.pendingQuests > 0) {
       setSelectedStudent(student);
       setIsApprovalModalOpen(true);
-    } else {
-      navigate(`/teacher/students/${student.id}`);
     }
+    // 승인 요청이 없는 학생은 클릭해도 아무 일도 일어나지 않음
   };
 
   const handleApproveRequest = (requestId: number) => {
@@ -162,7 +180,6 @@ export function StudentListPage() {
                 pendingQuests={student.pendingQuests}
                 coral={student.coral}
                 explorationData={student.explorationData}
-                onClick={handleStudentClick}
               />
             ))}
           </div>

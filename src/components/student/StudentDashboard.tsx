@@ -61,13 +61,6 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
     }
   ];
 
-  // 대표 칭호 데이터
-  const representativeTitles = [
-    { name: "수학의 달인", rarity: "전설", description: "수학 점수 90점 이상 달성" },
-    { name: "출석왕", rarity: "희귀", description: "한 달 출석률 100%" },
-    { name: "퀘스트 마스터", rarity: "일반", description: "퀘스트 10개 완료" }
-  ];
-
   // 코랄/탐사데이터 로그 데이터
   const activityLogs = [
     { id: 1, type: 'coral', amount: 15, action: '퀘스트 완료', time: '2시간 전', description: '수학 문제집 풀기 완료' },
@@ -225,33 +218,6 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
                 </div>
               ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 대표 칭호 */}
-      <Card className="border-2 border-gray-300">
-        <CardContent className="p-4">
-          <h3 className="font-medium text-black mb-4">대표 칭호</h3>
-          <div className="space-y-3">
-            {representativeTitles.map((title, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border-2 border-gray-300 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-bold">T</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-black">{title.name}</p>
-                    <p className="text-sm text-gray-600">{title.description}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Badge className={title.rarity === '전설' ? 'bg-black text-white border-black' : title.rarity === '희귀' ? 'bg-gray-100 text-black border-gray-300' : 'bg-gray-100 text-black border-gray-300'}>
-                    {title.rarity}
-                  </Badge>
-                </div>
-              </div>
-            ))}
           </div>
         </CardContent>
       </Card>

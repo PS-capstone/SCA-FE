@@ -7,13 +7,30 @@ import { TeacherSidebar } from "./TeacherSidebar";
 import { Progress } from "../ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-interface StudentDetailPageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPageProps) {
+export function StudentDetailPage() {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  
+  const handleNavigate = (page: string) => {
+    // TeacherSidebar의 onNavigate 형식에 맞춰 처리
+    const pageMap: Record<string, string> = {
+      'quest-create-new': '/teacher/quest/individual',
+      'class-manage': '/teacher/class',
+      'class-list': '/teacher/students',
+      'quest-approval': '/teacher/quest/approval',
+      'raid-manage': '/teacher/raid/manage',
+      'profile': '/teacher/profile',
+    };
+    
+    const targetPath = pageMap[page] || '/teacher/dashboard';
+    navigate(targetPath);
+  };
+  
+  const handleLogout = () => {
+    navigate('/teacher/login');
+  };
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState<{[key: number]: string}>({});
 
@@ -86,7 +103,7 @@ export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPagePro
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="class-list" onNavigate={onNavigate} onLogout={onLogout} />
+      <TeacherSidebar currentPage="class-list" onNavigate={handleNavigate} onLogout={handleLogout} />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
@@ -104,7 +121,7 @@ export function StudentDetailPage({ onNavigate, onLogout }: StudentDetailPagePro
             <Button 
               className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               variant="outline"
-              onClick={() => onNavigate('quest-create-new')}
+              onClick={() => handleNavigate('quest-create-new')}
             >
               <Plus className="w-4 h-4 mr-2" />
               퀘스트 등록

@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Home, 
   Plus, 
@@ -19,6 +19,7 @@ interface TeacherSidebarProps {
 export function TeacherSidebar({ currentPage }: TeacherSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
 
   // 홈 페이지에서는 홈만 표시
