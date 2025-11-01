@@ -25,7 +25,6 @@
 - Vite
 - Tailwind CSS
 - Radix UI
-- Supabase
 
 ## 설치 및 실행
 
@@ -48,7 +47,6 @@ src/
 │   ├── student/          # 학생용 컴포넌트
 │   ├── teacher/          # 교사용 컴포넌트
 │   └── ui/               # 공통 UI 컴포넌트
-├── supabase/             # Supabase 설정
 ├── utils/                # 유틸리티 함수
 └── styles/               # 스타일 파일
 ```
