@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { Card, CardContent } from "../ui/card";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
@@ -10,7 +10,6 @@ interface StudentListItemProps {
   pendingQuests: number;
   coral: number;
   explorationData: number;
-  onClick?: (student: any) => void;
   className?: string;
 }
 
@@ -21,17 +20,11 @@ function StudentListItemInner({
   pendingQuests, 
   coral, 
   explorationData, 
-  onClick,
   className = ""
 }: StudentListItemProps) {
-  const handleClick = useCallback(() => {
-    onClick?.({ id, name, avatar, pendingQuests, coral, explorationData });
-  }, [id, name, avatar, pendingQuests, coral, explorationData, onClick]);
-
   return (
     <Card 
-      className={`border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${className}`}
-      onClick={handleClick}
+      className={`border-2 border-gray-300 rounded-lg cursor-default ${className}`}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3 mb-4">

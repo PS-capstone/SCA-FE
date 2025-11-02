@@ -1,7 +1,6 @@
 import React from 'react';
 import { Home, BookOpen, Gamepad2, Book, Sword, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ThemeToggle } from '../common/ThemeToggle';
 
 type StudentScreen = 'dashboard' | 'quest' | 'gacha' | 'collection' | 'battle';
 
@@ -40,11 +39,6 @@ export function StudentBottomNav() {
               </button>
             );
           })}
-          
-          {/* 테마 토글 버튼 */}
-          <div className="flex flex-col items-center justify-center py-2 px-3">
-            <ThemeToggle />
-          </div>
           
           {/* 로그아웃 버튼 */}
           <button
