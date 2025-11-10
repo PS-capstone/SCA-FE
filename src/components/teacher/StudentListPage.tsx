@@ -1,4 +1,4 @@
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { useNavigate } from "react-router-dom";
 import { StudentListItem } from "../common/StudentListItem";
 
@@ -111,7 +111,7 @@ export function StudentListPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="class-list" onNavigate={handleNavigate} onLogout={handleLogout} />
+      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
 import { CheckCircle, X, Image as ImageIcon } from "lucide-react";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
@@ -56,7 +56,7 @@ export function QuestApprovalPageNew({ onNavigate, onLogout }: QuestApprovalPage
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="quest-approval-new" onNavigate={onNavigate} onLogout={onLogout} />
+      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

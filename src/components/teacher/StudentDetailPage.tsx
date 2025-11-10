@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Plus, CheckCircle } from "lucide-react";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { Progress } from "../ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useState, useEffect } from "react";
@@ -103,7 +103,7 @@ export function StudentDetailPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="class-list" onNavigate={handleNavigate} onLogout={handleLogout} />
+      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

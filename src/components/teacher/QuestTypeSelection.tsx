@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { Users, User, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ export function QuestTypeSelection() {
   }, [location.search, navigate]);
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="quest-create-new" />
+      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

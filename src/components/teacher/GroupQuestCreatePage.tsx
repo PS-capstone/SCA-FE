@@ -5,7 +5,7 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Users, Plus, Calendar, Clock, Target } from "lucide-react";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { Switch } from "../ui/switch";
 
 interface GroupQuestCreatePageProps {
@@ -17,6 +17,8 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
   const [questData, setQuestData] = useState({
     title: "",
     description: "",
+    reward_coral: "",
+    reward_research: "",
     reward: "",
     deadline: "",
     category: "출석",
@@ -32,7 +34,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
   // 단체 퀘스트 템플릿
   const templates = [
     { id: "attendance", name: "출석 체크", description: "수업 출석 확인" },
-    { id: "homework", name: "과제 제출", description: "숙제 제출 확인" },
+    { id: "assignment", name: "과제 제출", description: "숙제 제출 확인" },
     { id: "participation", name: "수업 참여", description: "적극적인 수업 참여" },
     { id: "exam", name: "학교 시험 점수", description: "학교 시험 점수 입력" },
     { id: "other", name: "기타", description: "기타 퀘스트" },
@@ -52,20 +54,20 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
       alert("퀘스트 제목을 입력해주세요.");
       return;
     }
-    
+
     if (questData.completionCondition.requiredStudents > questData.completionCondition.totalStudents) {
       alert("필요 완료 학생 수는 전체 학생 수보다 많을 수 없습니다.");
       return;
     }
-    
+
     alert(`단체 퀘스트가 등록되었습니다!\n제목: ${questData.title}\n대상: 반 전체 학생\n완료 조건: ${questData.completionCondition.requiredStudents}/${questData.completionCondition.totalStudents}명`);
     onNavigate('teacher-dashboard');
   };
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="quest-create-new" onNavigate={onNavigate} onLogout={onLogout} />
-      
+      <Sidebar />
+
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
         <div className="border-b-2 border-gray-300 p-6">
@@ -93,11 +95,10 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
                   {templates.map((template) => (
                     <div
                       key={template.id}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                        questData.template === template.name
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${questData.template === template.name
                           ? 'border-green-500 bg-green-50'
                           : 'border-gray-300 hover:border-gray-400'
-                      }`}
+                        }`}
                       onClick={() => handleTemplateSelect(template)}
                     >
                       <h3 className="font-medium text-black">{template.name}</h3>
@@ -122,7 +123,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
                   <Input
                     id="title"
                     value={questData.title}
-                    onChange={(e) => setQuestData({...questData, title: e.target.value})}
+                    onChange={(e) => setQuestData({ ...questData, title: e.target.value })}
                     placeholder="퀘스트 제목을 입력하세요"
                     className="border-2 border-gray-300 rounded-lg"
                   />
@@ -133,7 +134,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
                   <Textarea
                     id="description"
                     value={questData.description}
-                    onChange={(e) => setQuestData({...questData, description: e.target.value})}
+                    onChange={(e) => setQuestData({ ...questData, description: e.target.value })}
                     placeholder="퀘스트에 대한 자세한 설명을 입력하세요"
                     className="border-2 border-gray-300 rounded-lg min-h-20"
                   />
@@ -141,12 +142,32 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="reward" className="text-black font-medium">보상</Label>
+                    <Label htmlFor="reward_coral" className="text-black font-medium">보상: 코랄</Label>
+                    <Input
+                      id="reward_coral"
+                      value={questData.reward_coral}
+                      onChange={(e) => setQuestData({ ...questData, reward_coral: e.target.value })}
+                      placeholder="예: 30"
+                      className="border-2 border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reward_research" className="text-black font-medium">보상: 탐사데이터</Label>
+                    <Input
+                      id="reward_research"
+                      value={questData.reward_research}
+                      onChange={(e) => setQuestData({ ...questData, reward_research: e.target.value })}
+                      placeholder="예: 20"
+                      className="border-2 border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reward" className="text-black font-medium">기타 보상</Label>
                     <Input
                       id="reward"
                       value={questData.reward}
-                      onChange={(e) => setQuestData({...questData, reward: e.target.value})}
-                      placeholder="예: 산호 30개"
+                      onChange={(e) => setQuestData({ ...questData, reward: e.target.value })}
+                      placeholder="예: 쉬는시간 10분"
                       className="border-2 border-gray-300 rounded-lg"
                     />
                   </div>
@@ -157,7 +178,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
                       id="deadline"
                       type="date"
                       value={questData.deadline}
-                      onChange={(e) => setQuestData({...questData, deadline: e.target.value})}
+                      onChange={(e) => setQuestData({ ...questData, deadline: e.target.value })}
                       className="border-2 border-gray-300 rounded-lg"
                     />
                   </div>
@@ -191,7 +212,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
                   <p className="text-sm text-gray-600 mb-3">
                     몇 명의 학생이 완료해야 퀘스트를 완료 처리할지 설정하세요.
                   </p>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="totalStudents" className="text-black font-medium">전체 학생 수</Label>
@@ -246,14 +267,14 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
 
             {/* 액션 버튼들 */}
             <div className="flex gap-3 pt-6 border-t-2 border-gray-300">
-              <Button 
+              <Button
                 onClick={handleSubmit}
                 className="bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 단체 퀘스트 등록
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => onNavigate('quest-create-new')}
                 className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"

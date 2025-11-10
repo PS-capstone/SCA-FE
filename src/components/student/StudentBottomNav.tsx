@@ -12,7 +12,7 @@ export function StudentBottomNav() {
     { id: 'quest' as StudentScreen, label: '퀘스트', icon: BookOpen, path: '/student/quests' },
     { id: 'gacha' as StudentScreen, label: '가챠', icon: Gamepad2, path: '/student/gacha' },
     { id: 'collection' as StudentScreen, label: '도감', icon: Book, path: '/student/collection' },
-    { id: 'battle' as StudentScreen, label: '전투', icon: Sword, path: '/student/battle' },
+    { id: 'battle' as StudentScreen, label: '레이드', icon: Sword, path: '/student/battle' },
   ];
 
 

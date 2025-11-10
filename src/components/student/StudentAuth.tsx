@@ -15,6 +15,7 @@ export function StudentAuth() {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     realName: '',
+    nickname: '',
     username: '',
     password: '',
     classCode: ''
@@ -31,7 +32,7 @@ export function StudentAuth() {
     
     if (isSignUp) {
       // 회원가입 처리
-      if (!formData.realName || !formData.username || !formData.password || !formData.classCode) {
+      if (!formData.realName || !formData.nickname || !formData.username || !formData.password || !formData.classCode) {
         alert('모든 항목을 입력해주세요.');
         return;
       }
@@ -49,6 +50,7 @@ export function StudentAuth() {
       const user: StudentUser = {
         id: Math.random().toString(36).substr(2, 9),
         realName: formData.realName || '학생',
+        nickname: formData.nickname,
         username: formData.username,
         classCode: formData.classCode || 'CLASS001',
         totalCoral: 50,
@@ -68,6 +70,7 @@ export function StudentAuth() {
     const user: StudentUser = {
       id: Math.random().toString(36).substr(2, 9),
       realName: formData.realName,
+      nickname: formData.nickname,
       username: formData.username,
       classCode: formData.classCode,
       totalCoral: 50,
@@ -116,7 +119,17 @@ export function StudentAuth() {
                     required
                   />
                 </div>
-
+                <div>
+                  <label className="block mb-2 text-black">닉네임</label>
+                  <Input
+                    type="text"
+                    value={formData.nickname}
+                    onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                    placeholder="닉네임을 입력하세요"
+                    className="border-gray-300 bg-white text-black"
+                    required
+                  />
+                </div>
                 <div>
                   <label className="block mb-2 text-black">반 코드</label>
                   <Input
