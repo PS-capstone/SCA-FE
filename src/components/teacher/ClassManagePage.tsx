@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Plus, Users, Copy, Sword, Trophy } from "lucide-react";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { Progress } from "../ui/progress";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,7 @@ export function ClassManagePage() {
 
   const classInfo = {
     name: "중등 1반",
-    inviteCode: "MATH2025A",
+    classCode: "MATH2025A",
     studentCount: 15,
     attendance: 92,
     questCompletion: 78,
@@ -34,9 +34,22 @@ export function ClassManagePage() {
     daysLeft: 3,
   };
 
+  const handleCopyCode = () => {
+    if (!classInfo.classCode) return;
+
+    navigator.clipboard.writeText(classInfo.classCode)
+      .then(() => {
+        alert('초대 코드가 복사되었습니다!');
+      })
+      .catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        alert('복사에 실패했습니다.');
+      });
+  };
+
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="class-list" />
+      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
@@ -46,12 +59,13 @@ export function ClassManagePage() {
             <div className="flex items-center gap-2 text-sm">
               <span className="text-gray-600">초대 코드:</span>
               <code className="px-2 py-1 border-2 border-gray-300 bg-gray-100">
-                {classInfo.inviteCode}
+                {classInfo.classCode}
               </code>
               <Button 
                 variant="ghost" 
                 size="sm"
                 className="border border-gray-300 hover:bg-gray-100"
+                onClick={handleCopyCode}
               >
                 <Copy className="w-3 h-3" />
               </Button>

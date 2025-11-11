@@ -4,6 +4,7 @@ import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 export interface StudentUser {
   id: string;
   realName: string;
+  nickname: string;
   username: string;
   classCode: string;
   totalCoral: number;

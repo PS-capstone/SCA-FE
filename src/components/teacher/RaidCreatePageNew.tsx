@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useNavigate } from "react-router-dom";
@@ -17,8 +17,8 @@ export function RaidCreatePageNew() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="raid-create-new" />
-      
+      <Sidebar />
+
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
         <div className="border-b-2 border-gray-300 p-6">
@@ -31,7 +31,7 @@ export function RaidCreatePageNew() {
             {/* Raid Name */}
             <div className="space-y-2">
               <Label>레이드 이름</Label>
-              <Input 
+              <Input
                 placeholder="예: 중간고사 대비"
                 className="border-2 border-gray-300 rounded-lg"
               />
@@ -50,14 +50,14 @@ export function RaidCreatePageNew() {
                           헬릭스 인더스트리 (원양어선)
                         </Label>
                         <p className="text-sm text-gray-600 mt-1">
-                          침묵의 바다를 떠돌며 구시대의 유실 기술을 불법적으로 인양하여 독점하려는 거대 용병 기업. 
+                          침묵의 바다를 떠돌며 구시대의 유실 기술을 불법적으로 인양하여 독점하려는 거대 용병 기업.
                           SCA의 기술 집약체 '코어-피쉬'를 포획하려 한다.
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="border-2 border-gray-300 rounded-lg">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
@@ -67,7 +67,7 @@ export function RaidCreatePageNew() {
                           크라켄 (변종 이상 개체)
                         </Label>
                         <p className="text-sm text-gray-600 mt-1">
-                          Cascade Fail 당시 방출된 불안정한 에너지와 나노머신에 의해 유전 정보가 뒤틀린 해양 생물. 
+                          Cascade Fail 당시 방출된 불안정한 에너지와 나노머신에 의해 유전 정보가 뒤틀린 해양 생물.
                           활성화되는 아쿠아리스 에너지를 파괴하기 위해 거점을 침공한다.
                         </p>
                       </div>
@@ -84,14 +84,14 @@ export function RaidCreatePageNew() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm">시작</Label>
-                  <Input 
+                  <Input
                     type="datetime-local"
                     className="border-2 border-gray-300 rounded-lg"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm">종료</Label>
-                  <Input 
+                  <Input
                     type="datetime-local"
                     className="border-2 border-gray-300 rounded-lg"
                   />
@@ -118,31 +118,21 @@ export function RaidCreatePageNew() {
             <Card className="border-2 border-gray-300 rounded-lg">
               <CardContent className="p-4 space-y-4">
                 <h4>공통 보상</h4>
-                
+
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm">코랄</Label>
-                      <Input 
-                        type="number"
-                        placeholder="100"
-                        className="border-2 border-gray-300 rounded-lg"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm">탐사데이터</Label>
-                      <Input 
-                        type="number"
-                        placeholder="500"
-                        className="border-2 border-gray-300 rounded-lg"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm">코랄</Label>
+                    <Input
+                      type="number"
+                      placeholder="100"
+                      className="border-2 border-gray-300 rounded-lg"
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-sm">특별 보상 (선택)</Label>
-                    <Input 
-                      placeholder="예: 전설 스킨, 아이스크림 파티"
+                    <Input
+                      placeholder="예: 아이스크림 파티"
                       className="border-2 border-gray-300 rounded-lg"
                     />
                   </div>
@@ -152,14 +142,14 @@ export function RaidCreatePageNew() {
 
             {/* Submit */}
             <div className="flex gap-3">
-              <Button 
+              <Button
                 variant="outline"
                 className="flex-1 border-2 border-gray-300 rounded-lg hover:bg-gray-100"
                 onClick={() => navigate('/teacher/dashboard')}
               >
                 취소
               </Button>
-              <Button 
+              <Button
                 className="flex-1 bg-black hover:bg-gray-800 text-white rounded-lg h-12"
               >
                 레이드 등록

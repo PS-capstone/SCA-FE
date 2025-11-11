@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Plus, Settings, Users } from "lucide-react";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Sidebar } from "./Sidebar";
 import { ClassCard } from "../common/ClassCard";
 
 export function TeacherDashboardNew() {
@@ -17,7 +17,7 @@ export function TeacherDashboardNew() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="dashboard" />
+      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
