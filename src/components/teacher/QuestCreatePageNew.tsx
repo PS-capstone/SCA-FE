@@ -9,12 +9,7 @@ import { Sidebar } from "./Sidebar";
 import { Switch } from "../ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
-interface QuestCreatePageNewProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function QuestCreatePageNew({ onNavigate, onLogout }: QuestCreatePageNewProps) {
+export function QuestCreatePageNew() {
   const [groups, setGroups] = useState(["전체", "숙제", "시험"]);
   const [newGroup, setNewGroup] = useState("");
   const [showRewardGuide, setShowRewardGuide] = useState(false);

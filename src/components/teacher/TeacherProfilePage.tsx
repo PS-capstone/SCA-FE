@@ -6,12 +6,7 @@ import { Sidebar } from "./Sidebar";
 import { Save, User, Mail } from "lucide-react";
 import { useState } from "react";
 
-interface TeacherProfilePageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function TeacherProfilePage({ onNavigate, onLogout }: TeacherProfilePageProps) {
+export function TeacherProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
     name: "김선생",

@@ -5,15 +5,12 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Users, Plus, Calendar, Clock, Target } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Switch } from "../ui/switch";
 
-interface GroupQuestCreatePageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreatePageProps) {
+export function GroupQuestCreatePage() {
+  const navigate = useNavigate();
   const [questData, setQuestData] = useState({
     title: "",
     description: "",
@@ -61,7 +58,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
     }
 
     alert(`단체 퀘스트가 등록되었습니다!\n제목: ${questData.title}\n대상: 반 전체 학생\n완료 조건: ${questData.completionCondition.requiredStudents}/${questData.completionCondition.totalStudents}명`);
-    onNavigate('teacher-dashboard');
+    navigate('teacher-dashboard');
   };
 
   return (
@@ -276,7 +273,7 @@ export function GroupQuestCreatePage({ onNavigate, onLogout }: GroupQuestCreateP
               </Button>
               <Button
                 variant="outline"
-                onClick={() => onNavigate('quest-create-new')}
+                onClick={() => navigate('quest-create-new')}
                 className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               >
                 취소

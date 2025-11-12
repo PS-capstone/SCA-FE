@@ -16,6 +16,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
   const defaultUser: StudentUser = {
     id: '1',
     realName: '학생',
+    nickname: '닉네임',
     username: 'student',
     classCode: 'CLASS001',
     totalCoral: 50,

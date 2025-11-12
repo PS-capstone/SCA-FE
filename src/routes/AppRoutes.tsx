@@ -3,9 +3,10 @@ import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react
 
 // Components
 import { RoleSelection } from '../components/RoleSelection';
+const LoginPage = lazy(() => import('../components/common/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import('../components/common/SignupPage').then(m => ({ default: m.SignupPage })));
 
 // Student components
-const StudentAuth = lazy(() => import('../components/student/StudentAuth').then(m => ({ default: m.StudentAuth })));
 const StudentDashboard = lazy(() => import('../components/student/StudentDashboard').then(m => ({ default: m.StudentDashboard })));
 const StudentQuests = lazy(() => import('../components/student/StudentQuests').then(m => ({ default: m.StudentQuests })));
 const StudentGacha = lazy(() => import('../components/student/StudentGacha').then(m => ({ default: m.StudentGacha })));
@@ -14,8 +15,6 @@ const StudentBattle = lazy(() => import('../components/student/StudentBattle').t
 import { StudentBottomNav } from '../components/student/StudentBottomNav';
 
 // Teacher components
-const TeacherLoginPageNew = lazy(() => import('../components/teacher/TeacherLoginPageNew').then(m => ({ default: m.TeacherLoginPageNew })));
-const TeacherSignupPageNew = lazy(() => import('../components/teacher/TeacherSignupPageNew').then(m => ({ default: m.TeacherSignupPageNew })));
 const TeacherDashboardNew = lazy(() => import('../components/teacher/TeacherDashboardNew').then(m => ({ default: m.TeacherDashboardNew })));
 const QuestTypeSelection = lazy(() => import('../components/teacher/QuestTypeSelection').then(m => ({ default: m.QuestTypeSelection })));
 const IndividualQuestCreatePage = lazy(() => import('../components/teacher/IndividualQuestCreatePage').then(m => ({ default: m.IndividualQuestCreatePage })));
@@ -71,9 +70,8 @@ export const AppRoutes: React.FC = () => {
       {/* Public Routes */}
       <Route path="/" element={<RoleSelection />} />
       <Route path="/role-selection" element={<RoleSelection />} />
-      
-      {/* Student Routes */}
-      <Route path="/student/auth" element={<StudentAuth />} />
+      <Route path="/login/:role" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       
       {/* Student Protected Routes */}
       <Route path="/student" element={<StudentLayout />}>
@@ -86,8 +84,6 @@ export const AppRoutes: React.FC = () => {
       </Route>
       
       {/* Teacher Routes */}
-      <Route path="/teacher/login" element={<TeacherLoginPageNew />} />
-      <Route path="/teacher/signup" element={<TeacherSignupPageNew />} />
       <Route path="/teacher/dashboard" element={<TeacherDashboardNew />} />
       
       {/* Teacher Quest Routes */}
