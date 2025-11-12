@@ -6,20 +6,23 @@ export interface StudentUser {
   realName: string;
   nickname: string;
   username: string;
+  email: string;
   classCode: string;
-  totalCoral: number;
   currentCoral: number;
-  totalExplorationData: number;
+  currentExplorationData: number;
   mainFish: string;
 }
 
 export interface TeacherUser {
   id: string;
   realName: string;
+  nickname: string;
   username: string;
   email: string;
   classes: string[];
 }
+
+export type User = StudentUser | TeacherUser;
 
 export interface Theme {
   mode: 'light' | 'dark';
@@ -37,17 +40,17 @@ export interface Notification {
 // State Interface
 export interface AppState {
   // Authentication
-  user: StudentUser | TeacherUser | null;
+  user: User | null;
   isAuthenticated: boolean;
   userType: 'student' | 'teacher' | null;
-  
+
   // Theme
   theme: Theme;
-  
+
   // UI State
   loading: boolean;
   notifications: Notification[];
-  
+
   // Data
   quests: any[];
   raids: any[];
@@ -55,7 +58,7 @@ export interface AppState {
 
 // Action Types
 export type AppAction =
-  | { type: 'SET_USER'; payload: { user: StudentUser | TeacherUser; userType: 'student' | 'teacher' } }
+  | { type: 'SET_USER'; payload: { user: User; userType: 'student' | 'teacher' } }
   | { type: 'CLEAR_USER' }
   | { type: 'SET_THEME'; payload: Partial<Theme> }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -64,11 +67,15 @@ export type AppAction =
   | { type: 'SET_QUESTS'; payload: any[] }
   | { type: 'SET_RAIDS'; payload: any[] };
 
+// [이유] 새로고침 시에도 로그인 상태 유지
+const storedUser = localStorage.getItem('user');
+const storedUserType = localStorage.getItem('userType');
+
 // Initial State
 const initialState: AppState = {
-  user: null,
-  isAuthenticated: false,
-  userType: null,
+  user: storedUser ? JSON.parse(storedUser) : null,
+  isAuthenticated: !!storedUser,
+  userType: storedUserType as 'student' | 'teacher' | null,
   theme: {
     mode: 'light',
     language: 'ko'
@@ -83,33 +90,37 @@ const initialState: AppState = {
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_USER':
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.setItem('userType', action.payload.userType);
       return {
         ...state,
         user: action.payload.user,
         isAuthenticated: true,
         userType: action.payload.userType
       };
-    
+
     case 'CLEAR_USER':
+      localStorage.removeItem('user');
+      localStorage.removeItem('userType');
       return {
         ...state,
         user: null,
         isAuthenticated: false,
         userType: null
       };
-    
+
     case 'SET_THEME':
       return {
         ...state,
         theme: { ...state.theme, ...action.payload }
       };
-    
+
     case 'SET_LOADING':
       return {
         ...state,
         loading: action.payload
       };
-    
+
     case 'ADD_NOTIFICATION':
       const notification: Notification = {
         ...action.payload,
@@ -120,25 +131,25 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         notifications: [...state.notifications, notification]
       };
-    
+
     case 'REMOVE_NOTIFICATION':
       return {
         ...state,
         notifications: state.notifications.filter(n => n.id !== action.payload)
       };
-    
+
     case 'SET_QUESTS':
       return {
         ...state,
         quests: action.payload
       };
-    
+
     case 'SET_RAIDS':
       return {
         ...state,
         raids: action.payload
       };
-    
+
     default:
       return state;
   }
@@ -172,15 +183,15 @@ export function useApp() {
 
 export function useAuth() {
   const { state, dispatch } = useApp();
-  
-  const login = (user: StudentUser | TeacherUser, userType: 'student' | 'teacher') => {
-    dispatch({ type: 'SET_USER', payload: { user, userType } });
+
+  const login = (user: any, userType: 'student' | 'teacher') => {
+    dispatch({ type: 'SET_USER', payload: { user: user as User, userType } });
   };
-  
+
   const logout = () => {
     dispatch({ type: 'CLEAR_USER' });
   };
-  
+
   return {
     user: state.user,
     isAuthenticated: state.isAuthenticated,
@@ -192,11 +203,11 @@ export function useAuth() {
 
 export function useTheme() {
   const { state, dispatch } = useApp();
-  
+
   const setTheme = (theme: Partial<Theme>) => {
     dispatch({ type: 'SET_THEME', payload: theme });
   };
-  
+
   return {
     theme: state.theme,
     setTheme
@@ -205,15 +216,15 @@ export function useTheme() {
 
 export function useNotifications() {
   const { state, dispatch } = useApp();
-  
+
   const addNotification = (notification: Omit<Notification, 'id' | 'timestamp'>) => {
     dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
   };
-  
+
   const removeNotification = (id: string) => {
     dispatch({ type: 'REMOVE_NOTIFICATION', payload: id });
   };
-  
+
   return {
     notifications: state.notifications,
     addNotification,
@@ -223,11 +234,11 @@ export function useNotifications() {
 
 export function useQuests() {
   const { state, dispatch } = useApp();
-  
+
   const setQuests = (quests: any[]) => {
     dispatch({ type: 'SET_QUESTS', payload: quests });
   };
-  
+
   return {
     quests: state.quests,
     setQuests
@@ -236,11 +247,11 @@ export function useQuests() {
 
 export function useRaids() {
   const { state, dispatch } = useApp();
-  
+
   const setRaids = (raids: any[]) => {
     dispatch({ type: 'SET_RAIDS', payload: raids });
   };
-  
+
   return {
     raids: state.raids,
     setRaids
