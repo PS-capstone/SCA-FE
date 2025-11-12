@@ -6,6 +6,7 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useAuth, TeacherUser, StudentUser } from "../../contexts/AppContext";
+import { post } from "../../utils/api";
 
 type FormErrors = {
   username: string | null;
@@ -44,41 +45,10 @@ export function LoginPage() {
   // 역할에 따라 제목과 로그인 로직을 분기
   const title = role === 'teacher' ? '선생님 로그인' : '학생 로그인';
 
-  const handleLogin = () => {
-    // 역할(role)에 따라 다른 로그인 로직과 임시 데이터를 사용
-    if (role === 'teacher') {
-      const teacherUser: TeacherUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        realName: '선생님',
-        nickname: 'nickname',
-        username: formData.username,
-        email: 'teacher@example.com',
-        classes: ['CLASS001', 'CLASS002']
-      };
-      login(teacherUser, 'teacher');
-      navigate('/teacher/dashboard');
-    } else if (role === 'student') {
-      const studentUser: StudentUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        realName: '학생',
-        nickname: 'nickname',
-        username: formData.username,
-        email: 'student@example.com',
-        classCode: 'CLASS001',
-        currentCoral: 50,
-        currentExplorationData: 100,
-        mainFish: '기본 물고기'
-      };
-      login(studentUser, 'student');
-      navigate('/student/dashboard');
-    } else {
-      alert("잘못된 접근입니다.");
-      navigate('/'); // 역할이 없으면 홈으로
-    }
-  };
 
   //백엔드 api 호출용
-/*   const handleLogin = async () => {
+  const handleLogin = async () => {
+
     if (role !== 'teacher' && role !== 'student') {
       alert("잘못된 접근입니다.");
       navigate('/');
@@ -89,17 +59,12 @@ export function LoginPage() {
     setFormErrors({ username: null, password: null, formGeneral: null });
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          role: role
-        }),
-      });
+      const response = await post('/api/v1/auth/login', {
+        username: formData.username,
+        password: formData.password,
+        role: role
+      }, { skipAuth: true });
+
 
       if (!response.ok) {
         const status = response.status;
@@ -117,9 +82,10 @@ export function LoginPage() {
         return;
       }
 
-      const data = await response.json();
+      const {data} = await response.json();
 
-      login(data.user, role as 'teacher' | 'student');
+
+      login(data.username, role as 'teacher' | 'student', data.access_token, data.refresh_token);
 
       if (role === 'teacher') {
         navigate('/teacher/dashboard');
@@ -128,12 +94,14 @@ export function LoginPage() {
       }
 
     } catch (error) {
+      console.error('Login error:', error);
       const message = (error instanceof Error) ? error.message : "알 수 없는 에러가 발생했습니다.";
       setFormErrors(prev => ({ ...prev, formGeneral: `네트워크 오류: ${message}` }));
     } finally {
+      console.log('Login finished');
       setIsLoading(false);
     }
-  }; */
+  };
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
