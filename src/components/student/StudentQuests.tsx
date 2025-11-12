@@ -6,6 +6,7 @@ import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
+import { useAuth, StudentUser } from "../../contexts/AppContext";
 
 interface Quest {
   id: string;
@@ -15,7 +16,7 @@ interface Quest {
   dueDate: string;
   rewards: {
     coral: number;
-    explorationData: number;
+    researchData: number;
   };
   progress?: number;
   teacherComment?: string;
@@ -27,35 +28,8 @@ interface Quest {
   };
 }
 
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
-
-interface StudentQuestsProps {
-  user?: StudentUser;
-}
-
-export function StudentQuests({ user }: StudentQuestsProps) {
-  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
-  const defaultUser: StudentUser = {
-    id: '1',
-    realName: '학생',
-    username: 'student',
-    classCode: 'CLASS001',
-    totalCoral: 50,
-    currentCoral: 50,
-    totalExplorationData: 100,
-    mainFish: '기본 물고기'
-  };
-
-  const currentUser = user || defaultUser;
+export function StudentQuests() {
+  const { user, isAuthenticated, userType } = useAuth();
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
@@ -64,7 +38,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
   const [isCompletedModalOpen, setIsCompletedModalOpen] = useState(false);
   const [submitText, setSubmitText] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  
+
   const allQuests: Quest[] = [
     {
       id: '1',
@@ -72,7 +46,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '수학 연산 속도를 높이기 위해 RPM 100문제를 풀어보세요.',
       status: 'in_progress',
       dueDate: '2025-06-15T23:59:59',
-      rewards: { coral: 2, explorationData: 50 },
+      rewards: { coral: 2, researchData: 50 },
       progress: 65,
       template: {
         workbookName: 'RPM 100',
@@ -86,7 +60,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '이번 주 영단어 50개를 외우고 테스트를 통과하세요.',
       status: 'in_progress',
       dueDate: '2025-06-20T23:59:59',
-      rewards: { coral: 3, explorationData: 40 },
+      rewards: { coral: 3, researchData: 40 },
       template: {
         workbookName: '영단어 프린트',
         problemCount: 50,
@@ -99,7 +73,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '지난 시간에 진행한 실험 결과를 정리하여 보고서를 작성하세요.',
       status: 'submitted',
       dueDate: '2025-06-18T23:59:59',
-      rewards: { coral: 5, explorationData: 80 },
+      rewards: { coral: 5, researchData: 80 },
       submittedAt: '2024-03-17T14:30:00'
     },
     {
@@ -108,7 +82,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '수학 모의고사에서 80점 이상을 받으세요.',
       status: 'completed',
       dueDate: '2024-03-15T23:59:59',
-      rewards: { coral: 5, explorationData: 100 },
+      rewards: { coral: 5, researchData: 100 },
       submittedAt: '2024-03-15T16:20:00',
       teacherComment: '85점으로 목표를 달성했네요! 기하 부분에서 실수가 있었지만 대수 부분은 완벽하게 풀었습니다. 다음에는 더 신중하게 풀어보세요. 수고했어요!'
     },
@@ -118,7 +92,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '국어 독해 문제를 풀고 정답률을 확인하세요.',
       status: 'in_progress',
       dueDate: '2025-06-25T23:59:59',
-      rewards: { coral: 3, explorationData: 60 }
+      rewards: { coral: 3, researchData: 60 }
     },
     {
       id: '6',
@@ -126,7 +100,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '사회 시간에 배운 내용을 정리하여 과제를 제출하세요.',
       status: 'in_progress',
       dueDate: '2025-06-22T23:59:59',
-      rewards: { coral: 4, explorationData: 70 }
+      rewards: { coral: 4, researchData: 70 }
     },
     {
       id: '7',
@@ -134,7 +108,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '물리 실험 결과를 분석하고 보고서를 작성하세요.',
       status: 'in_progress',
       dueDate: '2025-06-28T23:59:59',
-      rewards: { coral: 6, explorationData: 90 }
+      rewards: { coral: 6, researchData: 90 }
     },
     {
       id: '8',
@@ -142,7 +116,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '주제에 대한 영어 에세이를 500단어 이상 작성하세요.',
       status: 'in_progress',
       dueDate: '2025-06-30T23:59:59',
-      rewards: { coral: 4, explorationData: 75 }
+      rewards: { coral: 4, researchData: 75 }
     },
     {
       id: '9',
@@ -150,7 +124,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '화학 문제집 3장을 완료하고 정답을 확인하세요.',
       status: 'in_progress',
       dueDate: '2025-07-01T23:59:59',
-      rewards: { coral: 3, explorationData: 55 }
+      rewards: { coral: 3, researchData: 55 }
     },
     {
       id: '10',
@@ -158,7 +132,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       description: '한국사 주제로 발표 자료를 준비하고 발표하세요.',
       status: 'in_progress',
       dueDate: '2025-07-05T23:59:59',
-      rewards: { coral: 5, explorationData: 85 }
+      rewards: { coral: 5, researchData: 85 }
     }
   ];
 
@@ -183,10 +157,10 @@ export function StudentQuests({ user }: StudentQuestsProps) {
     const now = new Date();
     const due = new Date(dueDate);
     const diff = due.getTime() - now.getTime();
-    
+
     // 승인대기중인 퀘스트는 시간 표시 안함
     if (status === 'submitted') return '';
-    
+
     // 마감일자 표시 (YYYY-MM-DD 형식)
     return due.toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -259,14 +233,14 @@ export function StudentQuests({ user }: StudentQuestsProps) {
       alert('제출 내용을 입력해주세요.');
       return;
     }
-    
+
     // 실제로는 API 호출로 제출 (파일 포함)
     const submitData = {
       questId: selectedQuest?.id,
       content: submitText,
       files: attachedFiles
     };
-    
+
     console.log('Quest submitted:', submitData);
     alert('퀘스트가 제출되었습니다!');
     setIsSubmitOpen(false);
@@ -274,9 +248,20 @@ export function StudentQuests({ user }: StudentQuestsProps) {
     setAttachedFiles([]);
   };
 
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-6">로딩중...</div>;
+  }
+
+  if (userType !== 'student') {
+    return <div className="p-6">학생 전용 대시보드입니다.</div>;
+  }
+
+  const currentUser = user as StudentUser;
+
   const totalEarned = {
-    coral: currentUser.totalCoral - currentUser.currentCoral,
-    explorationData: currentUser.totalExplorationData
+    coral: currentUser.currentCoral - currentUser.currentCoral,
+    researchData: currentUser.currentResearchData
   };
 
   return (
@@ -292,12 +277,12 @@ export function StudentQuests({ user }: StudentQuestsProps) {
           <Card key={quest.id} className="border-2 border-gray-300">
             <CardContent className="p-4">
               <div className="flex items-start space-x-3">
-                <Checkbox 
+                <Checkbox
                   checked={quest.status === 'completed'}
                   disabled={quest.status !== 'in_progress'}
                   className="mt-1"
                 />
-                
+
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -314,17 +299,16 @@ export function StudentQuests({ user }: StudentQuestsProps) {
                         )}
                       </div>
                     </div>
-                    
+
                     <Button
                       onClick={() => handleQuestAction(quest)}
                       disabled={isButtonDisabled(quest.status)}
-                      className={`px-3 py-1 text-sm ${
-                        isButtonDisabled(quest.status)
+                      className={`px-3 py-1 text-sm ${isButtonDisabled(quest.status)
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : quest.status === 'completed'
-                          ? 'bg-gray-800 text-white hover:bg-gray-900'
-                          : 'bg-gray-600 text-white hover:bg-gray-700'
-                      }`}
+                            ? 'bg-gray-800 text-white hover:bg-gray-900'
+                            : 'bg-gray-600 text-white hover:bg-gray-700'
+                        }`}
                       size="sm"
                     >
                       {getButtonText(quest.status)}
@@ -333,9 +317,9 @@ export function StudentQuests({ user }: StudentQuestsProps) {
 
                   <div className="flex items-center space-x-4 text-sm">
                     <span className="text-black">코랄 {quest.rewards.coral}</span>
-                    <span className="text-black">탐사데이터 {quest.rewards.explorationData}</span>
+                    <span className="text-black">탐사데이터 {quest.rewards.researchData}</span>
                   </div>
-                  
+
                   {quest.template && (
                     <div className="text-xs text-gray-500">
                       <span className="font-medium">{quest.template.workbookName}</span>
@@ -380,7 +364,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
             </div>
             <div className="p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">획득한 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{totalEarned.explorationData}</p>
+              <p className="text-xl font-medium text-black">{totalEarned.researchData}</p>
             </div>
           </div>
         </CardContent>
@@ -397,12 +381,12 @@ export function StudentQuests({ user }: StudentQuestsProps) {
             <div className="flex justify-between">
               <span className="text-gray-600">보상:</span>
               <span className="text-black">
-                코랄 {selectedQuest?.rewards.coral}, 탐사데이터 {selectedQuest?.rewards.explorationData}
+                코랄 {selectedQuest?.rewards.coral}, 탐사데이터 {selectedQuest?.rewards.researchData}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">마감:</span>
-              <span className="text-black">{selectedQuest && formatTimeLeft(selectedQuest.dueDate)}</span>
+              <span className="text-black">{selectedQuest && formatTimeLeft(selectedQuest.dueDate, selectedQuest.status)}</span>
             </div>
           </div>
         </DialogContent>
@@ -430,7 +414,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
                             </span>
                           </div>
                         </div>
-                        
+
                         <Button
                           onClick={() => {
                             setSelectedQuest(quest);
@@ -445,7 +429,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
 
                       <div className="flex items-center space-x-4 text-sm">
                         <span className="text-black">코랄 {quest.rewards.coral}</span>
-                        <span className="text-black">탐사데이터 {quest.rewards.explorationData}</span>
+                        <span className="text-black">탐사데이터 {quest.rewards.researchData}</span>
                       </div>
                     </div>
                   </div>
@@ -454,7 +438,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
             ))}
           </div>
           <div className="flex justify-center mt-4">
-            <Button 
+            <Button
               onClick={() => setIsCompletedModalOpen(false)}
               className="bg-black text-white hover:bg-gray-800"
             >
@@ -479,7 +463,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
             ))}
           </div>
           <div className="flex justify-center mt-4">
-            <Button 
+            <Button
               onClick={() => setIsExpiredModalOpen(false)}
               className="bg-black text-white hover:bg-gray-800"
             >
@@ -500,14 +484,14 @@ export function StudentQuests({ user }: StudentQuestsProps) {
               <h3 className="text-lg font-semibold text-black mb-2">{selectedQuest?.title}</h3>
               <p className="text-sm text-gray-600">제출일: {selectedQuest?.submittedAt ? new Date(selectedQuest.submittedAt).toLocaleString() : ''}</p>
             </div>
-            
+
             <div className="border-2 border-gray-300 p-4 bg-gray-50 rounded-lg">
               <h4 className="text-sm font-medium text-gray-600 mb-2">선생님 피드백</h4>
               <p className="text-black leading-relaxed">{selectedQuest?.teacherComment}</p>
             </div>
-            
+
             <div className="flex justify-center">
-              <Button 
+              <Button
                 onClick={() => setIsCommentOpen(false)}
                 className="bg-black text-white hover:bg-gray-800"
               >
@@ -533,7 +517,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
               className="border-gray-300 bg-white text-black"
               rows={4}
             />
-            
+
             {/* 첨부파일 섹션 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -553,7 +537,7 @@ export function StudentQuests({ user }: StudentQuestsProps) {
                   파일 추가
                 </Button>
               </div>
-              
+
               {/* 첨부된 파일 목록 */}
               {attachedFiles.length > 0 && (
                 <div className="space-y-2">
@@ -580,15 +564,15 @@ export function StudentQuests({ user }: StudentQuestsProps) {
                 </div>
               )}
             </div>
-            
+
             <div className="flex space-x-2">
-              <Button 
+              <Button
                 onClick={handleSubmit}
                 className="flex-1 bg-black text-white"
               >
                 제출하기
               </Button>
-              <Button 
+              <Button
                 onClick={() => {
                   setIsSubmitOpen(false);
                   setSubmitText('');

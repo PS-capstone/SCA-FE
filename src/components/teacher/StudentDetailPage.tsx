@@ -38,7 +38,7 @@ export function StudentDetailPage() {
     name: "김학생",
     avatar: "김",
     coral: 45,
-    explorationData: 320,
+    researchData: 320,
     questCompletion: 82,
   };
 
@@ -90,14 +90,14 @@ export function StudentDetailPage() {
       title: "독서록 작성하기", 
       submittedAt: "2025.10.04 14:30",
       coral: 4,
-      explorationData: 80
+      researchData: 80
     },
     { 
       id: 2, 
       title: "5일 연속 출석", 
       submittedAt: "2025.10.04 10:00",
       coral: 3,
-      explorationData: 50
+      researchData: 50
     },
   ];
 
@@ -142,7 +142,7 @@ export function StudentDetailPage() {
                 </div>
                 <div className="text-center border-2 border-gray-300 p-3">
                   <p className="text-sm text-gray-600 mb-1">탐사데이터</p>
-                  <h3>{student.explorationData}</h3>
+                  <h3>{student.researchData}</h3>
                 </div>
                 <div className="text-center border-2 border-gray-300 p-3">
                   <p className="text-sm text-gray-600 mb-1">퀘스트 달성률</p>
@@ -182,7 +182,7 @@ export function StudentDetailPage() {
                       <div className="flex gap-2 text-sm border-t-2 border-gray-300 pt-2">
                         <span className="text-gray-600">보상:</span>
                         <span>코랄 {quest.coral}</span>
-                        <span>탐사데이터 {quest.explorationData}</span>
+                        <span>탐사데이터 {quest.researchData}</span>
                       </div>
                     </CardContent>
                   </Card>

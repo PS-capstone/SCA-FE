@@ -1,5 +1,6 @@
 import React, { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Sidebar } from '../components/teacher/Sidebar';
 
 // Components
 import { RoleSelection } from '../components/RoleSelection';
@@ -11,7 +12,7 @@ const StudentDashboard = lazy(() => import('../components/student/StudentDashboa
 const StudentQuests = lazy(() => import('../components/student/StudentQuests').then(m => ({ default: m.StudentQuests })));
 const StudentGacha = lazy(() => import('../components/student/StudentGacha').then(m => ({ default: m.StudentGacha })));
 const StudentCollection = lazy(() => import('../components/student/StudentCollection').then(m => ({ default: m.StudentCollection })));
-const StudentBattle = lazy(() => import('../components/student/StudentBattle').then(m => ({ default: m.StudentBattle })));
+const StudentRaid = lazy(() => import('../components/student/StudentRaid').then(m => ({ default: m.StudentRaid })));
 import { StudentBottomNav } from '../components/student/StudentBottomNav';
 
 // Teacher components
@@ -45,7 +46,7 @@ const StudentLayout: React.FC = () => {
       quests: '/student/quests',
       gacha: '/student/gacha',
       collection: '/student/collection',
-      battle: '/student/battle',
+      raid: '/student/raid',
     };
 
     const target = tabToPath[tab];
@@ -62,54 +63,68 @@ const StudentLayout: React.FC = () => {
   );
 };
 
+// Teacher Layout Component
+const TeacherLayout: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-white flex">
+      <main className="flex-1 ml-64 overflow-y-auto">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
 // Main Routes Component
 export const AppRoutes: React.FC = () => {
   return (
     <Suspense fallback={<div className="p-6">로딩중...</div>}>
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<RoleSelection />} />
-      <Route path="/role-selection" element={<RoleSelection />} />
-      <Route path="/login/:role" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      
-      {/* Student Protected Routes */}
-      <Route path="/student" element={<StudentLayout />}>
-        <Route index element={<Navigate to="/student/dashboard" replace />} />
-        <Route path="dashboard" element={<StudentDashboard />} />
-        <Route path="quests" element={<StudentQuests />} />
-        <Route path="gacha" element={<StudentGacha />} />
-        <Route path="collection" element={<StudentCollection />} />
-        <Route path="battle" element={<StudentBattle />} />
-      </Route>
-      
-      {/* Teacher Routes */}
-      <Route path="/teacher/dashboard" element={<TeacherDashboardNew />} />
-      
-      {/* Teacher Quest Routes */}
-      <Route path="/teacher/quest" element={<QuestTypeSelection />} />
-      <Route path="/teacher/quest/individual" element={<IndividualQuestCreatePage />} />
-      <Route path="/teacher/quest/group" element={<GroupQuestCreatePage />} />
-      <Route path="/teacher/quest/group/manage" element={<GroupQuestManagePage />} />
-      <Route path="/teacher/quest/group/detail/:id" element={<GroupQuestDetailPage />} />
-      <Route path="/teacher/quest/approval" element={<QuestApprovalPageNew />} />
-      
-      {/* Teacher Raid Routes */}
-      <Route path="/teacher/raid/create" element={<RaidCreatePageNew />} />
-      <Route path="/teacher/raid/manage" element={<RaidManagePage />} />
-      
-      {/* Teacher Class Routes */}
-      <Route path="/teacher/class" element={<ClassManagePage />} />
-      <Route path="/teacher/class/create" element={<ClassCreatePage />} />
-      <Route path="/teacher/students" element={<StudentListPage />} />
-      <Route path="/teacher/students/:id" element={<StudentDetailPage />} />
-      
-      {/* Teacher Profile */}
-      <Route path="/teacher/profile" element={<TeacherProfilePage />} />
-      
-      {/* Fallback Route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<RoleSelection />} />
+        <Route path="/role-selection" element={<RoleSelection />} />
+        <Route path="/login/:role" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+
+        {/* Student Routes */}
+        <Route path="/student" element={<StudentLayout />}>
+          <Route index element={<Navigate to="/student/dashboard" replace />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="quests" element={<StudentQuests />} />
+          <Route path="gacha" element={<StudentGacha />} />
+          <Route path="collection" element={<StudentCollection />} />
+          <Route path="raid" element={<StudentRaid />} />
+        </Route>
+
+        {/* Teacher Routes */}
+        <Route path="/teacher" element={<TeacherLayout />}>
+          <Route index element={<Navigate to="/teacher/dashboard" replace />} />
+          <Route path="dashboard" element={<TeacherDashboardNew />} />
+
+          {/* Teacher Quest Routes */}
+          <Route path="quest" element={<QuestTypeSelection />} />
+          <Route path="quest/individual" element={<IndividualQuestCreatePage />} />
+          <Route path="quest/group" element={<GroupQuestCreatePage />} />
+          <Route path="quest/group/manage" element={<GroupQuestManagePage />} />
+          <Route path="quest/group/detail/:id" element={<GroupQuestDetailPage />} />
+          <Route path="quest/approval" element={<QuestApprovalPageNew />} />
+
+          {/* Teacher Raid Routes */}
+          <Route path="raid/create" element={<RaidCreatePageNew />} />
+          <Route path="raid/manage" element={<RaidManagePage />} />
+
+          {/* Teacher Class Routes */}
+          <Route path="class" element={<ClassManagePage />} />
+          <Route path="class/create" element={<ClassCreatePage />} />
+          <Route path="students" element={<StudentListPage />} />
+          <Route path="students/:id" element={<StudentDetailPage />} />
+
+          {/* Teacher Profile */}
+          <Route path="profile" element={<TeacherProfilePage />} />
+        </Route>
+
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Suspense>
   );
 };

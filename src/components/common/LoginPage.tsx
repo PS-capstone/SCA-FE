@@ -66,7 +66,7 @@ export function LoginPage() {
         email: 'student@example.com',
         classCode: 'CLASS001',
         currentCoral: 50,
-        currentExplorationData: 100,
+        currentResearchData: 100,
         mainFish: '기본 물고기'
       };
       login(studentUser, 'student');

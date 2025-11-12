@@ -4,17 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
+import { useAuth, StudentUser } from "../../contexts/AppContext";
 
 interface Achievement {
   id: string;
@@ -32,24 +22,9 @@ interface ContributionData {
   achievements: Achievement[];
 }
 
-interface StudentProfileProps {
-  user?: StudentUser;
-}
+export function StudentProfile() {
+  const { user, isAuthenticated, userType } = useAuth();
 
-export function StudentProfile({ user }: StudentProfileProps) {
-  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
-  const defaultUser: StudentUser = {
-    id: '1',
-    realName: '학생',
-    username: 'student',
-    classCode: 'CLASS001',
-    totalCoral: 50,
-    currentCoral: 50,
-    totalExplorationData: 100,
-    mainFish: '기본 물고기'
-  };
-
-  const currentUser = user || defaultUser;
   const [showTitleLog, setShowTitleLog] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
@@ -100,6 +75,17 @@ export function StudentProfile({ user }: StudentProfileProps) {
         return <Badge className="bg-gray-400">특별</Badge>;
     }
   };
+  
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-6">로딩중...</div>;
+  }
+
+  if (userType !== 'student') {
+    return <div className="p-6">학생 전용 대시보드입니다.</div>;
+  }
+
+  const currentUser = user as StudentUser;
 
   return (
     <div className="p-4 space-y-4 bg-white min-h-screen pb-20">
@@ -111,7 +97,7 @@ export function StudentProfile({ user }: StudentProfileProps) {
             <div className="w-24 h-24 bg-gray-400 rounded-full mx-auto flex items-center justify-center">
               <span className="text-white">물고기</span>
             </div>
-            
+
             {/* 사용자 정보 */}
             <div>
               <h2 className="text-xl font-medium text-black">{currentUser.realName}</h2>
@@ -155,7 +141,7 @@ export function StudentProfile({ user }: StudentProfileProps) {
               </p>
             </div>
           </div>
-          
+
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-600">이번 주 기여도</span>
@@ -201,7 +187,7 @@ export function StudentProfile({ user }: StudentProfileProps) {
         >
           도감 보기
         </Button>
-        
+
       </div>
 
       {/* 칭호 로그 모달 */}

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { useAuth, StudentUser } from "../../contexts/AppContext";
 
 interface Fish {
   id: string;
@@ -11,35 +12,9 @@ interface Fish {
   image: string;
 }
 
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
+export function StudentGacha() {
+  const { user, isAuthenticated, userType } = useAuth();
 
-interface StudentGachaProps {
-  user?: StudentUser;
-}
-
-export function StudentGacha({ user }: StudentGachaProps) {
-  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
-  const defaultUser: StudentUser = {
-    id: '1',
-    realName: '학생',
-    username: 'student',
-    classCode: 'CLASS001',
-    totalCoral: 50,
-    currentCoral: 50,
-    totalExplorationData: 100,
-    mainFish: '기본 물고기'
-  };
-
-  const currentUser = user || defaultUser;
   const [isResultOpen, setIsResultOpen] = useState(false);
   const [isProbabilityOpen, setIsProbabilityOpen] = useState(false);
   const [resultFish, setResultFish] = useState<Fish | null>(null);
@@ -53,14 +28,14 @@ export function StudentGacha({ user }: StudentGachaProps) {
     { id: '3', name: '빨강 물고기', rarity: 'common', image: 'fish3' },
     { id: '4', name: '노랑 물고기', rarity: 'common', image: 'fish4' },
     { id: '5', name: '초록 물고기', rarity: 'common', image: 'fish5' },
-    
+
     // Rare (30%)
     { id: '6', name: '무지개 물고기', rarity: 'rare', image: 'fish6' },
     { id: '7', name: '별빛 물고기', rarity: 'rare', image: 'fish7' },
     { id: '8', name: '황금 물고기', rarity: 'rare', image: 'fish8' },
     { id: '9', name: '크리스탈 물고기', rarity: 'rare', image: 'fish9' },
     { id: '10', name: '다이아 물고기', rarity: 'rare', image: 'fish10' },
-    
+
     // Legend (10%)
     { id: '11', name: '전설의 드래곤 피쉬', rarity: 'legend', image: 'fish11' },
     { id: '12', name: '고대의 바다왕', rarity: 'legend', image: 'fish12' },
@@ -75,6 +50,17 @@ export function StudentGacha({ user }: StudentGachaProps) {
     { rarity: 'legend', name: '레전드', rate: '10%', color: 'bg-black' },
   ];
 
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-4">로그인 정보 로딩 중...</div>;
+  }
+
+  if (userType !== 'student') {
+    return <div className="p-6">학생 전용 페이지입니다.</div>;
+  }
+
+  const currentUser = user as StudentUser;
+
   const drawGacha = () => {
     if (currentUser.currentCoral < gachaCost) {
       alert('코랄이 부족합니다!');
@@ -84,7 +70,7 @@ export function StudentGacha({ user }: StudentGachaProps) {
     // 가챠 뽑기 로직
     const random = Math.random() * 100;
     let selectedRarity: Fish['rarity'];
-    
+
     if (random < 10) {
       selectedRarity = 'legend';
     } else if (random < 40) {
@@ -95,10 +81,10 @@ export function StudentGacha({ user }: StudentGachaProps) {
 
     const fishOfRarity = fishDatabase.filter(fish => fish.rarity === selectedRarity);
     const randomFish = fishOfRarity[Math.floor(Math.random() * fishOfRarity.length)];
-    
+
     setResultFish(randomFish);
     setIsResultOpen(true);
-    
+
     // 실제로는 API 호출하여 코랄 차감 및 물고기 추가
     console.log('Gacha result:', randomFish);
   };
@@ -174,13 +160,12 @@ export function StudentGacha({ user }: StudentGachaProps) {
           </DialogHeader>
           <div className="text-center space-y-4">
             {/* 물고기 이미지 */}
-            <div className={`w-32 h-32 rounded mx-auto flex items-center justify-center ${
-              resultFish?.rarity === 'legend' ? 'bg-gray-800' :
+            <div className={`w-32 h-32 rounded mx-auto flex items-center justify-center ${resultFish?.rarity === 'legend' ? 'bg-gray-800' :
               resultFish?.rarity === 'rare' ? 'bg-gray-600' : 'bg-gray-400'
-            }`}>
+              }`}>
               <span className="text-white">물고기</span>
             </div>
-            
+
             {/* 물고기 정보 */}
             <div>
               <h3 className="text-lg font-medium text-black">{resultFish?.name}</h3>
@@ -195,7 +180,7 @@ export function StudentGacha({ user }: StudentGachaProps) {
               <p className="text-sm text-gray-600">⭐ 희귀한 물고기를 획득했습니다!</p>
             )}
 
-            <Button 
+            <Button
               onClick={() => setIsResultOpen(false)}
               className="w-full bg-black text-white"
             >
@@ -215,7 +200,7 @@ export function StudentGacha({ user }: StudentGachaProps) {
             <div className="text-center mb-4">
               <p className="text-sm text-gray-600">가챠에서 획득할 수 있는 물고기의 확률입니다</p>
             </div>
-            
+
             <div className="space-y-3">
               {probabilityTable.map((item) => (
                 <div key={item.rarity} className="flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
@@ -229,17 +214,16 @@ export function StudentGacha({ user }: StudentGachaProps) {
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="text-sm font-medium text-blue-800 mb-2">💡 가챠 팁</h4>
               <p className="text-xs text-blue-600">
-                • 코랄 10개로 가챠 1회 뽑기 가능<br/>
-                • 레전드 등급은 10% 확률로 매우 희귀합니다<br/>
-                • 매일 로그인하면 보너스 코랄을 받을 수 있어요!
+                • 코랄 10개로 가챠 1회 뽑기 가능<br />
+                • 레전드 등급은 10% 확률로 매우 희귀합니다<br />
               </p>
             </div>
 
-            <Button 
+            <Button
               onClick={() => setIsProbabilityOpen(false)}
               className="w-full bg-gray-600 text-white hover:bg-gray-700"
             >
