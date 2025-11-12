@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { useAuth, StudentUser } from "../../contexts/AppContext";
 
 interface Fish {
   id: string;
@@ -14,36 +15,8 @@ interface Fish {
   isOwned: boolean;
 }
 
-
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
-
-interface StudentCollectionProps {
-  user?: StudentUser;
-}
-
-export function StudentCollection({ user }: StudentCollectionProps) {
-  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
-  const defaultUser: StudentUser = {
-    id: '1',
-    realName: '학생',
-    username: 'student',
-    classCode: 'CLASS001',
-    totalCoral: 50,
-    currentCoral: 50,
-    totalExplorationData: 100,
-    mainFish: '기본 물고기'
-  };
-
-  const currentUser = user || defaultUser;
+export function StudentCollection() {
+  const { user, isAuthenticated, userType } = useAuth();
   const [selectedFish, setSelectedFish] = useState<Fish | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
@@ -56,7 +29,7 @@ export function StudentCollection({ user }: StudentCollectionProps) {
     { id: '2', name: '파랑 물고기', rarity: 'common', image: 'fish2', count: 2, isOwned: true },
     { id: '6', name: '무지개 물고기', rarity: 'rare', image: 'fish6', count: 1, isOwned: true },
     { id: '11', name: '전설의 드래곤 피쉬', rarity: 'legend', image: 'fish11', count: 1, isOwned: true },
-    
+
     // 미소유 물고기들 (도감에만 표시)
     { id: '3', name: '빨강 물고기', rarity: 'common', image: 'fish3', count: 0, isOwned: false },
     { id: '4', name: '노랑 물고기', rarity: 'common', image: 'fish4', count: 0, isOwned: false },
@@ -71,6 +44,17 @@ export function StudentCollection({ user }: StudentCollectionProps) {
   const totalOwnedCount = ownedFish.reduce((sum, fish) => sum + fish.count, 0);
   const maxCapacity = 20; // 최대 수용 가능 물고기 수
 
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-4">로그인 정보 로딩 중...</div>;
+  }
+
+  if (userType !== 'student') {
+    return <div className="p-6">학생 전용 페이지입니다.</div>;
+  }
+
+  const currentUser = user as StudentUser;
+
   const getRarityBadge = (rarity: Fish['rarity']) => {
     switch (rarity) {
       case 'common':
@@ -82,7 +66,6 @@ export function StudentCollection({ user }: StudentCollectionProps) {
     }
   };
 
-
   const handleFishClick = (fish: Fish) => {
     setSelectedFish(fish);
     setIsDetailOpen(true);
@@ -90,7 +73,7 @@ export function StudentCollection({ user }: StudentCollectionProps) {
 
   const handleDeleteFish = () => {
     if (!selectedFish) return;
-    
+
     // 실제로는 API 호출
     console.log('Deleting fish:', selectedFish.id);
     alert('물고기가 삭제되었습니다.');
@@ -124,7 +107,7 @@ export function StudentCollection({ user }: StudentCollectionProps) {
         <Card className="border-2 border-gray-400">
           <CardContent className="p-4">
             <p className="text-center text-black">
-              {isFullCapacity 
+              {isFullCapacity
                 ? '⚠️ 수족관이 가득 찼습니다! 일부 물고기를 삭제해주세요.'
                 : '⚠️ 수족관 용량이 부족합니다. 곧 정리가 필요합니다.'
               }
@@ -137,7 +120,7 @@ export function StudentCollection({ user }: StudentCollectionProps) {
       )}
 
       {/* 보기 모드 선택 */}
-      <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as any)}>
+      <Tabs value={currentView} onValueChange={(value: string) => setCurrentView(value as 'aquarium' | 'book')}>
         <TabsList className="grid w-full grid-cols-2 bg-gray-100">
           <TabsTrigger value="aquarium" className="text-black">수족관</TabsTrigger>
           <TabsTrigger value="book" className="text-black">도감</TabsTrigger>
@@ -158,11 +141,10 @@ export function StudentCollection({ user }: StudentCollectionProps) {
                       <div
                         key={`${fish.id}-${index}`}
                         onClick={() => handleFishClick(fish)}
-                        className={`w-12 h-12 rounded flex items-center justify-center cursor-pointer border ${
-                          fish.rarity === 'legend' ? 'bg-gray-800 border-gray-700' :
+                        className={`w-12 h-12 rounded flex items-center justify-center cursor-pointer border ${fish.rarity === 'legend' ? 'bg-gray-800 border-gray-700' :
                           fish.rarity === 'rare' ? 'bg-gray-600 border-gray-500' :
-                          'bg-gray-400 border-gray-300'
-                        }`}
+                            'bg-gray-400 border-gray-300'
+                          }`}
                       >
                         <span className="text-white text-xs">물고기</span>
                       </div>
@@ -178,25 +160,23 @@ export function StudentCollection({ user }: StudentCollectionProps) {
         <TabsContent value="book" className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             {fishCollection.map((fish) => (
-              <Card 
-                key={fish.id} 
-                className={`border-2 cursor-pointer ${
-                  fish.isOwned ? 'border-gray-300' : 'border-gray-200'
-                }`}
+              <Card
+                key={fish.id}
+                className={`border-2 cursor-pointer ${fish.isOwned ? 'border-gray-300' : 'border-gray-200'
+                  }`}
                 onClick={() => fish.isOwned && handleFishClick(fish)}
               >
                 <CardContent className="p-3">
-                  <div className={`w-full h-20 rounded mb-2 flex items-center justify-center ${
-                    fish.isOwned 
-                      ? fish.rarity === 'legend' ? 'bg-gray-800' :
-                        fish.rarity === 'rare' ? 'bg-gray-600' : 'bg-gray-400'
-                      : 'bg-gray-200'
-                  }`}>
+                  <div className={`w-full h-20 rounded mb-2 flex items-center justify-center ${fish.isOwned
+                    ? fish.rarity === 'legend' ? 'bg-gray-800' :
+                      fish.rarity === 'rare' ? 'bg-gray-600' : 'bg-gray-400'
+                    : 'bg-gray-200'
+                    }`}>
                     <span className={fish.isOwned ? 'text-white' : 'text-gray-400'}>
                       {fish.isOwned ? '물고기' : '???'}
                     </span>
                   </div>
-                  
+
                   <div className="text-center space-y-1">
                     <p className={`font-medium ${fish.isOwned ? 'text-black' : 'text-gray-400'}`}>
                       {fish.isOwned ? fish.name : '???'}
@@ -224,13 +204,12 @@ export function StudentCollection({ user }: StudentCollectionProps) {
           </DialogHeader>
           <div className="space-y-4">
             {/* 물고기 이미지 */}
-            <div className={`w-32 h-32 rounded mx-auto flex items-center justify-center ${
-              selectedFish?.rarity === 'legend' ? 'bg-gray-800' :
+            <div className={`w-32 h-32 rounded mx-auto flex items-center justify-center ${selectedFish?.rarity === 'legend' ? 'bg-gray-800' :
               selectedFish?.rarity === 'rare' ? 'bg-gray-600' : 'bg-gray-400'
-            }`}>
+              }`}>
               <span className="text-white">물고기</span>
             </div>
-            
+
             {/* 물고기 정보 */}
             <div className="text-center space-y-2">
               {selectedFish && getRarityBadge(selectedFish.rarity)}
@@ -240,14 +219,14 @@ export function StudentCollection({ user }: StudentCollectionProps) {
             {/* 액션 버튼 */}
             <div className="flex space-x-2">
               {selectedFish && selectedFish.count > 1 && (
-                <Button 
+                <Button
                   onClick={() => setIsDeleteWarningOpen(true)}
                   className="flex-1 bg-gray-600 text-white hover:bg-gray-700"
                 >
                   삭제
                 </Button>
               )}
-              <Button 
+              <Button
                 onClick={() => setIsDetailOpen(false)}
                 className="flex-1 bg-white text-black border border-gray-300"
               >
@@ -269,13 +248,13 @@ export function StudentCollection({ user }: StudentCollectionProps) {
               {selectedFish?.name} 1마리를 삭제하시겠습니까?
             </p>
             <div className="flex space-x-2">
-              <Button 
+              <Button
                 onClick={handleDeleteFish}
                 className="flex-1 bg-gray-600 text-white"
               >
                 삭제
               </Button>
-              <Button 
+              <Button
                 onClick={() => setIsDeleteWarningOpen(false)}
                 className="flex-1 bg-white text-black border border-gray-300"
               >

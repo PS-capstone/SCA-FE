@@ -3,7 +3,7 @@ import { Home, BookOpen, Gamepad2, Book, Sword, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AppContext';
 
-type StudentScreen = 'dashboard' | 'quest' | 'gacha' | 'collection' | 'battle';
+type StudentScreen = 'dashboard' | 'quest' | 'gacha' | 'collection' | 'raid';
 
 export function StudentBottomNav() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function StudentBottomNav() {
     { id: 'quest' as StudentScreen, label: '퀘스트', icon: BookOpen, path: '/student/quests' },
     { id: 'gacha' as StudentScreen, label: '가챠', icon: Gamepad2, path: '/student/gacha' },
     { id: 'collection' as StudentScreen, label: '도감', icon: Book, path: '/student/collection' },
-    { id: 'battle' as StudentScreen, label: '레이드', icon: Sword, path: '/student/battle' },
+    { id: 'raid' as StudentScreen, label: '레이드', icon: Sword, path: '/student/raid' },
   ];
 
 
