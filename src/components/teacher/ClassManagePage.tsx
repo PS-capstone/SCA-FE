@@ -15,7 +15,7 @@ export function ClassManagePage() {
 
   const classInfo = {
     name: "중등 1반",
-    classCode: "MATH2025A",
+    invite_code: "MATH2025A",
     studentCount: 15,
     attendance: 92,
     questCompletion: 78,
@@ -35,9 +35,9 @@ export function ClassManagePage() {
   };
 
   const handleCopyCode = () => {
-    if (!classInfo.classCode) return;
+    if (!classInfo.invite_code) return;
 
-    navigator.clipboard.writeText(classInfo.classCode)
+    navigator.clipboard.writeText(classInfo.invite_code)
       .then(() => {
         alert('초대 코드가 복사되었습니다!');
       })
@@ -59,7 +59,7 @@ export function ClassManagePage() {
             <div className="flex items-center gap-2 text-sm">
               <span className="text-gray-600">초대 코드:</span>
               <code className="px-2 py-1 border-2 border-gray-300 bg-gray-100">
-                {classInfo.classCode}
+                {classInfo.invite_code}
               </code>
               <Button 
                 variant="ghost" 

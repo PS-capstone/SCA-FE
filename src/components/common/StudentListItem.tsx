@@ -9,7 +9,7 @@ interface StudentListItemProps {
   avatar: string;
   pendingQuests: number;
   coral: number;
-  researchData: number;
+  research_data: number;
   className?: string;
 }
 
@@ -19,7 +19,7 @@ function StudentListItemInner({
   avatar, 
   pendingQuests, 
   coral, 
-  researchData, 
+  research_data, 
   className = ""
 }: StudentListItemProps) {
   return (
@@ -50,7 +50,7 @@ function StudentListItemInner({
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">탐사데이터</span>
-            <span>{researchData}</span>
+            <span>{research_data}</span>
           </div>
         </div>
       </CardContent>

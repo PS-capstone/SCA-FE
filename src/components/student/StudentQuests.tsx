@@ -16,7 +16,7 @@ interface Quest {
   dueDate: string;
   rewards: {
     coral: number;
-    researchData: number;
+    research_data: number;
   };
   progress?: number;
   teacherComment?: string;
@@ -46,7 +46,7 @@ export function StudentQuests() {
       description: '수학 연산 속도를 높이기 위해 RPM 100문제를 풀어보세요.',
       status: 'in_progress',
       dueDate: '2025-06-15T23:59:59',
-      rewards: { coral: 2, researchData: 50 },
+      rewards: { coral: 2, research_data: 50 },
       progress: 65,
       template: {
         workbookName: 'RPM 100',
@@ -60,7 +60,7 @@ export function StudentQuests() {
       description: '이번 주 영단어 50개를 외우고 테스트를 통과하세요.',
       status: 'in_progress',
       dueDate: '2025-06-20T23:59:59',
-      rewards: { coral: 3, researchData: 40 },
+      rewards: { coral: 3, research_data: 40 },
       template: {
         workbookName: '영단어 프린트',
         problemCount: 50,
@@ -73,7 +73,7 @@ export function StudentQuests() {
       description: '지난 시간에 진행한 실험 결과를 정리하여 보고서를 작성하세요.',
       status: 'submitted',
       dueDate: '2025-06-18T23:59:59',
-      rewards: { coral: 5, researchData: 80 },
+      rewards: { coral: 5, research_data: 80 },
       submittedAt: '2024-03-17T14:30:00'
     },
     {
@@ -82,7 +82,7 @@ export function StudentQuests() {
       description: '수학 모의고사에서 80점 이상을 받으세요.',
       status: 'completed',
       dueDate: '2024-03-15T23:59:59',
-      rewards: { coral: 5, researchData: 100 },
+      rewards: { coral: 5, research_data: 100 },
       submittedAt: '2024-03-15T16:20:00',
       teacherComment: '85점으로 목표를 달성했네요! 기하 부분에서 실수가 있었지만 대수 부분은 완벽하게 풀었습니다. 다음에는 더 신중하게 풀어보세요. 수고했어요!'
     },
@@ -92,7 +92,7 @@ export function StudentQuests() {
       description: '국어 독해 문제를 풀고 정답률을 확인하세요.',
       status: 'in_progress',
       dueDate: '2025-06-25T23:59:59',
-      rewards: { coral: 3, researchData: 60 }
+      rewards: { coral: 3, research_data: 60 }
     },
     {
       id: '6',
@@ -100,7 +100,7 @@ export function StudentQuests() {
       description: '사회 시간에 배운 내용을 정리하여 과제를 제출하세요.',
       status: 'in_progress',
       dueDate: '2025-06-22T23:59:59',
-      rewards: { coral: 4, researchData: 70 }
+      rewards: { coral: 4, research_data: 70 }
     },
     {
       id: '7',
@@ -108,7 +108,7 @@ export function StudentQuests() {
       description: '물리 실험 결과를 분석하고 보고서를 작성하세요.',
       status: 'in_progress',
       dueDate: '2025-06-28T23:59:59',
-      rewards: { coral: 6, researchData: 90 }
+      rewards: { coral: 6, research_data: 90 }
     },
     {
       id: '8',
@@ -116,7 +116,7 @@ export function StudentQuests() {
       description: '주제에 대한 영어 에세이를 500단어 이상 작성하세요.',
       status: 'in_progress',
       dueDate: '2025-06-30T23:59:59',
-      rewards: { coral: 4, researchData: 75 }
+      rewards: { coral: 4, research_data: 75 }
     },
     {
       id: '9',
@@ -124,7 +124,7 @@ export function StudentQuests() {
       description: '화학 문제집 3장을 완료하고 정답을 확인하세요.',
       status: 'in_progress',
       dueDate: '2025-07-01T23:59:59',
-      rewards: { coral: 3, researchData: 55 }
+      rewards: { coral: 3, research_data: 55 }
     },
     {
       id: '10',
@@ -132,7 +132,7 @@ export function StudentQuests() {
       description: '한국사 주제로 발표 자료를 준비하고 발표하세요.',
       status: 'in_progress',
       dueDate: '2025-07-05T23:59:59',
-      rewards: { coral: 5, researchData: 85 }
+      rewards: { coral: 5, research_data: 85 }
     }
   ];
 
@@ -260,8 +260,8 @@ export function StudentQuests() {
   const currentUser = user as StudentUser;
 
   const totalEarned = {
-    coral: currentUser.currentCoral - currentUser.currentCoral,
-    researchData: currentUser.currentResearchData
+    coral: currentUser.coral - currentUser.coral,
+    research_data: currentUser.research_data
   };
 
   return (
@@ -317,7 +317,7 @@ export function StudentQuests() {
 
                   <div className="flex items-center space-x-4 text-sm">
                     <span className="text-black">코랄 {quest.rewards.coral}</span>
-                    <span className="text-black">탐사데이터 {quest.rewards.researchData}</span>
+                    <span className="text-black">탐사데이터 {quest.rewards.research_data}</span>
                   </div>
 
                   {quest.template && (
@@ -364,7 +364,7 @@ export function StudentQuests() {
             </div>
             <div className="p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">획득한 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{totalEarned.researchData}</p>
+              <p className="text-xl font-medium text-black">{totalEarned.research_data}</p>
             </div>
           </div>
         </CardContent>
@@ -381,7 +381,7 @@ export function StudentQuests() {
             <div className="flex justify-between">
               <span className="text-gray-600">보상:</span>
               <span className="text-black">
-                코랄 {selectedQuest?.rewards.coral}, 탐사데이터 {selectedQuest?.rewards.researchData}
+                코랄 {selectedQuest?.rewards.coral}, 탐사데이터 {selectedQuest?.rewards.research_data}
               </span>
             </div>
             <div className="flex justify-between">
@@ -429,7 +429,7 @@ export function StudentQuests() {
 
                       <div className="flex items-center space-x-4 text-sm">
                         <span className="text-black">코랄 {quest.rewards.coral}</span>
-                        <span className="text-black">탐사데이터 {quest.rewards.researchData}</span>
+                        <span className="text-black">탐사데이터 {quest.rewards.research_data}</span>
                       </div>
                     </div>
                   </div>

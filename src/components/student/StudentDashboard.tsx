@@ -177,11 +177,11 @@ export function StudentDashboard() {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="text-center p-3 border-2 border-gray-300 rounded">
               <p className="text-sm text-gray-600">코랄</p>
-              <p className="text-xl font-medium text-black">{currentUser.currentCoral}</p>
+              <p className="text-xl font-medium text-black">{currentUser.coral}</p>
             </div>
             <div className="text-center p-3 border-2 border-gray-300 rounded">
               <p className="text-sm text-gray-600">탐사데이터</p>
-              <p className="text-xl font-medium text-black">{currentUser.currentResearchData}</p>
+              <p className="text-xl font-medium text-black">{currentUser.research_data}</p>
             </div>
           </div>
 

@@ -47,7 +47,7 @@ export function QuestDetailPage({ quest, onBack }: QuestDetailPageProps) {
   const currentUser = user as StudentUser;
 
   // 본인 확인 여부 (실제로는 사용자 데이터에서 가져와야 함)
-  const myStatus = completedStudents.find(student => student.name === currentUser.realName) ? '완료' : '미완료';
+  const myStatus = completedStudents.find(student => student.name === currentUser.real_name) ? '완료' : '미완료';
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen pb-20">
@@ -95,8 +95,8 @@ export function QuestDetailPage({ quest, onBack }: QuestDetailPageProps) {
                 <span className="text-xs font-bold">M</span>
               </div>
               <div>
-                <p className="font-medium text-black">{currentUser.realName}</p>
-                <p className="text-sm text-gray-600">@{currentUser.realName}</p>
+                <p className="font-medium text-black">{currentUser.real_name}</p>
+                <p className="text-sm text-gray-600">@{currentUser.real_name}</p>
               </div>
             </div>
             <Badge className={myStatus === '완료' ? 'bg-black text-white border-black' : 'bg-gray-100 text-black border-gray-300'}>

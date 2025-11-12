@@ -22,7 +22,7 @@ export function QuestApprovalPageNew() {
       group: "숙제",
       deadline: "2025.10.05 23:59",
       coral: 2,
-      researchData: 50,
+      research_data: 50,
       hasAttachment: true,
       submittedAt: "2025.10.04 14:30",
       studentComment: "RPM 100문제를 모두 풀었습니다. 처음에는 어려웠지만 차근차근 풀어가니 실력이 늘어나는 것 같습니다. 특히 곱셈과 나눗셈 부분에서 많이 향상되었어요!"
@@ -35,7 +35,7 @@ export function QuestApprovalPageNew() {
       group: "시험",
       deadline: "2025.10.10 00:00",
       coral: 5,
-      researchData: 100,
+      research_data: 100,
       hasAttachment: false,
       submittedAt: "2025.10.04 13:15",
       studentComment: "모의고사에서 85점을 받았습니다. 기하 부분에서 실수가 있었지만 대수 부분은 잘 풀었습니다. 다음에는 더 신중하게 풀어보겠습니다."
@@ -109,7 +109,7 @@ export function QuestApprovalPageNew() {
                     <div className="flex items-center gap-3 text-sm">
                       <span className="text-gray-600">보상:</span>
                       <span>코랄 {quest.coral}</span>
-                      <span>탐사데이터 {quest.researchData}</span>
+                      <span>탐사데이터 {quest.research_data}</span>
                     </div>
                     <div className="flex gap-2">
                       <Button

@@ -52,7 +52,7 @@ export function StudentRaid() {
 
   const currentUser = user as StudentUser;
   const handleEnergyContribute = () => {
-    if (contributeAmount <= 0 || contributeAmount > currentUser.currentResearchData) {
+    if (contributeAmount <= 0 || contributeAmount > currentUser.research_data) {
       alert('올바른 기여량을 입력해주세요.');
       return;
     }
@@ -153,7 +153,7 @@ export function StudentRaid() {
           <div className="grid grid-cols-1 gap-4">
             <div className="text-center p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">보유 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{currentUser.currentResearchData}</p>
+              <p className="text-xl font-medium text-black">{currentUser.research_data}</p>
             </div>
           </div>
 
@@ -162,7 +162,7 @@ export function StudentRaid() {
             <Button
               onClick={() => setIsContributeOpen(true)}
               className="w-full bg-black text-white hover:bg-gray-800 h-12"
-              disabled={currentUser.currentResearchData <= 0}
+              disabled={currentUser.research_data <= 0}
             >
               에너지 주입
             </Button>
@@ -345,13 +345,13 @@ export function StudentRaid() {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-600 mb-2">
-                보유 탐사데이터: {currentUser.currentResearchData}
+                보유 탐사데이터: {currentUser.research_data}
               </p>
               <input
                 type="number"
                 value={contributeAmount}
                 onChange={(e) => setContributeAmount(Number(e.target.value))}
-                max={currentUser.currentResearchData}
+                max={currentUser.research_data}
                 min={1}
                 className="w-full p-3 border border-gray-300 rounded bg-white text-black"
                 placeholder="기여할 양을 입력하세요"
@@ -384,7 +384,7 @@ export function StudentRaid() {
               <Button
                 onClick={handleEnergyContribute}
                 className="flex-1 bg-black text-white"
-                disabled={contributeAmount <= 0 || contributeAmount > currentUser.currentResearchData || isDiceRolling}
+                disabled={contributeAmount <= 0 || contributeAmount > currentUser.research_data || isDiceRolling}
               >
                 {isDiceRolling ? '주사위 굴리는 중...' : '기여하기'}
               </Button>

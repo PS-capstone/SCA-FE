@@ -100,9 +100,9 @@ export function StudentProfile() {
 
             {/* 사용자 정보 */}
             <div>
-              <h2 className="text-xl font-medium text-black">{currentUser.realName}</h2>
+              <h2 className="text-xl font-medium text-black">{currentUser.real_name}</h2>
               <p className="text-gray-600">@{currentUser.username}</p>
-              <p className="text-gray-600">{currentUser.classCode}</p>
+              <p className="text-gray-600">{currentUser.invite_code}</p>
             </div>
 
             {/* 대표 칭호 */}

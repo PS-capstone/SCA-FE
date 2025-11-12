@@ -62,7 +62,7 @@ export function StudentGacha() {
   const currentUser = user as StudentUser;
 
   const drawGacha = () => {
-    if (currentUser.currentCoral < gachaCost) {
+    if (currentUser.coral < gachaCost) {
       alert('코랄이 부족합니다!');
       return;
     }
@@ -122,7 +122,7 @@ export function StudentGacha() {
           {/* 현재 코랄 */}
           <div className="text-center mb-4">
             <p className="text-sm text-gray-600">보유 코랄</p>
-            <p className="text-2xl font-medium text-black">{currentUser.currentCoral}</p>
+            <p className="text-2xl font-medium text-black">{currentUser.coral}</p>
           </div>
 
           {/* 필요 코랄 */}
@@ -134,10 +134,10 @@ export function StudentGacha() {
           {/* 가챠 버튼 */}
           <Button
             onClick={drawGacha}
-            disabled={currentUser.currentCoral < gachaCost}
+            disabled={currentUser.coral < gachaCost}
             className="w-full bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500"
           >
-            {currentUser.currentCoral < gachaCost ? '코랄 부족' : '가챠 뽑기'}
+            {currentUser.coral < gachaCost ? '코랄 부족' : '가챠 뽑기'}
           </Button>
         </CardContent>
       </Card>
