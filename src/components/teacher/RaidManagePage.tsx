@@ -13,15 +13,12 @@ import {
   Trophy,
   X
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Progress } from "../ui/progress";
 import { useState } from "react";
 
-interface RaidManagePageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function RaidManagePage({ onNavigate, onLogout }: RaidManagePageProps) {
+export function RaidManagePage() {
+  const navigate = useNavigate();
   const [selectedRaid, setSelectedRaid] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
@@ -63,7 +60,7 @@ export function RaidManagePage({ onNavigate, onLogout }: RaidManagePageProps) {
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={() => onNavigate('teacher-dashboard')}
+            onClick={() => navigate('teacher-dashboard')}
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>

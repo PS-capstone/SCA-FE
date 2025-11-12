@@ -5,13 +5,11 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Sidebar } from "./Sidebar";
 import { Plus, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-interface ClassCreatePageProps {
-  onNavigate: (page: string) => void;
-}
-
-export function ClassCreatePage({ onNavigate }: ClassCreatePageProps) {
+export function ClassCreatePage() {
+  const navigate = useNavigate();
   const [classInfo, setClassInfo] = useState({
     name: "",
     grade: "",
@@ -74,7 +72,7 @@ export function ClassCreatePage({ onNavigate }: ClassCreatePageProps) {
     //임시 코드
     console.log("저장될 반 정보:", finalClassInfo);
     alert(`반이 생성되었습니다!\n반명: ${finalClassInfo.name}\n초대코드: ${finalClassInfo.classCode}`);
-    onNavigate('class-manage');
+    navigate('class-manage');
 
     //백엔드 api 호출용
 /*     try {
@@ -92,7 +90,7 @@ export function ClassCreatePage({ onNavigate }: ClassCreatePageProps) {
       }
 
       alert(`반이 생성되었습니다!\n반명: ${classInfo.name}\n초대코드: ${classInfo.classCode}`);
-      onNavigate('class-manage');
+      navigate('class-manage');
 
     } catch (error) {
       if (error instanceof Error) {
@@ -106,7 +104,7 @@ export function ClassCreatePage({ onNavigate }: ClassCreatePageProps) {
   };
 
   const handleCancel = () => {
-    onNavigate('class-manage');
+    navigate('class-manage');
   };
 
   return (

@@ -5,16 +5,13 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { User, Plus, X, Info, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Switch } from "../ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
-interface IndividualQuestCreatePageProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQuestCreatePageProps) {
+export function IndividualQuestCreatePage() {
+  const navigate = useNavigate();
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [showRewardGuide, setShowRewardGuide] = useState(false);
   const [showAIReward, setShowAIReward] = useState(false);
@@ -50,7 +47,7 @@ export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQu
     }
 
     alert(`개인 퀘스트가 등록되었습니다!\n대상: ${selectedStudents.length}명\n제목: ${questData.title}`);
-    onNavigate('teacher-dashboard');
+    navigate('teacher-dashboard');
   };
 
   return (
@@ -208,7 +205,7 @@ export function IndividualQuestCreatePage({ onNavigate, onLogout }: IndividualQu
               </Button>
               <Button
                 variant="outline"
-                onClick={() => onNavigate('quest-create-new')}
+                onClick={() => navigate('quest-create-new')}
                 className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
               >
                 취소

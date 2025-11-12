@@ -8,12 +8,7 @@ import { Sidebar } from "./Sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-interface QuestApprovalPageNewProps {
-  onNavigate: (page: string) => void;
-  onLogout?: () => void;
-}
-
-export function QuestApprovalPageNew({ onNavigate, onLogout }: QuestApprovalPageNewProps) {
+export function QuestApprovalPageNew() {
   const [selectedQuest, setSelectedQuest] = useState<any>(null);
   const [customComment, setCustomComment] = useState("");
   const [showApprovalModal, setShowApprovalModal] = useState(false);
