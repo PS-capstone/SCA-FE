@@ -6,6 +6,7 @@ import { Textarea } from "../ui/textarea";
 import { Plus, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { post } from "../../utils/api";
 
 type FormErrors = {
   name?: string | null;
@@ -20,11 +21,9 @@ export function ClassCreatePage() {
     name: "",
     grade: "",
     subject: "수학",
-    description: "",
-    invite_code: ""
+    description: ""
   });
 
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,70 +37,8 @@ export function ClassCreatePage() {
     }
   };
 
-  const generateinvite_code = () => {
-    setIsGeneratingCode(true);
-
-    //임시 코드
-    setTimeout(() => {
-      const code = `CLASS${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-      setClassInfo({ ...classInfo, invite_code: code });
-      setIsGeneratingCode(false);
-    }, 1000);
-
-  };
-
-  //백엔드 api 호출용(초대코드 생성 api 필요! 임시 '/api/class/generate-code')
-  /*   const generateinvite_code = async () => {
-      setIsGeneratingCode(true);
-      setFormErrors(prev => ({ ...prev, invite_code: null, formGeneral: null }));
-  
-      try {
-        const response = await fetch('/api/class/generate-code', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-  
-        if (!response.ok) {
-          throw new Error('API 호출에 실패했습니다.');
-        }
-  
-        const data = await response.json();
-  
-        if (data.invite_code) {
-          setClassInfo({ ...classInfo, invite_code: data.invite_code });
-        } else {
-          throw new Error('API 응답 형식이 올바르지 않습니다.');
-        }
-      } catch (error) {
-        console.error("초대 코드 생성 실패:", error);
-        const message = (error instanceof Error) ? error.message : "초대 코드 생성에 실패했습니다.";
-        setFormErrors(prev => ({ ...prev, formGeneral: message }));
-      } finally {
-        setIsGeneratingCode(false);
-      }
-    }; */
-
-  const handleSave = () => {
-    if (!classInfo.name || !classInfo.grade) {
-      alert("필수 항목을 모두 입력해주세요.");
-      return;
-    }
-
-    const finalClassInfo = { ...classInfo };
-    if (!finalClassInfo.invite_code) {
-      finalClassInfo.invite_code = `TEMP${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-    }
-
-    //임시 코드
-    console.log("저장될 반 정보:", finalClassInfo);
-    alert(`반이 생성되었습니다!\n반명: ${finalClassInfo.name}\n초대코드: ${finalClassInfo.invite_code}`);
-    navigate('class-manage');
-  };
-
   //백엔드 api 호출용
-  /*   const handleSave = async () => {
+   const handleSave = async () => {
       if (!classInfo.name || !classInfo.grade) {
         setFormErrors({
           name: !classInfo.name ? "반 이름을 입력해주세요." : null,
@@ -109,32 +46,39 @@ export function ClassCreatePage() {
         });
         return;
       }
-  
+
       setIsLoading(true);
       setFormErrors({});
-  
+
       try {
-        const response = await fetch('/api/classes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(classInfo)
-        });
-  
+        // 백엔드 API 요구사항에 맞게 데이터 변환 (name -> class_name)
+        const requestData = {
+          class_name: classInfo.name,
+          grade: classInfo.grade,
+          subject: classInfo.subject,
+          description: classInfo.description
+        };
+
+        // api.ts의 post 함수 사용 - 자동으로 Authorization 헤더에 Bearer token 추가
+        const response = await post('/api/v1/classes', requestData);
+
         if (!response.ok) {
           const status = response.status;
-          const data = await response.json();
-          if (status === 400 && data.error_code === 'INVALID_INPUT' && data.data) {
-            setFormErrors(data.data);
+          const responseData = await response.json();
+          if (status === 400 && responseData.error_code === 'INVALID_INPUT' && responseData.data) {
+            setFormErrors(responseData.data);
             return;
           }
-          throw new Error(data.message || '반 생성에 실패했습니다.');
+          throw new Error(responseData.message || '반 생성에 실패했습니다.');
         }
-  
-        alert(`반이 생성되었습니다!\n반명: ${classInfo.name}\n초대코드: ${classInfo.invite_code}`);
-        navigate('/teacher/class');
-  
+
+        // 백엔드 응답에서 생성된 반 정보 가져오기
+        const responseData = await response.json();
+        const createdClass = responseData.data;
+
+        alert(`반이 생성되었습니다!\n반명: ${createdClass.class_name}\n초대코드: ${createdClass.invite_code}`);
+        navigate('/teacher/dashboard');
+
       } catch (error) {
         if (error instanceof Error) {
           console.error("반 생성 실패:", error.message);
@@ -144,10 +88,10 @@ export function ClassCreatePage() {
           alert("알 수 없는 에러가 발생했습니다.");
         }
       }
-    }; */
+    }; 
 
   const handleCancel = () => {
-    navigate('/teacher/class');
+    navigate('/teacher/dashboard');
   };
 
   return (
@@ -230,7 +174,7 @@ export function ClassCreatePage() {
               <Button
                 onClick={handleSave}
                 className="bg-green-600 hover:bg-green-700 text-white rounded-lg"
-                disabled={isLoading || isGeneratingCode}
+                disabled={isLoading}
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isLoading ? "생성 중..." : "반 생성하기"}

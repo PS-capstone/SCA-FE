@@ -86,16 +86,18 @@ export function SignupPage() {
                 let payload: any = {
                     username: formData.username,
                     password: formData.password,
-                    real_name: formData.realName,
+                    real_name: formData.real_name,
                     nickname: formData.nickname,
                     email: formData.email,
                 };
+
+                console.log(payload);
     
                 if (role === 'teacher') {
                     apiEndpoint = '/api/v1/auth/teacher/signup';
                 } else {
                     apiEndpoint = '/api/v1/auth/student/signup';
-                    payload.invite_code = formData.classCode;
+                    payload.invite_code = formData.invite_code;
                 }
     
                 const response = await post(apiEndpoint, payload, { skipAuth: true });
