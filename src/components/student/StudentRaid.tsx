@@ -4,17 +4,7 @@ import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-
-interface StudentUser {
-  id: string;
-  realName: string;
-  username: string;
-  classCode: string;
-  totalCoral: number;
-  currentCoral: number;
-  totalExplorationData: number;
-  mainFish: string;
-}
+import { useAuth, StudentUser } from "../../contexts/AppContext";
 
 interface RaidData {
   name: string;
@@ -27,24 +17,8 @@ interface RaidData {
   skillReady: boolean;
 }
 
-interface StudentBattleProps {
-  user?: StudentUser;
-}
-
-export function StudentBattle({ user }: StudentBattleProps) {
-  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
-  const defaultUser: StudentUser = {
-    id: '1',
-    realName: '학생',
-    username: 'student',
-    classCode: 'CLASS001',
-    totalCoral: 50,
-    currentCoral: 50,
-    totalExplorationData: 100,
-    mainFish: '기본 물고기'
-  };
-
-  const currentUser = user || defaultUser;
+export function StudentRaid() {
+  const { user, isAuthenticated, userType } = useAuth();
   const [isContributeOpen, setIsContributeOpen] = useState(false);
   const [contributeAmount, setContributeAmount] = useState(0);
   const [lastContributeResult, setLastContributeResult] = useState<{
@@ -67,9 +41,18 @@ export function StudentBattle({ user }: StudentBattleProps) {
     skillReady: true
   };
 
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-4">로그인 정보 로딩 중...</div>;
+  }
 
+  if (userType !== 'student') {
+    return <div className="p-6">학생 전용 페이지입니다.</div>;
+  }
+
+  const currentUser = user as StudentUser;
   const handleEnergyContribute = () => {
-    if (contributeAmount <= 0 || contributeAmount > currentUser.totalExplorationData) {
+    if (contributeAmount <= 0 || contributeAmount > currentUser.currentResearchData) {
       alert('올바른 기여량을 입력해주세요.');
       return;
     }
@@ -77,7 +60,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
     // 주사위 굴리기 애니메이션 시작
     setIsDiceRolling(true);
     setDiceResult(null);
-    
+
     // 주사위 굴리기 애니메이션 (2초)
     setTimeout(() => {
       const diceResult = Math.floor(Math.random() * 6) + 1;
@@ -106,7 +89,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
 
       setIsContributeOpen(false);
       setContributeAmount(0);
-      
+
       alert(`기여 완료! 기본 ${contributeAmount} + 보너스 ${bonus} = 총 ${total} 기여`);
     }, 2000);
   };
@@ -148,8 +131,8 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 {raidData.currentHp.toLocaleString()} / {raidData.maxHp.toLocaleString()}
               </span>
             </div>
-            <Progress 
-              value={(raidData.currentHp / raidData.maxHp) * 100} 
+            <Progress
+              value={(raidData.currentHp / raidData.maxHp) * 100}
               className="h-6 bg-gray-200"
               style={{
                 '--progress-background': '#ef4444',
@@ -170,7 +153,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
           <div className="grid grid-cols-1 gap-4">
             <div className="text-center p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">보유 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{currentUser.totalExplorationData}</p>
+              <p className="text-xl font-medium text-black">{currentUser.currentResearchData}</p>
             </div>
           </div>
 
@@ -179,7 +162,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
             <Button
               onClick={() => setIsContributeOpen(true)}
               className="w-full bg-black text-white hover:bg-gray-800 h-12"
-              disabled={currentUser.totalExplorationData <= 0}
+              disabled={currentUser.currentResearchData <= 0}
             >
               에너지 주입
             </Button>
@@ -239,7 +222,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">2분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -249,7 +232,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">5분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -259,7 +242,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">8분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -269,7 +252,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">12분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -279,7 +262,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">15분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -289,7 +272,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">18분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -299,7 +282,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">22분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -309,7 +292,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">25분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -319,7 +302,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">28분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-rose-50 border-l-4 border-rose-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -329,7 +312,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-rose-600 bg-rose-100 px-2 py-1 rounded">32분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-lime-50 border-l-4 border-lime-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -339,7 +322,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
                 <span className="text-xs text-lime-600 bg-lime-100 px-2 py-1 rounded">35분 전</span>
               </div>
             </div>
-            
+
             <div className="bg-emerald-50 border-l-4 border-emerald-400 p-3 rounded-r">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -362,13 +345,13 @@ export function StudentBattle({ user }: StudentBattleProps) {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-600 mb-2">
-                보유 탐사데이터: {currentUser.totalExplorationData}
+                보유 탐사데이터: {currentUser.currentResearchData}
               </p>
               <input
                 type="number"
                 value={contributeAmount}
                 onChange={(e) => setContributeAmount(Number(e.target.value))}
-                max={currentUser.totalExplorationData}
+                max={currentUser.currentResearchData}
                 min={1}
                 className="w-full p-3 border border-gray-300 rounded bg-white text-black"
                 placeholder="기여할 양을 입력하세요"
@@ -401,7 +384,7 @@ export function StudentBattle({ user }: StudentBattleProps) {
               <Button
                 onClick={handleEnergyContribute}
                 className="flex-1 bg-black text-white"
-                disabled={contributeAmount <= 0 || contributeAmount > currentUser.totalExplorationData || isDiceRolling}
+                disabled={contributeAmount <= 0 || contributeAmount > currentUser.currentResearchData || isDiceRolling}
               >
                 {isDiceRolling ? '주사위 굴리는 중...' : '기여하기'}
               </Button>

@@ -9,7 +9,7 @@ export interface StudentUser {
   email: string;
   classCode: string;
   currentCoral: number;
-  currentExplorationData: number;
+  currentResearchData: number;
   mainFish: string;
 }
 

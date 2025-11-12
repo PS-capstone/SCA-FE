@@ -5,28 +5,9 @@ import { useState } from 'react';
 import { QuestDetailPage } from './QuestDetailPage';
 import { useAuth, StudentUser } from '../../contexts/AppContext';
 
-interface StudentDashboardProps {
-  user?: StudentUser; // Make user prop optional for backward compatibility
-}
+export function StudentDashboard() {
+  const { user, isAuthenticated, userType } = useAuth();
 
-export function StudentDashboard({ user }: StudentDashboardProps) {
-  const { user: contextUser, userType } = useAuth();
-  
-  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
-  const defaultUser: StudentUser = {
-    id: '1',
-    realName: '학생',
-    nickname: '닉네임',
-    username: 'student',
-    classCode: 'CLASS001',
-    totalCoral: 50,
-    currentCoral: 50,
-    totalExplorationData: 100,
-    mainFish: '기본 물고기'
-  };
-
-  // Use context user if available, otherwise fall back to prop or default
-  const currentUser = (contextUser as StudentUser) || user || defaultUser;
   const [selectedQuest, setSelectedQuest] = useState<typeof groupQuests[0] | null>(null);
   const currentRaid = {
     name: '중간고사 대비 레이드',
@@ -66,18 +47,28 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
   // 코랄/탐사데이터 로그 데이터
   const activityLogs = [
     { id: 1, type: 'coral', amount: 15, action: '퀘스트 완료', time: '2시간 전', description: '수학 문제집 풀기 완료' },
-    { id: 2, type: 'exploration', amount: 8, action: '레이드 참여', time: '5시간 전', description: '중간고사 대비 레이드 참여' },
+    { id: 2, type: 'research', amount: 8, action: '레이드 참여', time: '5시간 전', description: '중간고사 대비 레이드 참여' },
     { id: 3, type: 'coral', amount: 10, action: '퀘스트 완료', time: '1일 전', description: '영어 단어 암기 완료' },
-    { id: 4, type: 'exploration', amount: 12, action: '배틀 승리', time: '1일 전', description: '친구와의 배틀에서 승리' },
+    { id: 4, type: 'research', amount: 12, action: '배틀 승리', time: '1일 전', description: '친구와의 배틀에서 승리' },
     { id: 5, type: 'coral', amount: 20, action: '퀘스트 완료', time: '2일 전', description: '과학 실험 보고서 작성' }
   ];
+
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-6">로딩중...</div>;
+  }
+
+  if (userType !== 'student') {
+    return <div className="p-6">학생 전용 대시보드입니다.</div>;
+  }
+
+  const currentUser = user as StudentUser;
 
   // 퀘스트 상세 페이지가 선택된 경우
   if (selectedQuest) {
     return (
-      <QuestDetailPage 
+      <QuestDetailPage
         quest={selectedQuest}
-        user={currentUser}
         onBack={() => setSelectedQuest(null)}
       />
     );
@@ -119,8 +110,8 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
               <span className="text-gray-700 font-medium">HP</span>
               <span className="text-black font-semibold">{currentRaid.currentHp.toLocaleString()} / {currentRaid.maxHp.toLocaleString()}</span>
             </div>
-            <Progress 
-              value={(currentRaid.currentHp / currentRaid.maxHp) * 100} 
+            <Progress
+              value={(currentRaid.currentHp / currentRaid.maxHp) * 100}
               className="h-6 bg-gray-200"
               style={{
                 '--progress-background': '#000000',
@@ -149,8 +140,8 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           <h3 className="font-medium text-black mb-4">현재 단체 퀘스트 달성률</h3>
           <div className="space-y-4">
             {groupQuests.map((quest) => (
-              <div 
-                key={quest.id} 
+              <div
+                key={quest.id}
                 className="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                 onClick={() => setSelectedQuest(quest)}
               >
@@ -160,7 +151,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
                 </div>
                 <p className="text-sm text-gray-600 mb-3">{quest.description}</p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                  <div 
+                  <div
                     className="bg-black h-2 rounded-full transition-all duration-300"
                     style={{ width: `${(quest.completed / quest.total) * 100}%` }}
                   />
@@ -190,7 +181,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
             </div>
             <div className="text-center p-3 border-2 border-gray-300 rounded">
               <p className="text-sm text-gray-600">탐사데이터</p>
-              <p className="text-xl font-medium text-black">{currentUser.totalExplorationData}</p>
+              <p className="text-xl font-medium text-black">{currentUser.currentResearchData}</p>
             </div>
           </div>
 

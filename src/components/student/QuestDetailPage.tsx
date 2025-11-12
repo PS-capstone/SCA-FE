@@ -1,6 +1,8 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
+import { useAuth, StudentUser } from '../../contexts/AppContext';
 
 interface QuestDetailPageProps {
   quest: {
@@ -11,15 +13,12 @@ interface QuestDetailPageProps {
     total: number;
     incompleteStudents: string[];
   };
-  user: {
-    id: string;
-    realName: string;
-    username: string;
-  };
   onBack: () => void;
 }
 
-export function QuestDetailPage({ quest, user, onBack }: QuestDetailPageProps) {
+export function QuestDetailPage({ quest, onBack }: QuestDetailPageProps) {
+  const { user, isAuthenticated, userType } = useAuth();
+
   // 완료한 학생 목록 (실제로는 API에서 가져와야 함)
   const completedStudents = [
     { name: '김학생', completedAt: '2024-01-15 14:30', status: '완료' },
@@ -36,14 +35,25 @@ export function QuestDetailPage({ quest, user, onBack }: QuestDetailPageProps) {
     { name: '송학생', completedAt: '2024-01-16 10:20', status: '완료' }
   ];
 
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-6">로딩중...</div>;
+  }
+
+  if (userType !== 'student') {
+    return <div className="p-6">학생 전용 상세 페이지입니다.</div>;
+  }
+
+  const currentUser = user as StudentUser;
+
   // 본인 확인 여부 (실제로는 사용자 데이터에서 가져와야 함)
-  const myStatus = completedStudents.find(student => student.name === user.realName) ? '완료' : '미완료';
+  const myStatus = completedStudents.find(student => student.name === currentUser.realName) ? '완료' : '미완료';
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen pb-20">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
-        <Button 
+        <Button
           onClick={onBack}
           variant="outline"
           className="border-2 border-gray-300"
@@ -85,8 +95,8 @@ export function QuestDetailPage({ quest, user, onBack }: QuestDetailPageProps) {
                 <span className="text-xs font-bold">M</span>
               </div>
               <div>
-                <p className="font-medium text-black">{user.realName}</p>
-                <p className="text-sm text-gray-600">@{user.username}</p>
+                <p className="font-medium text-black">{currentUser.realName}</p>
+                <p className="text-sm text-gray-600">@{currentUser.realName}</p>
               </div>
             </div>
             <Badge className={myStatus === '완료' ? 'bg-black text-white border-black' : 'bg-gray-100 text-black border-gray-300'}>
