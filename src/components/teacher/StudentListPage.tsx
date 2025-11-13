@@ -30,7 +30,7 @@ export function StudentListPage() {
       avatar: "김",
       pendingQuests: 2,
       coral: 45,
-      explorationData: 320,
+      research_data: 320,
       approvalRequests: [
         {
           id: 1,
@@ -54,7 +54,7 @@ export function StudentListPage() {
       avatar: "이",
       pendingQuests: 1,
       coral: 38,
-      explorationData: 280,
+      research_data: 280,
       approvalRequests: [
         {
           id: 3,
@@ -71,7 +71,7 @@ export function StudentListPage() {
       avatar: "박",
       pendingQuests: 0,
       coral: 52,
-      explorationData: 410,
+      research_data: 410,
       approvalRequests: []
     },
     { 
@@ -80,7 +80,7 @@ export function StudentListPage() {
       avatar: "최",
       pendingQuests: 3,
       coral: 31,
-      explorationData: 250,
+      research_data: 250,
       approvalRequests: [
         {
           id: 4,
@@ -135,7 +135,7 @@ export function StudentListPage() {
                 avatar={student.avatar}
                 pendingQuests={student.pendingQuests}
                 coral={student.coral}
-                explorationData={student.explorationData}
+                research_data={student.research_data}
               />
             ))}
           </div>

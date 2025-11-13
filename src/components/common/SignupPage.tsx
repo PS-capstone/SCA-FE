@@ -12,10 +12,10 @@ type FormErrors = {
     username?: string | null;
     password?: string | null;
     confirmPassword?: string | null;
-    realName?: string | null;
+    real_name?: string | null;
     nickname?: string | null;
     email?: string | null;
-    classCode?: string | null;
+    invite_code?: string | null;
     formGeneral?: string | null; // 약관 동의, 일반 서버 에러용
 };
 
@@ -28,10 +28,10 @@ export function SignupPage() {
         username: "",
         password: "",
         confirmPassword: "",
-        realName: "",
+        real_name: "",
         nickname: "",
         email: "",
-        classCode: "" // 학생일 경우에만 사용될 반 코드
+        invite_code: "" // 학생일 경우에만 사용될 반 코드
     });
 
     const [agreed, setAgreed] = useState(false);
@@ -40,10 +40,10 @@ export function SignupPage() {
         username: null,
         password: null,
         confirmPassword: null,
-        realName: null,
+        real_name: null,
         nickname: null,
         email: null,
-        classCode: null,
+        invite_code: null,
         formGeneral: null,
     });
 
@@ -76,7 +76,7 @@ export function SignupPage() {
             // 교사 로그인 페이지로 이동
             navigate('/login/teacher');
         } else {
-            if (!formData.classCode) {
+            if (!formData.invite_code) {
                 alert("학생은 반 코드를 필수로 입력해야 합니다.");
                 return;
             }
@@ -97,15 +97,15 @@ export function SignupPage() {
                 setFormErrors(prev => ({ ...prev, formGeneral: "서비스 이용약관에 동의해주세요." }));
                 return;
             }
-            if (role === 'student' && !formData.classCode) {
-                setFormErrors(prev => ({ ...prev, classCode: "학생은 반 코드를 필수로 입력해야 합니다." }));
+            if (role === 'student' && !formData.invite_code) {
+                setFormErrors(prev => ({ ...prev, invite_code: "학생은 반 코드를 필수로 입력해야 합니다." }));
                 return;
             }
     
             setIsLoading(true);
             setFormErrors({
-                username: null, password: null, confirmPassword: null, realName: null,
-                nickname: null, email: null, classCode: null, formGeneral: null,
+                username: null, password: null, confirmPassword: null, real_name: null,
+                nickname: null, email: null, invite_code: null, formGeneral: null,
             }); 
     
             try {
@@ -113,7 +113,7 @@ export function SignupPage() {
                 let payload: any = {
                     username: formData.username,
                     password: formData.password,
-                    realName: formData.realName,
+                    real_name: formData.real_name,
                     nickname: formData.nickname,
                     email: formData.email,
                 };
@@ -122,7 +122,7 @@ export function SignupPage() {
                     apiEndpoint = '/api/auth/teacher/signup';
                 } else {
                     apiEndpoint = '/api/auth/student/signup';
-                    payload.classCode = formData.classCode;
+                    payload.invite_code = formData.invite_code;
                 }
     
                 const response = await fetch(apiEndpoint, {
@@ -146,7 +146,7 @@ export function SignupPage() {
                         return;
                     }
                     if (status === 400 && data.error_code === 'INVALID_CLASS_CODE') {
-                        setFormErrors(prev => ({ ...prev, classCode: data.message || '유효하지 않은 반 코드입니다.' }));
+                        setFormErrors(prev => ({ ...prev, invite_code: data.message || '유효하지 않은 반 코드입니다.' }));
                         return;
                     }
                     setFormErrors(prev => ({ ...prev, formGeneral: data.message || '회원가입에 실패했습니다. (서버 오류)' }));
@@ -226,10 +226,10 @@ export function SignupPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="realName">이름 (실명) *</Label>
-                        <Input id="realName" placeholder="이름을 입력하세요" className="border-2 border-gray-300 rounded-lg" value={formData.realName} onChange={handleChange} />
-                        {formErrors.realName && (
-                            <p className="text-sm text-red-600 pt-1">{formErrors.realName}</p>
+                        <Label htmlFor="real_name">이름 (실명) *</Label>
+                        <Input id="real_name" placeholder="이름을 입력하세요" className="border-2 border-gray-300 rounded-lg" value={formData.real_name} onChange={handleChange} />
+                        {formErrors.real_name && (
+                            <p className="text-sm text-red-600 pt-1">{formErrors.real_name}</p>
                         )}
                     </div>
 
@@ -252,10 +252,10 @@ export function SignupPage() {
                     {/* 역할이 'student'일 때만 반 코드 입력창 표시 */}
                     {role === 'student' && (
                         <div className="space-y-2 transition-all duration-300">
-                            <Label htmlFor="classCode">반 코드 *</Label>
-                            <Input id="classCode" placeholder="선생님께 받은 반 코드를 입력하세요" className="border-2 border-gray-300 rounded-lg" value={formData.classCode} onChange={handleChange} />
-                            {formErrors.classCode && (
-                                <p className="text-sm text-red-600 pt-1">{formErrors.classCode}</p>
+                            <Label htmlFor="invite_code">반 코드 *</Label>
+                            <Input id="invite_code" placeholder="선생님께 받은 반 코드를 입력하세요" className="border-2 border-gray-300 rounded-lg" value={formData.invite_code} onChange={handleChange} />
+                            {formErrors.invite_code && (
+                                <p className="text-sm text-red-600 pt-1">{formErrors.invite_code}</p>
                             )}
                         </div>
                     )}

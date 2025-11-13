@@ -3,19 +3,19 @@ import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 // Types
 export interface StudentUser {
   id: string;
-  realName: string;
+  real_name: string;
   nickname: string;
   username: string;
   email: string;
-  classCode: string;
-  currentCoral: number;
-  currentExplorationData: number;
+  invite_code: string;
+  coral: number;
+  research_data: number;
   mainFish: string;
 }
 
 export interface TeacherUser {
   id: string;
-  realName: string;
+  real_name: string;
   nickname: string;
   username: string;
   email: string;

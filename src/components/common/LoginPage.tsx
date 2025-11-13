@@ -49,7 +49,7 @@ export function LoginPage() {
     if (role === 'teacher') {
       const teacherUser: TeacherUser = {
         id: Math.random().toString(36).substr(2, 9),
-        realName: '선생님',
+        real_name: '선생님',
         nickname: 'nickname',
         username: formData.username,
         email: 'teacher@example.com',
@@ -60,13 +60,13 @@ export function LoginPage() {
     } else if (role === 'student') {
       const studentUser: StudentUser = {
         id: Math.random().toString(36).substr(2, 9),
-        realName: '학생',
+        real_name: '학생',
         nickname: 'nickname',
         username: formData.username,
         email: 'student@example.com',
-        classCode: 'CLASS001',
-        currentCoral: 50,
-        currentExplorationData: 100,
+        invite_code: 'CLASS001',
+        coral: 50,
+        research_data: 100,
         mainFish: '기본 물고기'
       };
       login(studentUser, 'student');
