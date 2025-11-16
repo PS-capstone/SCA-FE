@@ -31,7 +31,7 @@ export function TeacherDashboardNew() {
 
     if (userType !== 'teacher') {
       setIsLoading(false);
-      setError("교사 전용 페이지입니다.");
+      setError("접근 권한이 없습니다.");
       return;
     }
 
@@ -45,7 +45,6 @@ export function TeacherDashboardNew() {
         if (!response.ok) {
           throw new Error('반 목록을 불러오는 데 실패했습니다.');
         }
-
 
         const data = await response.json();
 
