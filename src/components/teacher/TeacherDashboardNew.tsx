@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Plus, Settings, Users } from "lucide-react";
 import { ClassCard } from "../common/ClassCard";
 import { useAuth, TeacherUser } from '../../contexts/AppContext';
+import { get } from '../../utils/api';
 
 interface ClassSummary {
   class_id: number | string;
@@ -30,7 +31,7 @@ export function TeacherDashboardNew() {
 
     if (userType !== 'teacher') {
       setIsLoading(false);
-      setError("교사 전용 페이지입니다.");
+      setError("접근 권한이 없습니다.");
       return;
     }
 
@@ -38,11 +39,8 @@ export function TeacherDashboardNew() {
     const fetchClasses = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('/api/classes', {
-          headers: {
-            // 'Authorization': `Bearer ${token}` // 필요시 인증 토큰 추가
-          }
-        });
+        // api.ts의 get 함수 사용 - 자동으로 Authorization 헤더에 Bearer token 추가
+        const response = await get('/api/v1/classes');
 
         if (!response.ok) {
           throw new Error('반 목록을 불러오는 데 실패했습니다.');
@@ -50,7 +48,9 @@ export function TeacherDashboardNew() {
 
         const data = await response.json();
 
-        setClasses(data.classes || []);
+        console.log(data);
+
+        setClasses(data.data.classes || []);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -126,8 +126,8 @@ export function TeacherDashboardNew() {
                 class_name={classItem.class_name}
                 student_count={classItem.student_count}
                 waiting_quest_count={classItem.waiting_quest_count}
-                // '반 상세' 페이지(/teacher/class/:id)로 이동
-                onClick={() => navigate(`/teacher/class/${classItem.class_id}`)}
+                // 반 관리 페이지로 이동
+                onClick={() => navigate('/teacher/class')}
               />
             ))
           ) : (

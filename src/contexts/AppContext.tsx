@@ -58,7 +58,7 @@ export interface AppState {
 
 // Action Types
 export type AppAction =
-  | { type: 'SET_USER'; payload: { user: User; userType: 'student' | 'teacher' } }
+  | { type: 'SET_USER'; payload: { user: User; userType: 'student' | 'teacher'; accessToken: string; refreshToken: string } }
   | { type: 'CLEAR_USER' }
   | { type: 'SET_THEME'; payload: Partial<Theme> }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -71,10 +71,21 @@ export type AppAction =
 const storedUser = localStorage.getItem('user');
 const storedUserType = localStorage.getItem('userType');
 
+// 안전하게 user 파싱
+let parsedUser: User | null = null;
+try {
+  if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
+    parsedUser = JSON.parse(storedUser);
+  }
+} catch (error) {
+  console.error('Failed to parse stored user:', error);
+  localStorage.removeItem('user');
+}
+
 // Initial State
 const initialState: AppState = {
-  user: storedUser ? JSON.parse(storedUser) : null,
-  isAuthenticated: !!storedUser,
+  user: parsedUser,
+  isAuthenticated: !!parsedUser,
   userType: storedUserType as 'student' | 'teacher' | null,
   theme: {
     mode: 'light',
@@ -92,6 +103,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_USER':
       localStorage.setItem('user', JSON.stringify(action.payload.user));
       localStorage.setItem('userType', action.payload.userType);
+      localStorage.setItem('accessToken', action.payload.accessToken);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
       return {
         ...state,
         user: action.payload.user,
@@ -102,6 +115,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'CLEAR_USER':
       localStorage.removeItem('user');
       localStorage.removeItem('userType');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       return {
         ...state,
         user: null,
@@ -184,8 +199,8 @@ export function useApp() {
 export function useAuth() {
   const { state, dispatch } = useApp();
 
-  const login = (user: any, userType: 'student' | 'teacher') => {
-    dispatch({ type: 'SET_USER', payload: { user: user as User, userType } });
+  const login = (user: any, userType: 'student' | 'teacher', accessToken: string, refreshToken: string) => {
+    dispatch({ type: 'SET_USER', payload: { user: user as User, userType, accessToken, refreshToken } });
   };
 
   const logout = () => {

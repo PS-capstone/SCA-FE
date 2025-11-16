@@ -4,7 +4,6 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { Sidebar } from "./Sidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +16,6 @@ export function RaidCreatePageNew() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <Sidebar />
 
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

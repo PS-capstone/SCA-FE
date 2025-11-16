@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Sidebar } from "./Sidebar";
 import { ArrowLeft, Users, Target, CheckCircle, Award, Calendar, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -79,7 +78,6 @@ export function GroupQuestManagePage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

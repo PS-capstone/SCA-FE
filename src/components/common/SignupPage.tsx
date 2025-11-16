@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Checkbox } from "../ui/checkbox";
+import { post } from "../../utils/api";
 
 type FormErrors = {
     username?: string | null;
@@ -58,37 +59,9 @@ export function SignupPage() {
         }
     };
 
-    const handleSignup = () => {
-        // 회원가입 로직
-        if (formData.password !== formData.confirmPassword) {
-            alert("비밀번호가 일치하지 않습니다.");
-            return;
-        }
-        if (!agreed) {
-            alert("서비스 이용약관에 동의해주세요.");
-            return;
-        }
-
-        // 역할에 따라 다른 데이터로 API 호출
-        if (role === 'teacher') {
-            console.log("교사 회원가입 처리:", formData);
-            alert("교사 회원가입 성공");
-            // 교사 로그인 페이지로 이동
-            navigate('/login/teacher');
-        } else {
-            if (!formData.invite_code) {
-                alert("학생은 반 코드를 필수로 입력해야 합니다.");
-                return;
-            }
-            console.log("학생 회원가입 처리:", formData);
-            alert("학생 회원가입 성공");
-            // 학생 로그인 페이지로 이동
-            navigate('/login/student');
-        }
-    };
 
     //백엔드 api 호출용
-    /*     const handleSignup = async () => {
+           const handleSignup = async () => {
             if (formData.password !== formData.confirmPassword) {
                 setFormErrors(prev => ({ ...prev, confirmPassword: "비밀번호가 일치하지 않습니다." }));
                 return;
@@ -117,21 +90,17 @@ export function SignupPage() {
                     nickname: formData.nickname,
                     email: formData.email,
                 };
+
+                console.log(payload);
     
                 if (role === 'teacher') {
-                    apiEndpoint = '/api/auth/teacher/signup';
+                    apiEndpoint = '/api/v1/auth/teacher/signup';
                 } else {
-                    apiEndpoint = '/api/auth/student/signup';
+                    apiEndpoint = '/api/v1/auth/student/signup';
                     payload.invite_code = formData.invite_code;
                 }
     
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
+                const response = await post(apiEndpoint, payload, { skipAuth: true });
     
                 if (!response.ok) {
                     const status = response.status;
@@ -166,7 +135,7 @@ export function SignupPage() {
             } finally {
                 setIsLoading(false);
             }
-        }; */
+        }; 
 
     return (
         <div className="min-h-screen bg-white flex items-center justify-center p-4">

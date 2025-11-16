@@ -1,12 +1,14 @@
 import React from 'react';
 import { Home, BookOpen, Gamepad2, Book, Sword, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AppContext';
 
 type StudentScreen = 'dashboard' | 'quest' | 'gacha' | 'collection' | 'raid';
 
 export function StudentBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const navItems = [
     { id: 'dashboard' as StudentScreen, label: '홈', icon: Home, path: '/student/dashboard' },
     { id: 'quest' as StudentScreen, label: '퀘스트', icon: BookOpen, path: '/student/quests' },
@@ -42,7 +44,10 @@ export function StudentBottomNav() {
           
           {/* 로그아웃 버튼 */}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              logout();
+              navigate('/');
+            }}
             className="flex flex-col items-center justify-center py-2 px-3 rounded transition-all text-gray-600 hover:bg-red-100 hover:text-red-600 whitespace-nowrap"
           >
             <LogOut size={20} />
