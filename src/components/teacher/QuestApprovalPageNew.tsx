@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
-import { CheckCircle, X, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { CheckCircle, X, Image as ImageIcon, ChevronDown, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAuth } from "../../contexts/AppContext";
@@ -19,9 +19,30 @@ interface Assignment {
   reward_coral_personal: number;
   reward_research_data_personal: number;
   status: "SUBMITTED";
+}
 
-  studentComment: string;
-  hasAttachment: boolean;
+interface DetailedAssignment {
+  assignment_id: number;
+  quest: {
+    quest_id: number;
+    title: string;
+    teacher_content: string;
+  };
+  student: {
+    student_id: number;
+    student_name: string;
+    class_name: string;
+  };
+  reward_coral_personal: number;
+  reward_research_data_personal: number;
+  status: "SUBMITTED";
+  submission: {
+    submission_id: number;
+    student_content: string;
+    attachment_url: string | null; // 첨부파일은 null일 수 있음
+    submitted_at: string;
+    comment: string | null;
+  };
 }
 
 function formatDateTime(isoString: string) {
@@ -41,9 +62,14 @@ function formatDateTime(isoString: string) {
 }
 
 export function QuestApprovalPageNew() {
-  const { isAuthenticated, userType } = useAuth();
+  const { isAuthenticated, userType, access_token, currentClassId } = useAuth();
   const [pendingQuests, setPendingQuests] = useState<Assignment[]>([]);
-  const [selectedQuest, setSelectedQuest] = useState<Assignment | null>(null);
+
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedQuestDetail, setSelectedQuestDetail] = useState<DetailedAssignment | null>(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
   const [customComment, setCustomComment] = useState("");
   const [showApprovalModal, setShowApprovalModal] = useState(false);
 
@@ -61,7 +87,7 @@ export function QuestApprovalPageNew() {
   ];
 
   useEffect(() => {
-    if (!isAuthenticated || userType !== 'teacher') {
+    if (!isAuthenticated || userType !== 'teacher' || !access_token) {
       setIsLoading(false);
       setError("접근 권한이 없습니다.");
       return;
@@ -70,10 +96,16 @@ export function QuestApprovalPageNew() {
     const fetchPendingQuests = async () => {
       setIsLoading(true);
       setError(null);
+
+      let url = '/api/v1/quests/personal/pending';
+      if (currentClassId) {
+        url += `?class_id=${currentClassId}`;
+      }
+
       try {
-        const response = await fetch('/api/quests/personal/pending', {
+        const response = await fetch(url, {
           headers: {
-            // 'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${access_token}`
           }
         });
         if (!response.ok) {
@@ -81,17 +113,7 @@ export function QuestApprovalPageNew() {
         }
         const data = await response.json();
 
-        // [수정] API 명세에 없는 'studentComment', 'hasAttachment'를 임시로 추가합니다.
-        // [참고] 실제로는 '/api/quests/personal/pending' API가 이 정보를 줘야 합니다.
-        const questsWithMockDetails = (data.data.assignments || []).map((q: Assignment) => ({
-          ...q,
-          studentComment: q.title === "RPM 100 문제 풀기"
-            ? "RPM 100문제를 모두 풀었습니다. 처음에는 어려웠지만..."
-            : "모의고사에서 85점을 받았습니다. 기하 부분에서...",
-          hasAttachment: q.title === "RPM 100 문제 풀기"
-        }));
-
-        setPendingQuests(questsWithMockDetails);
+        setPendingQuests(data.data.assignments || []);
       } catch (err) {
         const message = (err instanceof Error) ? err.message : "알 수 없는 에러 발생";
         setError(message);
@@ -101,41 +123,75 @@ export function QuestApprovalPageNew() {
     };
 
     fetchPendingQuests();
-  }, [isAuthenticated, userType]);
+  }, [isAuthenticated, userType, access_token, currentClassId]);
+
+  const handleOpenDetailModal = async (assignmentId: number) => {
+    setShowDetailModal(true);
+    setIsModalLoading(true);
+    setModalError(null);
+    setSelectedQuestDetail(null);
+
+    try {
+      const response = await fetch(`/api/v1/quests/personal/${assignmentId}/detail`, {
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || '퀘스트 상세 정보를 불러오지 못했습니다.');
+      }
+
+      const data = await response.json();
+      setSelectedQuestDetail(data.data);
+
+    } catch (err) {
+      const message = (err instanceof Error) ? err.message : "알 수 없는 에러 발생";
+      setModalError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedQuestDetail(null);
+    setCustomComment("");
+    setModalError(null);
+  };
 
   const handleApproveOrReject = async (action: 'approve' | 'reject') => {
-    if (!selectedQuest) return;
+    if (!selectedQuestDetail || !access_token) return;
 
     setIsSubmitting(true);
-    const endpoint = `/api/quests/personal/{assignmentId}/${action}`;
+    const endpoint = `/api/v1/quests/personal/${selectedQuestDetail.assignment_id}/${action}`;
 
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${access_token}`
         },
         body: JSON.stringify({
-          teacher_comment: customComment || (action === 'approve' ? "잘했어요!" : "다시 확인해주세요.")
+          comment: customComment || (action === 'approve' ? "잘했어요!" : "다시 확인해주세요.")
         })
       });
 
-      if (!response.ok) {
-        const data = await response.json();
+      const data = await response.json();
+      if (!response.ok || !data.success) {
         throw new Error(data.message || `${action} 처리에 실패했습니다.`);
       }
 
-      // API 호출 성공 시
       if (action === 'approve') {
         setShowApprovalModal(true);
       } else {
         alert("퀘스트가 반려되었습니다.");
       }
 
-      setSelectedQuest(null);
-      setCustomComment("");
-      setPendingQuests(prev => prev.filter(q => q.assignment_id !== selectedQuest.assignment_id));
+      handleCloseDetailModal();
+      setPendingQuests(prev => prev.filter(q => q.assignment_id !== selectedQuestDetail.assignment_id));
 
     } catch (error) {
       alert((error instanceof Error) ? error.message : "처리 중 오류가 발생했습니다.");
@@ -145,7 +201,12 @@ export function QuestApprovalPageNew() {
   };
 
   if (isLoading) {
-    return <div className="p-6">승인 대기 목록을 불러오는 중...</div>;
+    return (
+      <div className="p-6 flex justify-center items-center">
+        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+        승인 대기 목록을 불러오는 중...
+      </div>
+    );
   }
 
   if (error) {
@@ -156,13 +217,17 @@ export function QuestApprovalPageNew() {
     <>
       {/* Header */}
       <div className="border-b-2 border-gray-300 p-6">
-        <h1>퀘스트 승인</h1>
+        <h1 className="text-2xl font-bold">퀘스트 승인</h1>
         <p className="text-gray-600 mt-1">승인 대기 중: {pendingQuests.length}건</p>
       </div>
 
       {/* Main Content */}
       <div className="p-6">
         <div className="space-y-4 max-w-4xl">
+          {pendingQuests.length === 0 && !isLoading && (
+            <p>승인 대기 중인 퀘스트가 없습니다.</p>
+          )}
+
           {pendingQuests.map((quest) => {
             const isExpanded = expandedQuestId === quest.assignment_id;
             const toggleExpansion = () => {
@@ -183,7 +248,7 @@ export function QuestApprovalPageNew() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h4>{quest.student_name}</h4>
+                          <h4 className="font-semibold text-lg">{quest.student_name}</h4>
                           <Badge variant="outline" className="border-2 border-gray-300 rounded-lg">
                             {quest.class_name}
                           </Badge>
@@ -206,24 +271,6 @@ export function QuestApprovalPageNew() {
 
                   {isExpanded && (
                     <div className="mt-4 pt-4 border-t-2 border-gray-300 space-y-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="border-2 border-gray-300 p-2">
-                          <span className="text-gray-600">마감 시간</span>
-                          <p className="mt-1">{"N/A"}</p>
-                        </div>
-                      </div>
-                      {quest.hasAttachment && (
-                        <div className="border-2 border-gray-300 p-3 flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4" />
-                          <span className="text-sm">첨부 파일 있음</span>
-                          <Button
-                            variant="link"
-                            className="ml-auto text-black underline"
-                          >
-                            보기
-                          </Button>
-                        </div>
-                      )}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 text-sm">
                           <span className="text-gray-600">보상:</span>
@@ -234,7 +281,7 @@ export function QuestApprovalPageNew() {
                           <Button
                             variant="outline"
                             className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-                            onClick={() => setSelectedQuest(quest)}
+                            onClick={() => handleOpenDetailModal(quest.assignment_id)}
                           >
                             상세보기/승인
                           </Button>
@@ -250,31 +297,44 @@ export function QuestApprovalPageNew() {
       </div>
 
       {/* Quest Detail Dialog */}
-      <Dialog open={selectedQuest !== null} onOpenChange={() => setSelectedQuest(null)}>
+      <Dialog open={showDetailModal} onOpenChange={(isOpen: Boolean) => { if (!isOpen) handleCloseDetailModal(); }}>
         <DialogContent className="border-2 border-gray-300 rounded-lg max-w-2xl">
           <DialogHeader>
             <DialogTitle>퀘스트 승인</DialogTitle>
           </DialogHeader>
 
-          {selectedQuest && (
+          {isModalLoading && (
+            <div className="py-10 flex justify-center items-center">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              상세 내용을 불러오는 중...
+            </div>
+          )}
+
+          {modalError && (
+            <div className="py-10 text-center text-red-600">
+              오류: {modalError}
+            </div>
+          )}
+
+          {selectedQuestDetail && !isModalLoading && (
             <div className="space-y-4">
               {/* Quest Info */}
               <Card className="border-2 border-gray-300 rounded-lg">
                 <CardContent className="p-4 space-y-3">
                   <div>
-                    <h4>{selectedQuest.title}</h4>
+                    <h4 className="font-semibold">{selectedQuestDetail.quest.title}</h4>
                     <p className="text-sm text-gray-600 mt-1">
-                      {selectedQuest.student_name} - {selectedQuest.class_name}
+                      {selectedQuestDetail.student.student_name} - {selectedQuestDetail.student.class_name}
                     </p>
                   </div>
                   <div className="border-t-2 border-gray-300 pt-3 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-600">퀘스트 그룹</span>
-                      <p>{selectedQuest.title}</p>
+                      <span className="text-gray-600">퀘스트 설명</span>
+                      <p>{selectedQuestDetail.quest.teacher_content || "N/A"}</p>
                     </div>
                     <div>
                       <span className="text-gray-600">제출 시간</span>
-                      <p>{formatDateTime(selectedQuest.submitted_at)}</p>
+                      <p>{formatDateTime(selectedQuestDetail.submission.submitted_at)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -284,28 +344,44 @@ export function QuestApprovalPageNew() {
               <Card className="border-2 border-gray-300 rounded-lg">
                 <CardContent className="p-4">
                   <p className="text-sm text-gray-600 mb-2">학생 수행내용</p>
-                  <div className="border-2 border-gray-300 p-3 bg-gray-50 rounded">
-                    <p className="text-sm text-black">{selectedQuest.studentComment}</p>
+                  <div className="border-2 border-gray-300 p-3 bg-gray-50 rounded min-h-[50px]">
+                    <p className="text-sm text-black whitespace-pre-wrap">
+                      {selectedQuestDetail.submission.student_content || "학생 코멘트 없음"}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Attachment */}
-              {selectedQuest.hasAttachment && (
+              {selectedQuestDetail.submission.attachment_url && (
                 <Card className="border-2 border-gray-300 rounded-lg">
                   <CardContent className="p-4">
                     <p className="text-sm text-gray-600 mb-2">첨부 파일</p>
-                    <div className="border-2 border-gray-300 p-8 text-center">
-                      <ImageIcon className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm text-gray-600">증거 이미지</p>
-                    </div>
+                    {/* [참고] 'attachment_url'이 이미지 URL이라고 가정하고 <img> 태그 사용
+                      만약 PDF 등이면 <a href..> 태그로 변경 필요
+                    */}
+                    <a
+                      href={selectedQuestDetail.submission.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border-2 border-gray-300 p-8 text-center block hover:bg-gray-50"
+                    >
+                      <img
+                        src={selectedQuestDetail.submission.attachment_url}
+                        alt="제출된 첨부파일"
+                        className="max-w-full max-h-64 mx-auto"
+                      />
+                      <p className="text-sm text-blue-600 mt-2 underline">
+                        클릭하여 원본 보기
+                      </p>
+                    </a>
                   </CardContent>
                 </Card>
               )}
 
               {/* Comment Section */}
               <div className="space-y-3">
-                <h4>선생님 코멘트</h4>
+                <h4 className="font-semibold">선생님 코멘트</h4>
 
                 <div className="space-y-2">
                   <label className="text-sm">기본 코멘트 선택</label>
@@ -351,8 +427,12 @@ export function QuestApprovalPageNew() {
                   onClick={() => handleApproveOrReject('approve')}
                   disabled={isSubmitting}
                 >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  승인 및 보상 지급
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                  )}
+                  {isSubmitting ? "승인 중..." : "승인 및 보상 지급"}
                 </Button>
               </div>
             </div>
