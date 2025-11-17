@@ -1,226 +1,166 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { useAuth, StudentUser } from "../../contexts/AppContext";
+import { Loader2, Send, File as FileIcon, X } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
-interface Quest {
-  id: string;
+interface MyPersonalQuest {
+  assignment_id: number;
+  quest_id: number;
   title: string;
-  description: string;
-  status: 'in_progress' | 'submitted' | 'completed';
-  dueDate: string;
-  rewards: {
-    coral: number;
-    research_data: number;
-  };
-  progress?: number;
-  teacherComment?: string;
-  submittedAt?: string;
-  template?: {
-    workbookName: string;
-    problemCount: number;
-    difficulty: string;
+  teacher_content: string;
+  reward_coral_personal: number;
+  reward_research_data_personal: number;
+  status: "ASSIGNED" | "SUBMITTED" | "REJECTED" | "APPROVED" | "EXPIRED";
+  created_at: string;
+  submission?: {
+    submitted_at?: string;
+    comment?: string;
   };
 }
 
-export function StudentQuests() {
-  const { user, isAuthenticated, userType } = useAuth();
-  const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
-  const [isCommentOpen, setIsCommentOpen] = useState(false);
-  const [isExpiredModalOpen, setIsExpiredModalOpen] = useState(false);
-  const [isCompletedModalOpen, setIsCompletedModalOpen] = useState(false);
-  const [submitText, setSubmitText] = useState('');
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-
-  const allQuests: Quest[] = [
-    {
-      id: '1',
-      title: 'RPM 100 문제 풀기',
-      description: '수학 연산 속도를 높이기 위해 RPM 100문제를 풀어보세요.',
-      status: 'in_progress',
-      dueDate: '2025-06-15T23:59:59',
-      rewards: { coral: 2, research_data: 50 },
-      progress: 65,
-      template: {
-        workbookName: 'RPM 100',
-        problemCount: 100,
-        difficulty: '보통'
-      }
-    },
-    {
-      id: '2',
-      title: '영단어 50개 외우기',
-      description: '이번 주 영단어 50개를 외우고 테스트를 통과하세요.',
-      status: 'in_progress',
-      dueDate: '2025-06-20T23:59:59',
-      rewards: { coral: 3, research_data: 40 },
-      template: {
-        workbookName: '영단어 프린트',
-        problemCount: 50,
-        difficulty: '쉬움'
-      }
-    },
-    {
-      id: '3',
-      title: '과학 실험 보고서 작성하기',
-      description: '지난 시간에 진행한 실험 결과를 정리하여 보고서를 작성하세요.',
-      status: 'submitted',
-      dueDate: '2025-06-18T23:59:59',
-      rewards: { coral: 5, research_data: 80 },
-      submittedAt: '2024-03-17T14:30:00'
-    },
-    {
-      id: '4',
-      title: '수학 모의고사 80점 이상',
-      description: '수학 모의고사에서 80점 이상을 받으세요.',
-      status: 'completed',
-      dueDate: '2024-03-15T23:59:59',
-      rewards: { coral: 5, research_data: 100 },
-      submittedAt: '2024-03-15T16:20:00',
-      teacherComment: '85점으로 목표를 달성했네요! 기하 부분에서 실수가 있었지만 대수 부분은 완벽하게 풀었습니다. 다음에는 더 신중하게 풀어보세요. 수고했어요!'
-    },
-    {
-      id: '5',
-      title: '국어 독해 문제 20개',
-      description: '국어 독해 문제를 풀고 정답률을 확인하세요.',
-      status: 'in_progress',
-      dueDate: '2025-06-25T23:59:59',
-      rewards: { coral: 3, research_data: 60 }
-    },
-    {
-      id: '6',
-      title: '사회 과제 제출',
-      description: '사회 시간에 배운 내용을 정리하여 과제를 제출하세요.',
-      status: 'in_progress',
-      dueDate: '2025-06-22T23:59:59',
-      rewards: { coral: 4, research_data: 70 }
-    },
-    {
-      id: '7',
-      title: '물리 실험 보고서',
-      description: '물리 실험 결과를 분석하고 보고서를 작성하세요.',
-      status: 'in_progress',
-      dueDate: '2025-06-28T23:59:59',
-      rewards: { coral: 6, research_data: 90 }
-    },
-    {
-      id: '8',
-      title: '영어 에세이 작성',
-      description: '주제에 대한 영어 에세이를 500단어 이상 작성하세요.',
-      status: 'in_progress',
-      dueDate: '2025-06-30T23:59:59',
-      rewards: { coral: 4, research_data: 75 }
-    },
-    {
-      id: '9',
-      title: '화학 문제집 풀기',
-      description: '화학 문제집 3장을 완료하고 정답을 확인하세요.',
-      status: 'in_progress',
-      dueDate: '2025-07-01T23:59:59',
-      rewards: { coral: 3, research_data: 55 }
-    },
-    {
-      id: '10',
-      title: '역사 발표 준비',
-      description: '한국사 주제로 발표 자료를 준비하고 발표하세요.',
-      status: 'in_progress',
-      dueDate: '2025-07-05T23:59:59',
-      rewards: { coral: 5, research_data: 85 }
-    }
-  ];
-
-  // 메인 목록: 진행중 + 승인대기중 퀘스트들 (마감일 체크 없이)
-  const quests = allQuests.filter(quest => {
-    const isInProgress = quest.status === 'in_progress';
-    const isSubmitted = quest.status === 'submitted';
-    return isInProgress || isSubmitted;
-  });
-
-  // 완료된 퀘스트들 (승인완료)
-  const completedQuests = allQuests.filter(quest => quest.status === 'completed');
-
-  // 마감된 퀘스트들 (진행중이지만 마감된 것들)
-  const expiredQuests = allQuests.filter(quest => {
-    const now = new Date();
-    const due = new Date(quest.dueDate);
-    return quest.status === 'in_progress' && due.getTime() <= now.getTime();
-  });
-
-  const formatTimeLeft = (dueDate: string, status: Quest['status']) => {
-    const now = new Date();
-    const due = new Date(dueDate);
-    const diff = due.getTime() - now.getTime();
-
-    // 승인대기중인 퀘스트는 시간 표시 안함
-    if (status === 'submitted') return '';
-
-    // 마감일자 표시 (YYYY-MM-DD 형식)
-    return due.toLocaleDateString('ko-KR', {
+const formatDateTime = (isoString: string | undefined) => {
+  if (!isoString) return "N/A";
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     });
-  };
+  } catch (e) {
+    return "날짜 오류";
+  }
+};
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case '쉬움': return 'bg-green-100 text-green-800 border-green-200';
-      case '보통': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case '어려움': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case '매우어려움': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+export function StudentQuests() {
+  const { user, isAuthenticated, userType, access_token } = useAuth();
+
+  const [activeQuests, setActiveQuests] = useState<MyPersonalQuest[]>([]);
+  const [approvedQuests, setApprovedQuests] = useState<MyPersonalQuest[]>([]);
+  const [expiredQuests, setExpiredQuests] = useState<MyPersonalQuest[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [selectedQuest, setSelectedQuest] = useState<MyPersonalQuest | null>(null);
+  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [isExpiredModalOpen, setIsExpiredModalOpen] = useState(false);
+  const [isCompletedModalOpen, setIsCompletedModalOpen] = useState(false);
+
+  const [submitText, setSubmitText] = useState('');
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // API로부터 퀘스트 목록을 불러오는 함수
+  const fetchAllQuests = async () => {
+    if (!access_token) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const [activeRes, approvedRes, expiredRes] = await Promise.all([
+        fetch('/api/v1/quests/personal/my?status=ACTIVE', {
+          headers: { 'Authorization': `Bearer ${access_token}` }
+        }),
+        fetch('/api/v1/quests/personal/my?status=APPROVED', {
+          headers: { 'Authorization': `Bearer ${access_token}` }
+        }),
+        fetch('/api/v1/quests/personal/my?status=EXPIRED', {
+          headers: { 'Authorization': `Bearer ${access_token}` }
+        })
+      ]);
+
+      if (!activeRes.ok || !approvedRes.ok || !expiredRes.ok) {
+        throw new Error('퀘스트 목록을 불러오는 데 실패했습니다.');
+      }
+
+      const activeData = await activeRes.json();
+      const approvedData = await approvedRes.json();
+      const expiredData = await expiredRes.json();
+
+      setActiveQuests(activeData.data.quests || []);
+      setApprovedQuests(approvedData.data.quests || []);
+      setExpiredQuests(expiredData.data.quests || []);
+
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getStatusBadge = (status: Quest['status']) => {
+  useEffect(() => {
+    if (isAuthenticated && userType === 'student' && access_token) {
+      fetchAllQuests();
+    } else if (!isAuthenticated) {
+      setIsLoading(false);
+      setError("로그인이 필요합니다.");
+    }
+  }, [isAuthenticated, userType, access_token]);
+
+  const getStatusBadge = (status: MyPersonalQuest['status']) => {
     switch (status) {
-      case 'in_progress':
-        return <Badge className="bg-black">진행중</Badge>;
-      case 'submitted':
-        return <Badge className="bg-gray-600">제출됨</Badge>;
-      case 'completed':
-        return <Badge className="bg-gray-800">완료</Badge>;
+      case 'ASSIGNED':
+        return <Badge className="bg-blue-600 text-white">제출 필요</Badge>;
+      case 'SUBMITTED':
+        return <Badge className="bg-yellow-500 text-black">승인 대기중</Badge>;
+      case 'REJECTED':
+        return <Badge className="bg-red-600 text-white">반려됨 (재제출)</Badge>;
+      case 'APPROVED':
+        return <Badge className="bg-green-600 text-white">승인 완료</Badge>;
+      case 'EXPIRED':
+        return <Badge className="bg-gray-500 text-white">만료됨</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
     }
   };
 
-  const getButtonText = (status: Quest['status']) => {
+  const getButtonText = (status: MyPersonalQuest['status']) => {
     switch (status) {
-      case 'in_progress':
-        return '제출';
-      case 'submitted':
+      case 'ASSIGNED':
+        return '제출하기';
+      case 'REJECTED':
+        return '다시 제출';
+      case 'SUBMITTED':
         return '승인대기중';
-      case 'completed':
+      case 'APPROVED':
         return '코멘트 확인';
+      case 'EXPIRED':
+        return '만료됨';
     }
   };
 
-  const isButtonDisabled = (status: Quest['status']) => {
-    return status === 'submitted';
+  const isButtonDisabled = (status: MyPersonalQuest['status']) => {
+    return status === 'SUBMITTED' || status === 'EXPIRED';
   };
 
-  const handleQuestAction = (quest: Quest) => {
+  const handleQuestAction = (quest: MyPersonalQuest) => {
     setSelectedQuest(quest);
-    if (quest.status === 'in_progress') {
+    if (quest.status === 'ASSIGNED' || quest.status === 'REJECTED') {
+      // 반려된 경우, 이전 제출 내용을 불러올 수 있으나,
+      // API 명세에 재제출 시 이전 내용 로드 기능이 없으므로 새로 입력
+      setSubmitText('');
+      setAttachedFiles([]);
+      setSubmitError(null);
       setIsSubmitOpen(true);
-    } else if (quest.status === 'completed') {
+    } else if (quest.status === 'APPROVED') {
       setIsCommentOpen(true);
-    } else {
-      setIsDetailOpen(true);
     }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newFiles = Array.from(files);
-      setAttachedFiles(prev => [...prev, ...newFiles]);
+    const file = event.target.files?.[0];
+    if (file) {
+      setAttachedFiles([file]);
     }
   };
 
@@ -228,29 +168,59 @@ export function StudentQuests() {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    if (!submitText.trim()) {
-      alert('제출 내용을 입력해주세요.');
+  const handleSubmit = async () => {
+    if (!selectedQuest || !access_token) return;
+    if (!submitText.trim() && attachedFiles.length === 0) {
+      setSubmitError('제출 내용이나 첨부파일 중 하나는 필수입니다.');
       return;
     }
 
-    // 실제로는 API 호출로 제출 (파일 포함)
-    const submitData = {
-      questId: selectedQuest?.id,
-      content: submitText,
-      files: attachedFiles
-    };
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    console.log('Quest submitted:', submitData);
-    alert('퀘스트가 제출되었습니다!');
-    setIsSubmitOpen(false);
-    setSubmitText('');
-    setAttachedFiles([]);
+    const formData = new FormData();
+    formData.append('content', submitText);
+    if (attachedFiles.length > 0) {
+      formData.append('attachment', attachedFiles[0]);
+    }
+
+    const method = selectedQuest.status === 'REJECTED' ? 'PUT' : 'POST';
+    const endpoint = `/api/v1/quests/personal/${selectedQuest.assignment_id}/submit`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || '제출에 실패했습니다.');
+      }
+
+      alert(data.message || '퀘스트가 제출되었습니다!');
+      setIsSubmitOpen(false);
+      setSubmitText('');
+      setAttachedFiles([]);
+      fetchAllQuests(); // 퀘스트 목록 새로고침
+
+    } catch (err) {
+      setSubmitError((err as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   //로그인 여부 확인
   if (!isAuthenticated || !user) {
-    return <div className="p-6">로딩중...</div>;
+    return (
+      <div className="p-6 flex justify-center items-center">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
   }
 
   if (userType !== 'student') {
@@ -259,10 +229,18 @@ export function StudentQuests() {
 
   const currentUser = user as StudentUser;
 
-  const totalEarned = {
-    coral: currentUser.coral - currentUser.coral,
-    research_data: currentUser.research_data
-  };
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center">
+        <Loader2 className="w-6 h-6 animate-spin" />
+        <span>퀘스트 목록을 불러오는 중...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-600">오류: {error}</div>;
+  }
 
   return (
     <div className="p-4 space-y-4 bg-white min-h-screen pb-20">
@@ -273,16 +251,13 @@ export function StudentQuests() {
 
       {/* 퀘스트 리스트 */}
       <div className="space-y-3">
-        {quests.map((quest) => (
-          <Card key={quest.id} className="border-2 border-gray-300">
+        {activeQuests.length === 0 && (
+          <p className="text-center text-gray-500">진행 중인 퀘스트가 없습니다.</p>
+        )}
+        {activeQuests.map((quest) => (
+          <Card key={quest.assignment_id} className="border-2 border-gray-300">
             <CardContent className="p-4">
               <div className="flex items-start space-x-3">
-                <Checkbox
-                  checked={quest.status === 'completed'}
-                  disabled={quest.status !== 'in_progress'}
-                  className="mt-1"
-                />
-
                 <div className="flex-1 space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -290,13 +265,8 @@ export function StudentQuests() {
                       <div className="flex items-center space-x-2 text-sm">
                         {getStatusBadge(quest.status)}
                         <span className="text-sm text-gray-600">
-                          {formatTimeLeft(quest.dueDate, quest.status)}
+                          {quest.status === 'SUBMITTED' ? `제출: ${formatDateTime(quest.submission?.submitted_at)}` : `생성: ${formatDateTime(quest.created_at)}`}
                         </span>
-                        {quest.template?.difficulty && (
-                          <Badge className={getDifficultyColor(quest.template.difficulty)}>
-                            {quest.template.difficulty}
-                          </Badge>
-                        )}
                       </div>
                     </div>
 
@@ -304,10 +274,10 @@ export function StudentQuests() {
                       onClick={() => handleQuestAction(quest)}
                       disabled={isButtonDisabled(quest.status)}
                       className={`px-3 py-1 text-sm ${isButtonDisabled(quest.status)
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : quest.status === 'completed'
-                            ? 'bg-gray-800 text-white hover:bg-gray-900'
-                            : 'bg-gray-600 text-white hover:bg-gray-700'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : quest.status === 'APPROVED'
+                          ? 'bg-gray-800 text-white hover:bg-gray-900'
+                          : 'bg-gray-600 text-white hover:bg-gray-700'
                         }`}
                       size="sm"
                     >
@@ -316,18 +286,9 @@ export function StudentQuests() {
                   </div>
 
                   <div className="flex items-center space-x-4 text-sm">
-                    <span className="text-black">코랄 {quest.rewards.coral}</span>
-                    <span className="text-black">탐사데이터 {quest.rewards.research_data}</span>
+                    <span className="text-black font-semibold"><span className="text-blue-600">C</span> {quest.reward_coral_personal}</span>
+                    <span className="text-black font-semibold"><span className="text-purple-600">R</span> {quest.reward_research_data_personal}</span>
                   </div>
-
-                  {quest.template && (
-                    <div className="text-xs text-gray-500">
-                      <span className="font-medium">{quest.template.workbookName}</span>
-                      {quest.template.problemCount > 0 && (
-                        <span> • {quest.template.problemCount}문제</span>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             </CardContent>
@@ -347,50 +308,28 @@ export function StudentQuests() {
           onClick={() => setIsCompletedModalOpen(true)}
           className="bg-gray-100 text-black border border-gray-300 hover:bg-gray-200"
         >
-          승인완료된 퀘스트들 ({completedQuests.length})
+          승인완료된 퀘스트들 ({approvedQuests.length})
         </Button>
       </div>
 
       {/* 하단 획득 현황 */}
       <Card className="border-2 border-gray-300 mt-6">
         <CardHeader>
-          <CardTitle className="text-black text-center">총 획득 현황</CardTitle>
+          <CardTitle className="text-black text-center">현재 보유 재화</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div className="p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">획득한 코랄</p>
-              <p className="text-xl font-medium text-black">{totalEarned.coral}</p>
+              <p className="text-xl font-medium text-black">{currentUser.coral}</p>
             </div>
             <div className="p-3 border border-gray-200 rounded">
               <p className="text-sm text-gray-600">획득한 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{totalEarned.research_data}</p>
+              <p className="text-xl font-medium text-black">{currentUser.research_data}</p>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* 세부정보 모달 */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="bg-white border-2 border-gray-300">
-          <DialogHeader>
-            <DialogTitle className="text-black">{selectedQuest?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-black">{selectedQuest?.description}</p>
-            <div className="flex justify-between">
-              <span className="text-gray-600">보상:</span>
-              <span className="text-black">
-                코랄 {selectedQuest?.rewards.coral}, 탐사데이터 {selectedQuest?.rewards.research_data}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">마감:</span>
-              <span className="text-black">{selectedQuest && formatTimeLeft(selectedQuest.dueDate, selectedQuest.status)}</span>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* 승인완료된 퀘스트 모달 */}
       <Dialog open={isCompletedModalOpen} onOpenChange={setIsCompletedModalOpen}>
@@ -399,8 +338,9 @@ export function StudentQuests() {
             <DialogTitle className="text-black">승인완료된 퀘스트들</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {completedQuests.map((quest) => (
-              <Card key={quest.id} className="border-2 border-gray-300">
+            {approvedQuests.length === 0 && <p className="text-gray-500 text-center">승인 완료된 퀘스트가 없습니다.</p>}
+            {approvedQuests.map((quest) => (
+              <Card key={quest.assignment_id} className="border-2 border-gray-300">
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-3">
                     <div className="flex-1 space-y-2">
@@ -410,7 +350,7 @@ export function StudentQuests() {
                           <div className="flex items-center space-x-2 text-sm">
                             {getStatusBadge(quest.status)}
                             <span className="text-sm text-gray-600">
-                              완료일: {quest.submittedAt ? new Date(quest.submittedAt).toLocaleDateString() : ''}
+                              완료일: {formatDateTime(quest.submission?.submitted_at)}
                             </span>
                           </div>
                         </div>
@@ -428,8 +368,8 @@ export function StudentQuests() {
                       </div>
 
                       <div className="flex items-center space-x-4 text-sm">
-                        <span className="text-black">코랄 {quest.rewards.coral}</span>
-                        <span className="text-black">탐사데이터 {quest.rewards.research_data}</span>
+                        <span className="text-black font-semibold"><span className="text-blue-600">C</span> {quest.reward_coral_personal}</span>
+                        <span className="text-black font-semibold"><span className="text-purple-600">R</span> {quest.reward_research_data_personal}</span>
                       </div>
                     </div>
                   </div>
@@ -452,13 +392,14 @@ export function StudentQuests() {
       <Dialog open={isExpiredModalOpen} onOpenChange={setIsExpiredModalOpen}>
         <DialogContent className="bg-white border-2 border-gray-300 max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-black">마감지난 퀘스트들</DialogTitle>
+            <DialogTitle className="text-black">마감지난 퀘스트</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-60 overflow-y-auto">
+            {expiredQuests.length === 0 && <p className="text-gray-500 text-center">마감 지난 퀘스트가 없습니다.</p>}
             {expiredQuests.map((quest) => (
-              <div key={quest.id} className="p-3 border border-gray-300 rounded">
+              <div key={quest.assignment_id} className="p-3 border border-gray-300 rounded">
                 <h3 className="font-medium text-black">{quest.title}</h3>
-                <p className="text-sm text-gray-600">마감일: {new Date(quest.dueDate).toLocaleDateString()}</p>
+                <p className="text-sm text-gray-600">생성일: {formatDateTime(quest.created_at)}</p>
               </div>
             ))}
           </div>
@@ -482,12 +423,14 @@ export function StudentQuests() {
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-semibold text-black mb-2">{selectedQuest?.title}</h3>
-              <p className="text-sm text-gray-600">제출일: {selectedQuest?.submittedAt ? new Date(selectedQuest.submittedAt).toLocaleString() : ''}</p>
+              <p className="text-sm text-gray-600">제출일: {formatDateTime(selectedQuest?.submission?.submitted_at)}</p>
             </div>
 
             <div className="border-2 border-gray-300 p-4 bg-gray-50 rounded-lg">
               <h4 className="text-sm font-medium text-gray-600 mb-2">선생님 피드백</h4>
-              <p className="text-black leading-relaxed">{selectedQuest?.teacherComment}</p>
+              <p className="text-black leading-relaxed whitespace-pre-wrap">
+                {selectedQuest?.submission?.comment || "추가 코멘트가 없습니다."}
+              </p>
             </div>
 
             <div className="flex justify-center">
@@ -503,13 +446,27 @@ export function StudentQuests() {
       </Dialog>
 
       {/* 제출 모달 */}
-      <Dialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
+      <Dialog open={isSubmitOpen} onOpenChange={(isOpen: Boolean) => { if (!isOpen) setIsSubmitOpen(false); }}>
         <DialogContent className="bg-white border-2 border-gray-300">
           <DialogHeader>
             <DialogTitle className="text-black">퀘스트 제출</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-black">{selectedQuest?.title}</p>
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
+            <p className="font-semibold text-black">{selectedQuest?.title}</p>
+            <p className="text-sm text-gray-600 border p-2 rounded-md bg-gray-50">
+              {selectedQuest?.teacher_content}
+            </p>
+
+            {/* 반려된 경우, 반려 사유 표시 */}
+            {selectedQuest?.status === 'REJECTED' && (
+              <Alert variant="destructive">
+                <AlertTitle>반려 사유</AlertTitle>
+                <AlertDescription>
+                  {selectedQuest.submission?.comment || "사유가 없습니다. 다시 제출해주세요."}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Textarea
               value={submitText}
               onChange={(e) => setSubmitText(e.target.value)}
@@ -521,20 +478,20 @@ export function StudentQuests() {
             {/* 첨부파일 섹션 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-black">첨부파일</label>
+                <label className="text-sm font-medium text-black">첨부파일 (10MB 이하)</label>
                 <Input
                   type="file"
-                  multiple
                   onChange={handleFileUpload}
                   className="hidden"
                   id="file-upload"
+                  accept=".pdf, .jpg, .jpeg, .png, .doc, .docx"
                 />
                 <Button
                   type="button"
                   onClick={() => document.getElementById('file-upload')?.click()}
                   className="bg-gray-100 text-black border border-gray-300 hover:bg-gray-200"
                 >
-                  파일 추가
+                  파일 선택
                 </Button>
               </div>
 
@@ -543,12 +500,10 @@ export function StudentQuests() {
                 <div className="space-y-2">
                   {attachedFiles.map((file, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-gray-50 border border-gray-300 rounded">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center">
-                          <span className="text-xs font-bold">F</span>
-                        </div>
-                        <span className="text-sm text-black">{file.name}</span>
-                        <span className="text-xs text-gray-500">
+                      <div className="flex items-center space-x-2 overflow-hidden">
+                        <FileIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <span className="text-sm text-black truncate">{file.name}</span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">
                           ({(file.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>
@@ -557,7 +512,7 @@ export function StudentQuests() {
                         onClick={() => handleRemoveFile(index)}
                         className="bg-gray-100 text-black border border-gray-300 hover:bg-gray-200 p-1 h-6 w-6"
                       >
-                        ×
+                        <X className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
@@ -565,25 +520,29 @@ export function StudentQuests() {
               )}
             </div>
 
+            {submitError && (
+              <Alert variant="destructive">
+                <AlertDescription>{submitError}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="flex space-x-2">
               <Button
-                onClick={handleSubmit}
-                className="flex-1 bg-black text-white"
+                type="submit"
+                className="flex-1 bg-black text-white hover:bg-gray-800"
+                disabled={isSubmitting}
               >
-                제출하기
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (selectedQuest?.status === 'REJECTED' ? '다시 제출' : '제출하기')}
               </Button>
               <Button
-                onClick={() => {
-                  setIsSubmitOpen(false);
-                  setSubmitText('');
-                  setAttachedFiles([]);
-                }}
-                className="flex-1 bg-white text-black border border-gray-300"
+                type="button"
+                onClick={() => setIsSubmitOpen(false)}
+                className="flex-1 bg-white text-black border border-gray-300 hover:bg-gray-50"
               >
                 취소
               </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
