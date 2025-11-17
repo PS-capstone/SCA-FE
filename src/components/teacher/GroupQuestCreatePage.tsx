@@ -6,7 +6,6 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Users, Plus, Calendar, Clock, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
 import { Switch } from "../ui/switch";
 
 export function GroupQuestCreatePage() {
@@ -63,7 +62,6 @@ export function GroupQuestCreatePage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <Sidebar />
 
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

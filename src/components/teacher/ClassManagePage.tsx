@@ -3,7 +3,6 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Plus, Users, Copy, Sword, Trophy } from "lucide-react";
-import { Sidebar } from "./Sidebar";
 import { Progress } from "../ui/progress";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +48,6 @@ export function ClassManagePage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <Sidebar />
       
       <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}

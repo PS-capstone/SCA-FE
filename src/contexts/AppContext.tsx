@@ -10,7 +10,6 @@ export interface StudentUser {
   invite_code: string;
   coral: number;
   research_data: number;
-  mainFish: string;
 }
 
 export interface TeacherUser {
@@ -43,6 +42,7 @@ export interface AppState {
   user: User | null;
   isAuthenticated: boolean;
   userType: 'student' | 'teacher' | null;
+  currentClassId: string | null;
 
   // Theme
   theme: Theme;
@@ -60,6 +60,7 @@ export interface AppState {
 export type AppAction =
   | { type: 'SET_USER'; payload: { user: User; userType: 'student' | 'teacher'; accessToken: string; refreshToken: string } }
   | { type: 'CLEAR_USER' }
+  | { type: 'SET_CURRENT_CLASS'; payload: string }
   | { type: 'SET_THEME'; payload: Partial<Theme> }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'ADD_NOTIFICATION'; payload: Omit<Notification, 'id' | 'timestamp'> }
@@ -82,11 +83,14 @@ try {
   localStorage.removeItem('user');
 }
 
+const storedCurrentClassId = localStorage.getItem('currentClassId');
+
 // Initial State
 const initialState: AppState = {
   user: parsedUser,
   isAuthenticated: !!parsedUser,
   userType: storedUserType as 'student' | 'teacher' | null,
+  currentClassId: storedCurrentClassId,
   theme: {
     mode: 'light',
     language: 'ko'
@@ -100,28 +104,49 @@ const initialState: AppState = {
 // Reducer
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case 'SET_USER':
+    case 'SET_USER': {
       localStorage.setItem('user', JSON.stringify(action.payload.user));
       localStorage.setItem('userType', action.payload.userType);
       localStorage.setItem('accessToken', action.payload.accessToken);
       localStorage.setItem('refreshToken', action.payload.refreshToken);
+
+      const isTeacher = action.payload.userType === 'teacher';
+      const teacherUser = action.payload.user as TeacherUser;
+      let firstClassId: string | null = null;
+
+      if (isTeacher && teacherUser.classes && teacherUser.classes.length > 0) {
+        firstClassId = teacherUser.classes[0];
+        localStorage.setItem('currentClassId', firstClassId);
+      }
+
       return {
         ...state,
         user: action.payload.user,
         isAuthenticated: true,
-        userType: action.payload.userType
+        userType: action.payload.userType,
+        currentClassId: firstClassId
       };
+    }
 
     case 'CLEAR_USER':
       localStorage.removeItem('user');
       localStorage.removeItem('userType');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('currentClassId');
       return {
         ...state,
         user: null,
         isAuthenticated: false,
-        userType: null
+        userType: null,
+        currentClassId: null
+      };
+
+    case 'SET_CURRENT_CLASS':
+      localStorage.setItem('currentClassId', action.payload);
+      return {
+        ...state,
+        currentClassId: action.payload
       };
 
     case 'SET_THEME':
@@ -207,10 +232,17 @@ export function useAuth() {
     dispatch({ type: 'CLEAR_USER' });
   };
 
+  const setCurrentClass = (classId: string) => {
+    dispatch({ type: 'SET_CURRENT_CLASS', payload: classId });
+  };
+
   return {
     user: state.user,
     isAuthenticated: state.isAuthenticated,
     userType: state.userType,
+    access_token: state.isAuthenticated ? localStorage.getItem('accessToken') : null,
+    currentClassId: state.currentClassId,
+    setCurrentClass,
     login,
     logout
   };

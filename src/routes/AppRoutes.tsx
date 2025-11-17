@@ -67,6 +67,7 @@ const StudentLayout: React.FC = () => {
 const TeacherLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex">
+      <Sidebar />
       <main className="flex-1 ml-64 overflow-y-auto">
         <Outlet />
       </main>

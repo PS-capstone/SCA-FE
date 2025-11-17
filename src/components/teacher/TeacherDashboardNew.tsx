@@ -17,7 +17,7 @@ interface ClassSummary {
 export function TeacherDashboardNew() {
   const navigate = useNavigate();
 
-  const { user, isAuthenticated, userType } = useAuth();
+  const { user, isAuthenticated, userType, setCurrentClass } = useAuth();
   const [classes, setClasses] = useState<ClassSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function TeacherDashboardNew() {
 
     if (userType !== 'teacher') {
       setIsLoading(false);
-      setError("교사 전용 페이지입니다.");
+      setError("접근 권한이 없습니다.");
       return;
     }
 
@@ -43,13 +43,11 @@ export function TeacherDashboardNew() {
         const response = await get('/api/v1/classes');
 
         if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
           throw new Error('반 목록을 불러오는 데 실패했습니다.');
         }
 
-
         const data = await response.json();
-
-        console.log(data);
 
         setClasses(data.data.classes || []);
       } catch (err) {
@@ -64,11 +62,11 @@ export function TeacherDashboardNew() {
     };
 
     fetchClasses();
-  }, [isAuthenticated, user, userType]);
+  }, [isAuthenticated, user]);
 
   // 인증 가드 및 로딩/에러 상태에 따른 UI 분기 처리
   if (!isAuthenticated || !user) {
-    return <div className="p-6">로딩중...</div>;
+    return <div className="p-6">로그인 정보 확인 중...</div>;
   }
 
   if (userType !== 'teacher') {
@@ -127,8 +125,10 @@ export function TeacherDashboardNew() {
                 class_name={classItem.class_name}
                 student_count={classItem.student_count}
                 waiting_quest_count={classItem.waiting_quest_count}
-                // 반 관리 페이지로 이동
-                onClick={() => navigate('/teacher/class')}
+                onClick={() => {
+                  setCurrentClass(classItem.class_id.toString());
+                  navigate('/teacher/class');
+                }}
               />
             ))
           ) : (
