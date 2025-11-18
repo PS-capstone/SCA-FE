@@ -8,6 +8,7 @@ import { Input } from '../ui/input';
 import { useAuth, StudentUser } from "../../contexts/AppContext";
 import { Loader2, Send, File as FileIcon, X } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { get, apiCall } from '../../utils/api';
 
 interface MyPersonalQuest {
   assignment_id: number;
@@ -68,15 +69,9 @@ export function StudentQuests() {
 
     try {
       const [activeRes, approvedRes, expiredRes] = await Promise.all([
-        fetch('/api/v1/quests/personal/my?status=ACTIVE', {
-          headers: { 'Authorization': `Bearer ${access_token}` }
-        }),
-        fetch('/api/v1/quests/personal/my?status=APPROVED', {
-          headers: { 'Authorization': `Bearer ${access_token}` }
-        }),
-        fetch('/api/v1/quests/personal/my?status=EXPIRED', {
-          headers: { 'Authorization': `Bearer ${access_token}` }
-        })
+        get('/api/v1/quests/personal/my?status=ACTIVE'),
+        get('/api/v1/quests/personal/my?status=APPROVED'),
+        get('/api/v1/quests/personal/my?status=EXPIRED')
       ]);
 
       if (!activeRes.ok || !approvedRes.ok || !expiredRes.ok) {
@@ -188,11 +183,9 @@ export function StudentQuests() {
     const endpoint = `/api/v1/quests/personal/${selectedQuest.assignment_id}/submit`;
 
     try {
-      const response = await fetch(endpoint, {
+      // apiCall이 FormData를 자동으로 감지하여 적절한 Content-Type을 설정
+      const response = await apiCall(endpoint, {
         method: method,
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        },
         body: formData
       });
 

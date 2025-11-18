@@ -40,7 +40,7 @@ export function StudentListPage() {
       setError(null);
       try {
         const response = await get(
-          `/api/classes/${currentClassId}/students`
+          `/api/v1/classes/${currentClassId}/students`
         );
 
         if (!response.ok) {

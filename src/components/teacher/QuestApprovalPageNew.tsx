@@ -7,6 +7,7 @@ import { CheckCircle, X, Image as ImageIcon, ChevronDown, Loader2 } from "lucide
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAuth } from "../../contexts/AppContext";
+import { get, post } from "../../utils/api";
 
 interface Assignment {
   assignment_id: number;
@@ -103,11 +104,7 @@ export function QuestApprovalPageNew() {
       }
 
       try {
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${access_token}`
-          }
-        });
+        const response = await get(url);
         if (!response.ok) {
           throw new Error('승인 대기 목록을 불러오는 데 실패했습니다.');
         }
@@ -132,11 +129,7 @@ export function QuestApprovalPageNew() {
     setSelectedQuestDetail(null);
 
     try {
-      const response = await fetch(`/api/v1/quests/personal/${assignmentId}/detail`, {
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        }
-      });
+      const response = await get(`/api/v1/quests/personal/${assignmentId}/detail`);
 
       if (!response.ok) {
         const errData = await response.json();
@@ -168,15 +161,8 @@ export function QuestApprovalPageNew() {
     const endpoint = `/api/v1/quests/personal/${selectedQuestDetail.assignment_id}/${action}`;
 
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${access_token}`
-        },
-        body: JSON.stringify({
-          comment: customComment || (action === 'approve' ? "잘했어요!" : "다시 확인해주세요.")
-        })
+      const response = await post(endpoint, {
+        comment: customComment || (action === 'approve' ? "잘했어요!" : "다시 확인해주세요.")
       });
 
       const data = await response.json();
