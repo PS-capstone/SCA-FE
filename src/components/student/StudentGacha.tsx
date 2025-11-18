@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -6,49 +6,65 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useAuth, StudentUser } from "../../contexts/AppContext";
 
 interface Fish {
-  id: string;
-  name: string;
-  rarity: 'common' | 'rare' | 'legend';
-  image: string;
+  fish_id: number;
+  fish_name: string;
+  grade: 'COMMON' | 'RARE' | 'LEGENDARY';
+  is_new: boolean;
+  current_count: number;
 }
 
 export function StudentGacha() {
-  const { user, isAuthenticated, userType } = useAuth();
+  const { user, isAuthenticated, userType, access_token } = useAuth();
 
   const [isResultOpen, setIsResultOpen] = useState(false);
   const [isProbabilityOpen, setIsProbabilityOpen] = useState(false);
   const [resultFish, setResultFish] = useState<Fish | null>(null);
 
-  const gachaCost = 10; // 코랄 10개 필요
-
-  const fishDatabase: Fish[] = [
-    // Common (60%)
-    { id: '1', name: '기본 물고기', rarity: 'common', image: 'fish1' },
-    { id: '2', name: '파랑 물고기', rarity: 'common', image: 'fish2' },
-    { id: '3', name: '빨강 물고기', rarity: 'common', image: 'fish3' },
-    { id: '4', name: '노랑 물고기', rarity: 'common', image: 'fish4' },
-    { id: '5', name: '초록 물고기', rarity: 'common', image: 'fish5' },
-
-    // Rare (30%)
-    { id: '6', name: '무지개 물고기', rarity: 'rare', image: 'fish6' },
-    { id: '7', name: '별빛 물고기', rarity: 'rare', image: 'fish7' },
-    { id: '8', name: '황금 물고기', rarity: 'rare', image: 'fish8' },
-    { id: '9', name: '크리스탈 물고기', rarity: 'rare', image: 'fish9' },
-    { id: '10', name: '다이아 물고기', rarity: 'rare', image: 'fish10' },
-
-    // Legend (10%)
-    { id: '11', name: '전설의 드래곤 피쉬', rarity: 'legend', image: 'fish11' },
-    { id: '12', name: '고대의 바다왕', rarity: 'legend', image: 'fish12' },
-    { id: '13', name: '신화의 크라켄', rarity: 'legend', image: 'fish13' },
-    { id: '14', name: '환상의 리바이어던', rarity: 'legend', image: 'fish14' },
-    { id: '15', name: '천공의 바다독수리', rarity: 'legend', image: 'fish15' },
-  ];
+  const [gachaCost, setGachaCost] = useState(10);
+  const [studentCoral, setStudentCoral] = useState(100);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const probabilityTable = [
-    { rarity: 'common', name: '커먼', rate: '60%', color: 'bg-gray-400' },
-    { rarity: 'rare', name: '레어', rate: '30%', color: 'bg-gray-600' },
-    { rarity: 'legend', name: '레전드', rate: '10%', color: 'bg-black' },
+    { rarity: 'COMMON', name: '커먼', rate: '70%', color: 'bg-gray-400' },
+    { rarity: 'RARE', name: '레어', rate: '25%', color: 'bg-blue-500' },
+    { rarity: 'LEGENDARY', name: '레전더리', rate: '5%', color: 'bg-yellow-600' },
   ];
+
+  useEffect(() => {
+    if (isAuthenticated && userType === 'student' && access_token) {
+      const fetchGachaInfo = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const response = await fetch('/api/v1/gacha/info', {
+            headers: {
+              'Authorization': `Bearer ${access_token}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('가챠 정보를 불러오는데 실패했습니다.');
+          }
+
+          const result = await response.json();
+
+          if (result.success) {
+            setStudentCoral(result.data.student_coral);
+            setGachaCost(result.data.gacha_cost);
+          } else {
+            throw new Error(result.message || '데이터 포맷 오류');
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err.message : '알 수 없는 오류 발생');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchGachaInfo();
+    }
+  }, [isAuthenticated, userType, access_token]);
 
   //로그인 여부 확인
   if (!isAuthenticated || !user) {
@@ -59,44 +75,69 @@ export function StudentGacha() {
     return <div className="p-6">학생 전용 페이지입니다.</div>;
   }
 
-  const currentUser = user as StudentUser;
+  // 가챠 정보 로딩 중
+  if (isLoading) {
+    return <div className="p-4">가챠 정보 로딩 중...</div>;
+  }
 
-  const drawGacha = () => {
-    if (currentUser.coral < gachaCost) {
+  // 에러 발생 시
+  if (error) {
+    return <div className="p-4 text-red-500">오류: {error}</div>;
+  }
+
+  const drawGacha = async () => {
+    if (studentCoral < gachaCost) {
       alert('코랄이 부족합니다!');
       return;
     }
 
-    // 가챠 뽑기 로직
-    const random = Math.random() * 100;
-    let selectedRarity: Fish['rarity'];
+    try {
+      const response = await fetch('/api/v1/gacha/draw', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          coral: studentCoral
+        }),
+      });
 
-    if (random < 10) {
-      selectedRarity = 'legend';
-    } else if (random < 40) {
-      selectedRarity = 'rare';
-    } else {
-      selectedRarity = 'common';
+      const result = await response.json();
+
+      // 가챠 뽑기 로직
+      if (result.success) {
+        // 가챠 성공
+        setResultFish(result.data.drawn_fish);
+        setStudentCoral(result.data.remaining_coral); // 남은 코랄 업데이트
+        setIsResultOpen(true);
+        console.log('Gacha result:', result.data);
+      } else {
+        // 가챠 실패 (예: 코랄 부족)
+        if (result.error_code === 'INSUFFICIENT_CORAL') {
+          alert('코랄이 부족합니다. (서버 체크)');
+          // 서버 값으로 코랄 동기화
+          if (result.details && typeof result.details.available === 'number') {
+            setStudentCoral(result.details.available);
+          }
+        } else {
+          alert(`오류: ${result.message}`);
+        }
+      }
+    } catch (err) {
+      console.error('Gacha draw error:', err);
+      alert('가챠 뽑기 중 오류가 발생했습니다.');
     }
-
-    const fishOfRarity = fishDatabase.filter(fish => fish.rarity === selectedRarity);
-    const randomFish = fishOfRarity[Math.floor(Math.random() * fishOfRarity.length)];
-
-    setResultFish(randomFish);
-    setIsResultOpen(true);
-
-    // 실제로는 API 호출하여 코랄 차감 및 물고기 추가
-    console.log('Gacha result:', randomFish);
   };
 
-  const getRarityBadge = (rarity: Fish['rarity']) => {
-    switch (rarity) {
-      case 'common':
+  const getRarityBadge = (grade: Fish['grade']) => {
+    switch (grade) {
+      case 'COMMON':
         return <Badge className="bg-gray-400">커먼</Badge>;
-      case 'rare':
-        return <Badge className="bg-gray-600">레어</Badge>;
-      case 'legend':
-        return <Badge className="bg-black">레전드</Badge>;
+      case 'RARE':
+        return <Badge className="bg-blue-500">레어</Badge>;
+      case 'LEGENDARY':
+        return <Badge className="bg-yellow-600">레전더리</Badge>;
     }
   };
 
@@ -122,7 +163,7 @@ export function StudentGacha() {
           {/* 현재 코랄 */}
           <div className="text-center mb-4">
             <p className="text-sm text-gray-600">보유 코랄</p>
-            <p className="text-2xl font-medium text-black">{currentUser.coral}</p>
+            <p className="text-2xl font-medium text-black">{studentCoral}</p>
           </div>
 
           {/* 필요 코랄 */}
@@ -134,10 +175,10 @@ export function StudentGacha() {
           {/* 가챠 버튼 */}
           <Button
             onClick={drawGacha}
-            disabled={currentUser.coral < gachaCost}
+            disabled={studentCoral < gachaCost}
             className="w-full bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500"
           >
-            {currentUser.coral < gachaCost ? '코랄 부족' : '가챠 뽑기'}
+            {studentCoral < gachaCost ? '코랄 부족' : '가챠 뽑기'}
           </Button>
         </CardContent>
       </Card>
@@ -160,24 +201,32 @@ export function StudentGacha() {
           </DialogHeader>
           <div className="text-center space-y-4">
             {/* 물고기 이미지 */}
-            <div className={`w-32 h-32 rounded mx-auto flex items-center justify-center ${resultFish?.rarity === 'legend' ? 'bg-gray-800' :
-              resultFish?.rarity === 'rare' ? 'bg-gray-600' : 'bg-gray-400'
+            <div className={`w-32 h-32 rounded mx-auto flex items-center justify-center ${resultFish?.grade === 'LEGENDARY' ? 'bg-yellow-600' :
+              resultFish?.grade === 'RARE' ? 'bg-blue-500' : 'bg-gray-400'
               }`}>
               <span className="text-white">물고기</span>
             </div>
 
             {/* 물고기 정보 */}
             <div>
-              <h3 className="text-lg font-medium text-black">{resultFish?.name}</h3>
-              {resultFish && getRarityBadge(resultFish.rarity)}
+              <div className="flex justify-center items-center gap-2 mb-2">
+                {resultFish?.is_new && (
+                  <Badge className="bg-green-500 text-white">NEW!</Badge>
+                )}
+                <h3 className="text-lg font-medium text-black">{resultFish?.fish_name}</h3>
+              </div>
+              {resultFish && getRarityBadge(resultFish.grade)}
+              <p className="text-sm text-gray-500 mt-2">
+                (보유 수량: {resultFish?.current_count})
+              </p>
             </div>
 
             {/* 희귀도에 따른 효과 설명 */}
-            {resultFish?.rarity === 'legend' && (
-              <p className="text-sm text-gray-600">✨ 전설급 물고기를 획득했습니다! ✨</p>
+            {resultFish?.grade === 'LEGENDARY' && (
+              <p className="text-sm text-yellow-600">✨ 레전더리 물고기를 획득했습니다! ✨</p>
             )}
-            {resultFish?.rarity === 'rare' && (
-              <p className="text-sm text-gray-600">⭐ 희귀한 물고기를 획득했습니다!</p>
+            {resultFish?.grade === 'RARE' && (
+              <p className="text-sm text-blue-600">⭐ 레어 물고기를 획득했습니다!</p>
             )}
 
             <Button
@@ -218,8 +267,8 @@ export function StudentGacha() {
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="text-sm font-medium text-blue-800 mb-2">💡 가챠 팁</h4>
               <p className="text-xs text-blue-600">
-                • 코랄 10개로 가챠 1회 뽑기 가능<br />
-                • 레전드 등급은 10% 확률로 매우 희귀합니다<br />
+                • 코랄 {gachaCost}개로 가챠 1회 뽑기 가능<br />
+                • 레전더리 등급은 {probabilityTable.find(p => p.rarity === 'LEGENDARY')?.rate} 확률로 매우 희귀합니다<br />
               </p>
             </div>
 
