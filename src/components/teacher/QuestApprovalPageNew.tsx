@@ -97,9 +97,9 @@ export function QuestApprovalPageNew() {
       setIsLoading(true);
       setError(null);
 
-      let url = '/api/v1/quests/personal/pending';
+      let url = '/api/v1/quests/personal?status=SUBMITTED';
       if (currentClassId) {
-        url += `?class_id=${currentClassId}`;
+        url += `&class_id=${currentClassId}`;
       }
 
       try {
@@ -256,7 +256,7 @@ export function QuestApprovalPageNew() {
                         <p className="text-sm text-gray-600">{quest.title}</p>
                       </div>
                       <Badge className="bg-gray-200 text-black border-2 border-gray-300 rounded-lg">
-                        {quest.title}
+                        {quest.status}
                       </Badge>
                     </div>
                     <div className="text-sm text-gray-600">

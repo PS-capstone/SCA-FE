@@ -32,8 +32,9 @@ export function Sidebar() {
     { id: '/teacher/quest/approval', label: '퀘스트 승인', icon: CheckCircle },
   ];
 
-  const isDashboard = location.pathname === '/teacher/dashboard';
-  const navItems = isDashboard ? homeNavItems : allNavItems;
+  const showOnlyHome = location.pathname === '/teacher/dashboard' ||
+    location.pathname === '/teacher/class/create';
+  const navItems = showOnlyHome ? homeNavItems : allNavItems;
 
   return (
     <div className={`max-h-screen bg-white border-r-2 border-gray-300 transition-all ${collapsed ? 'w-20' : 'w-64'} flex flex-col`}>

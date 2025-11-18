@@ -6,7 +6,6 @@ import { Badge } from "../ui/badge";
 interface StudentListItemProps {
   id: number;
   name: string;
-  avatar: string;
   pendingQuests: number;
   coral: number;
   research_data: number;
@@ -15,8 +14,7 @@ interface StudentListItemProps {
 
 function StudentListItemInner({ 
   id, 
-  name, 
-  avatar, 
+  name,  
   pendingQuests, 
   coral, 
   research_data, 
@@ -28,11 +26,6 @@ function StudentListItemInner({
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3 mb-4">
-          <Avatar className="w-12 h-12 border-2 border-gray-300">
-            <AvatarFallback className="bg-gray-200 text-black">
-              {avatar}
-            </AvatarFallback>
-          </Avatar>
           <div className="flex-1">
             <h4>{name}</h4>
             {pendingQuests > 0 && (
