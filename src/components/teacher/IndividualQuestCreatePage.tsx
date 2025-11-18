@@ -17,18 +17,6 @@ import {
   SelectValue,
 } from "../ui/select";
 
-const MOCK_STUDENTS: StudentUser[] = [
-  { id: '1', real_name: '김철수', nickname: '철수', username: '1', email: '1@domain.com', invite_code: 'aa', coral: 10, research_data: 50, mainFish: 'c' },
-  { id: '2', real_name: '이영희', nickname: '영희', username: '2', email: '2@domain.com', invite_code: 'aa', coral: 120, research_data: 50, mainFish: 'c' },
-  { id: '3', real_name: '박민수', nickname: '민수', username: '3', email: '3@domain.com', invite_code: 'aa', coral: 70, research_data: 30, mainFish: 'c' },
-  { id: '4', real_name: '최다빈', nickname: '다빈', username: '4', email: '4@domain.com', invite_code: 'aa', coral: 10, research_data: 10, mainFish: 'c' },
-]
-
-interface Student {
-  id: string;
-  name: string;
-  class: string;
-}
 interface AiRecommendation {
   student_id: number;
   student_name: string;
@@ -55,10 +43,9 @@ type EditFormState = {
 
 export function IndividualQuestCreatePage() {
   const navigate = useNavigate();
-  const { isAuthenticated, userType } = useAuth();
+  const { isAuthenticated, userType, user, access_token, currentClassId } = useAuth();
 
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [showDefaultRewardModal, setShowDefaultRewardModal] = useState(false);
   const [showDifficultyGuide, setShowDifficultyGuide] = useState(false);
   const [showAIReward, setShowAIReward] = useState(false);
   const [questData, setQuestData] = useState({
@@ -71,8 +58,6 @@ export function IndividualQuestCreatePage() {
     category: "일반"
   });
 
-  const [tempAiDefaultRewards, setTempAiDefaultRewards] = useState({ coral: "", research: "" });
-  const [isDefaultAiLoading, setIsDefaultAiLoading] = useState(false);
   const [aiModeEnabled, setAiModeEnabled] = useState(false);
 
   const [aiRecommendations, setAiRecommendations] = useState<Map<string, AiRecommendation>>(new Map());
@@ -102,25 +87,27 @@ export function IndividualQuestCreatePage() {
   };
 
   useEffect(() => {
-    /*     if (!isAuthenticated || userType !== 'teacher') {
-          setIsLoadingStudents(false);
-          setFetchError("접근 권한이 없습니다.");
-          return;
-        } */
+    if (!isAuthenticated || userType !== 'teacher') {
+      setIsLoadingStudents(false);
+      setFetchError("접근 권한이 없습니다.");
+      return;
+    }
+
+    if (!currentClassId) {
+      setIsLoadingStudents(false);
+      setFetchError("선택된 반이 없습니다. 반을 먼저 선택해주세요.");
+      return;
+    }
 
     const fetchStudents = async () => {
       setIsLoadingStudents(true);
       setFetchError(null);
-      setTimeout(() => {
-        setAllStudents(MOCK_STUDENTS);
-        setIsLoadingStudents(false);
-      }, 1000);
-//백엔드 api 연결용
-/*             try {
+
+      try {
         // 전체 학생 목록 조회
-        const response = await fetch('/api/classes/{class_id}/students', {
+        const response = await fetch(`/api/v1/classes/${currentClassId}/students`, {
           headers: {
-            // 'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${access_token}`
           }
         });
         if (!response.ok) {
@@ -133,11 +120,11 @@ export function IndividualQuestCreatePage() {
         setFetchError(message);
       } finally {
         setIsLoadingStudents(false);
-      } */
+      }
     };
 
     fetchStudents();
-  }, [/* isAuthenticated, userType */]);
+  }, [isAuthenticated, userType, user, access_token, currentClassId]);
 
   const toggleStudent = (studentId: string) => {
     setSelectedStudents(prev =>
@@ -153,95 +140,24 @@ export function IndividualQuestCreatePage() {
     setAiModeEnabled(false);
   };
 
-  const MOCK_AI_RESPONSE = {
-    data: {
-      reward_coral_default: 50,
-      reward_research_data_default: 30,
-      recommendations: [
-        { student_id: 1, student_name: '김철수', recommended_coral: 42, recommended_research_data: 84, reason: '우수 학생' },
-        { student_id: 2, student_name: '이영희', recommended_coral: 55, recommended_research_data: 110, reason: '부진 학생' },
-        { student_id: 3, student_name: '박민수', recommended_coral: 45, recommended_research_data: 89, reason: '양호 학생' },
-      ]
-    }
-  };
-
-  //기본 보상 결정 모달
-  const handleFetchDefaultRewards = async () => {
-    setIsDefaultAiLoading(true);
-    setTimeout(() => {
-      const responseData = MOCK_AI_RESPONSE.data;
-
-      setTempAiDefaultRewards({
-        coral: responseData.reward_coral_default.toString(),
-        research: responseData.reward_research_data_default.toString()
-      });
-
-      setShowDefaultRewardModal(true);
-      setIsDefaultAiLoading(false);
-    }, 1000);
-  };
-
-  const handleConfirmDefaultRewards = () => {
-    setQuestData(prev => ({
-      ...prev,
-      reward_coral_default: tempAiDefaultRewards.coral,
-      reward_research_data_default: tempAiDefaultRewards.research
-    }));
-    handleCancelDefaultRewards();
-  };
-
-  const handleCancelDefaultRewards = () => {
-    setShowDefaultRewardModal(false);
-    setTempAiDefaultRewards({ coral: "", research: "" });
-  };
-
   const handleAiRecommend = async () => {
     if (selectedStudents.length === 0) {
       alert("AI 추천을 받으려면 대상 학생을 1명 이상 선택해야 합니다.");
       return;
     }
+    if (!access_token) {
+      alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+      return;
+    }
+
     setIsAiLoading(true);
-    setTimeout(() => {
-      const responseData = MOCK_AI_RESPONSE.data;
-
-      // 학생별 추천 목록 state에 저장
-      const recommendations: AiRecommendation[] = responseData.recommendations || [];
-      const newAiRecsMap = new Map<string, AiRecommendation>();
-      const newPersonalRewardsMap = new Map<string, { coral: number, research: number, memo?: string }>();
-
-      recommendations.forEach((rec: AiRecommendation) => {
-        const studentId = rec.student_id.toString();
-        // 선택된 학생 목록(selectedStudents)에 포함된 학생의 추천만 저장
-        if (selectedStudents.includes(studentId)) {
-          newAiRecsMap.set(studentId, rec);
-          newPersonalRewardsMap.set(studentId, {
-            coral: rec.recommended_coral,
-            research: rec.recommended_research_data,
-            memo: ""
-          });
-        }
-      });
-
-      setAiRecommendations(newAiRecsMap);
-      setPersonalRewards(newPersonalRewardsMap);
-
-      setShowAIReward(false);
-      setShowAiStudentModal(true);
-      setIsAiLoading(false);
-
-      setAiModeEnabled(true);
-      setQuestData(prev => ({
-        ...prev,
-        reward_coral_default: "",
-        reward_research_data_default: ""
-      }));
-    }, 1500);
-
-    //백엔드 api 연결용
-/*     try {
-      const response = await fetch('/api/quests/personal/ai-recommend', {
+    try {
+      const response = await fetch('/api/v1/quests/personal/ai-recommend', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           quest_title: questData.title,
           quest_content: questData.teacher_content,
@@ -249,10 +165,13 @@ export function IndividualQuestCreatePage() {
           student_ids: selectedStudents.map(Number)
         })
       });
-      if (!response.ok) {
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
         throw new Error('AI 추천에 실패했습니다.');
       }
-      const data = await response.json();
+
       const responseData = data.data;
 
       setQuestData(prev => ({
@@ -267,26 +186,28 @@ export function IndividualQuestCreatePage() {
 
       recommendations.forEach((rec: AiRecommendation) => {
         const studentId = rec.student_id.toString();
-        newAiRecsMap.set(studentId, rec);
-        // 'personalRewards'를 AI 추천값으로 우선 채워둠
-        newPersonalRewardsMap.set(studentId, {
-          coral: rec.recommended_coral,
-          research: rec.recommended_research_data,
-          memo: ""
-        });
+        if (selectedStudents.includes(studentId)) {
+          newAiRecsMap.set(studentId, rec);
+          newPersonalRewardsMap.set(studentId, {
+            coral: rec.recommended_coral,
+            research: rec.recommended_research_data,
+            memo: ""
+          });
+        }
       });
       setAiRecommendations(newAiRecsMap);
       setPersonalRewards(newPersonalRewardsMap);
 
       setShowAIReward(false); // 성공 시 모달 닫기
       setShowAiStudentModal(true);
+      setAiModeEnabled(true);
 
     } catch (error) {
       console.error("AI 보상 추천 실패:", error);
       alert((error instanceof Error) ? error.message : "AI 추천 중 오류 발생");
     } finally {
       setIsAiLoading(false);
-    } */
+    }
 
   };
 
@@ -344,6 +265,7 @@ export function IndividualQuestCreatePage() {
     setAiRecommendations(new Map());
     setPersonalRewards(new Map());
     setShowAiStudentModal(false);
+    setAiModeEnabled(false);
   };
 
   const handleSubmit = async () => {
@@ -356,61 +278,90 @@ export function IndividualQuestCreatePage() {
       return;
     };
 
+    if (!isAuthenticated || userType !== 'teacher' || !user || !access_token) {
+      setFormErrors(prev => ({ ...prev, formGeneral: "로그인이 필요하거나 교사 계정이 아닙니다." }));
+      return;
+    }
+    if (!currentClassId) {
+      setFormErrors(prev => ({ ...prev, formGeneral: "교사 계정에 반 정보가 없습니다." }));
+      return;
+    }
+
     setIsSubmitting(true);
     setFormErrors({});
 
-    setTimeout(() => {
+    try {
       const assignments = selectedStudents.map(studentId => {
-        let personalCoral: number;
-        let personalResearch: number;
-        let aiCoral: number = 0;
-        let aiResearch: number = 0;
+        const assignment: any = {
+          student_id: Number(studentId)
+        };
 
         if (aiModeEnabled) {
-          // AI 모드 활성화 시: personalRewards (AI추천값 또는 수정값) 사용
           const personalRec = personalRewards.get(studentId);
-          const aiRec = aiRecommendations.get(studentId); // 원본 AI 추천값
+          const aiRec = aiRecommendations.get(studentId);
 
-          personalCoral = personalRec?.coral ?? 0;
-          personalResearch = personalRec?.research ?? 0;
-          aiCoral = aiRec?.recommended_coral || 0;
-          aiResearch = aiRec?.recommended_research_data || 0;
+          assignment.reward_coral_personal = personalRec?.coral ?? 0;
+          assignment.reward_research_data_personal = personalRec?.research ?? 0;
+          assignment.ai_reward_coral = aiRec?.recommended_coral || 0;
+          assignment.ai_reward_research_data = aiRec?.recommended_research_data || 0;
 
         } else {
-          // AI 모드 비활성화 시: questData (수동입력값) 사용
-          personalCoral = Number(questData.reward_coral_default) || 0;
-          personalResearch = Number(questData.reward_research_data_default) || 0;
+          assignment.reward_coral_personal = Number(questData.reward_coral_default) || 0;
+          assignment.reward_research_data_personal = Number(questData.reward_research_data_default) || 0;
         }
-
-        return {
-          student_id: Number(studentId),
-          reward_coral_personal: personalCoral,
-          reward_research_data_personal: personalResearch,
-          ai_reward_coral: aiCoral,
-          ai_reward_research_data: aiResearch
-        };
+        return assignment;
       });
+
+      const localDate = questData.deadline ? new Date(questData.deadline) : null;
+      let formattedDeadline: string | null = null;
+      if (questData.deadline) {
+        formattedDeadline = questData.deadline + ":00";
+      }
 
       const payload = {
         title: questData.title,
         teacher_content: questData.teacher_content,
         difficulty: questData.difficulty || 3,
-        deadline: questData.deadline || null,
-        ai_used: aiRecommendations.size > 0,
+        deadline: formattedDeadline,
+        class_id: Number(currentClassId),
+        ai_used: aiModeEnabled,
         reward_coral_default: Number(questData.reward_coral_default) || 0,
         reward_research_data_default: Number(questData.reward_research_data_default) || 0,
         assignments: assignments
       };
 
-      console.log("퀘스트 등록 페이로드:", payload);
-      alert(`[MOCK] 개인 퀘스트가 등록되었습니다!\n대상: ${selectedStudents.length}명\n제목: ${questData.title}`);
+      console.log("퀘스트 등록 페이로드:", JSON.stringify(payload, null, 2));
 
-      setIsSubmitting(false);
+      const response = await fetch('/api/v1/quests/personal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access_token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        const errorData = await response.json().catch(() => ({ message: "서버 응답이 올바르지 않습니다." }));
+        throw new Error(errorData.message || "퀘스트 등록에 실패했습니다.");
+      }
+
+      alert(result.message || `[SUCCESS] 개인 퀘스트가 등록되었습니다!`);
       navigate('/teacher/quest/individual');
-    }, 1000);
+
+    } catch (err) {
+      console.error("퀘스트 등록 실패:", err);
+      const message = (err instanceof Error) ? err.message : "알 수 없는 에러 발생";
+      setFormErrors(prev => ({
+        ...prev,
+        formGeneral: message
+      }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-
 
   // 현재 수정 모달에 필요한 데이터 가져오기
   const currentEditStudent = allStudents.find(s => s.id === currentEditingStudentId);
@@ -494,42 +445,6 @@ export function IndividualQuestCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-                  onClick={handleFetchDefaultRewards}
-                  disabled={isDefaultAiLoading || aiModeEnabled}
-                >
-                  {isDefaultAiLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-4 h-4 mr-2" />
-                  )}
-                  {isDefaultAiLoading ? "추천 로딩중..." : "기본 보상 추천"}
-                </Button>
-                <Label htmlFor="reward_coral_default" className="text-black font-medium">보상: 코랄</Label>
-                <Input
-                  id="reward_coral_default"
-                  value={questData.reward_coral_default}
-                  onChange={handleQuestDataChange}
-                  placeholder={aiModeEnabled ? "AI 학생별 보상 적용됨" : "직접 입력 (예: 50)"}
-                  className="border-2 border-gray-300 rounded-lg disabled:bg-gray-100"
-                  disabled={aiModeEnabled}
-                />
-
-                <Label htmlFor="reward_research_data_default" className="text-black font-medium">보상: 탐사데이터</Label>
-                <Input
-                  id="reward_research_data_default"
-                  value={questData.reward_research_data_default}
-                  onChange={handleQuestDataChange}
-                  placeholder={aiModeEnabled ? "AI 학생별 보상 적용됨" : "직접 입력 (예: 30)"}
-                  className="border-2 border-gray-300 rounded-lg disabled:bg-gray-100"
-                  disabled={aiModeEnabled}
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="difficulty" className="text-black font-medium">대상 학생 선택 *</Label>
                 {isLoadingStudents && <p>학생 목록 로딩 중...</p>}
                 {fetchError && <p className="text-red-600">{fetchError}</p>}
@@ -601,13 +516,40 @@ export function IndividualQuestCreatePage() {
                   <Label htmlFor="deadline" className="text-black font-medium">마감일</Label>
                   <Input
                     id="deadline"
-                    type="date"
+                    type="datetime-local"
                     value={questData.deadline}
                     onChange={handleQuestDataChange}
                     className="border-2 border-gray-300 rounded-lg"
                   />
                 </div>
               </div>
+              {/* AI 모드가 아닐 때 (수동 입력) */}
+              {!aiModeEnabled && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reward_coral_default" className="text-black font-medium">기본 코랄 보상</Label>
+                    <Input
+                      id="reward_coral_default"
+                      type="number"
+                      value={questData.reward_coral_default}
+                      onChange={handleQuestDataChange}
+                      placeholder="예: 50"
+                      className="border-2 border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reward_research_data_default" className="text-black font-medium">기본 탐사 데이터 보상</Label>
+                    <Input
+                      id="reward_research_data_default"
+                      type="number"
+                      value={questData.reward_research_data_default}
+                      onChange={handleQuestDataChange}
+                      placeholder="예: 30"
+                      className="border-2 border-gray-300 rounded-lg"
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -657,45 +599,6 @@ export function IndividualQuestCreatePage() {
                 className="bg-black hover:bg-gray-800 text-white rounded-lg"
               >
                 확인
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 기본 보상값 모달 */}
-      <Dialog open={showDefaultRewardModal} onOpenChange={(isOpen: Boolean) => {
-        if (!isOpen) handleCancelDefaultRewards();
-        else setShowDefaultRewardModal(true);
-      }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-black">AI 기본 보상 추천</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <p className="text-sm text-gray-700 mb-3">
-                퀘스트 정보를 기반으로 AI가 추천한 기본 보상입니다.
-              </p>
-              <h3 className="font-semibold text-black mb-2">AI 추천 보상</h3>
-              <ul className="space-y-1 text-sm text-gray-900">
-                <li>• 추천 코랄: <span className="font-bold">{tempAiDefaultRewards.coral || "..."}</span></li>
-                <li>• 추천 탐사데이터: <span className="font-bold">{tempAiDefaultRewards.research || "..."}</span></li>
-              </ul>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={handleCancelDefaultRewards}
-                className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleConfirmDefaultRewards}
-                className="bg-black hover:bg-gray-800 text-white rounded-lg"
-              >
-                결정
               </Button>
             </div>
           </div>
