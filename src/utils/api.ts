@@ -71,13 +71,17 @@ async function refreshAccessToken(): Promise<string> {
  * - refresh 실패 시 로그아웃 처리
  */
 export async function apiCall(url: string, options: ApiCallOptions = {}): Promise<Response> {
-  const { skipAuth = false, headers = {}, ...restOptions } = options;
+  const { skipAuth = false, headers = {}, body, ...restOptions } = options;
 
   // 기본 헤더 설정
   const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
     ...headers,
   };
+
+  // body가 FormData가 아닐 때만 Content-Type을 application/json으로 설정
+  if (!(body instanceof FormData)) {
+    (defaultHeaders as Record<string, string>)['Content-Type'] = 'application/json';
+  }
 
   // skipAuth가 false이고 accessToken이 있으면 헤더에 추가
   if (!skipAuth) {
@@ -91,6 +95,7 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
   let response = await fetch(url, {
     ...restOptions,
     headers: defaultHeaders,
+    body,
   });
 
   // 401 에러가 아니면 바로 반환
@@ -112,6 +117,7 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
       response = await fetch(url, {
         ...restOptions,
         headers: defaultHeaders,
+        body,
       });
 
       return response;
@@ -141,6 +147,7 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
       return fetch(url, {
         ...restOptions,
         headers: defaultHeaders,
+        body,
       });
     }) as Promise<Response>;
   }

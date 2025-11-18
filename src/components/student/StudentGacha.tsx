@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { useAuth, StudentUser } from "../../contexts/AppContext";
+import { get, post } from "../../utils/api";
 
 interface Fish {
   fish_id: number;
@@ -37,11 +38,7 @@ export function StudentGacha() {
         setIsLoading(true);
         setError(null);
         try {
-          const response = await fetch('/api/v1/gacha/info', {
-            headers: {
-              'Authorization': `Bearer ${access_token}`,
-            },
-          });
+          const response = await get('/api/v1/gacha/info');
 
           if (!response.ok) {
             throw new Error('가챠 정보를 불러오는데 실패했습니다.');
@@ -92,15 +89,8 @@ export function StudentGacha() {
     }
 
     try {
-      const response = await fetch('/api/v1/gacha/draw', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          coral: studentCoral
-        }),
+      const response = await post('/api/v1/gacha/draw', {
+        coral: studentCoral
       });
 
       const result = await response.json();
