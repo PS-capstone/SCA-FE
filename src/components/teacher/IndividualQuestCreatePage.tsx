@@ -111,7 +111,15 @@ export function IndividualQuestCreatePage() {
           throw new Error('학생 목록을 불러오는 데 실패했습니다.');
         }
         const data = await response.json();
-        setAllStudents(data.students || []);
+        console.log(data)
+        // API 응답을 프론트엔드 형식에 맞게 변환
+        const students = (data.data.students || []).map((student: any) => ({
+          id: student.student_id.toString(),
+          real_name: student.name,
+          coral: student.coral,
+          research_data: student.research_data
+        }));
+        setAllStudents(students);
       } catch (err) {
         const message = (err instanceof Error) ? err.message : "알 수 없는 에러 발생";
         setFetchError(message);
