@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Textarea } from '../ui/textarea';
-import { Input } from '../ui/input';
 import { useAuth, StudentUser } from "../../contexts/AppContext";
-import { Loader2, Send, File as FileIcon, X } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Loader2, File as FileIcon, X } from 'lucide-react';
 import { get, apiCall } from '../../utils/api';
 
 interface MyPersonalQuest {
@@ -119,6 +113,17 @@ export function StudentQuests() {
     }
   };
 
+  const getStatusText = (status: MyPersonalQuest['status']) => {
+    switch (status) {
+      case 'ASSIGNED': return <span style={{ color: "blue", fontWeight: "bold" }}>[제출 필요]</span>;
+      case 'SUBMITTED': return <span style={{ color: "yellow", fontWeight: "bold" }}>[승인 대기]</span>;
+      case 'REJECTED': return <span style={{ color: "red", fontWeight: "bold" }}>[반려됨]</span>;
+      case 'APPROVED': return <span style={{ color: "green", fontWeight: "bold" }}>[승인 완료]</span>;
+      case 'EXPIRED': return <span style={{ color: "gray", fontWeight: "bold" }}>[만료됨]</span>;
+      default: return <span>[{status}]</span>;
+    }
+  };
+
   const getButtonText = (status: MyPersonalQuest['status']) => {
     switch (status) {
       case 'ASSIGNED':
@@ -209,15 +214,11 @@ export function StudentQuests() {
 
   //로그인 여부 확인
   if (!isAuthenticated || !user) {
-    return (
-      <div className="p-6 flex justify-center items-center">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
+    return <div className="p-6">로그인 정보 확인 중...</div>;
   }
 
   if (userType !== 'student') {
-    return <div className="p-6">학생 전용 대시보드입니다.</div>;
+    return <div className="p-6">접근 권한이 없습니다.</div>;
   }
 
   const currentUser = user as StudentUser;
@@ -236,308 +237,265 @@ export function StudentQuests() {
   }
 
   return (
-    <div className="p-4 space-y-4 bg-white min-h-screen pb-20">
-      {/* 헤더 */}
-      <div className="text-center mb-6">
-        <h1 className="text-xl font-medium text-black">오늘의 퀘스트</h1>
-      </div>
+    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ backgroundColor: "var(--bg-color)", minHeight: "100vh" }}>
 
-      {/* 퀘스트 리스트 */}
-      <div className="space-y-3">
-        {activeQuests.length === 0 && (
-          <p className="text-center text-gray-500">진행 중인 퀘스트가 없습니다.</p>
-        )}
-        {activeQuests.map((quest) => (
-          <Card key={quest.assignment_id} className="border-2 border-gray-300">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-black line-clamp-1 mb-1">{quest.title}</h3>
-                      <div className="flex items-center space-x-2 text-sm">
-                        {getStatusBadge(quest.status)}
-                        <span className="text-sm text-gray-600">
-                          {quest.status === 'SUBMITTED' ? `제출: ${formatDateTime(quest.submission?.submitted_at)}` : `생성: ${formatDateTime(quest.created_at)}`}
-                        </span>
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={() => handleQuestAction(quest)}
-                      disabled={isButtonDisabled(quest.status)}
-                      className={`px-3 py-1 text-sm ${isButtonDisabled(quest.status)
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : quest.status === 'APPROVED'
-                          ? 'bg-gray-800 text-white hover:bg-gray-900'
-                          : 'bg-gray-600 text-white hover:bg-gray-700'
-                        }`}
-                      size="sm"
-                    >
-                      {getButtonText(quest.status)}
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center space-x-4 text-sm">
-                    <span className="text-black font-semibold"><span className="text-blue-600">C</span> {quest.reward_coral_personal}</span>
-                    <span className="text-black font-semibold"><span className="text-purple-600">R</span> {quest.reward_research_data_personal}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* 하단 버튼들 */}
-      <div className="mt-4 flex justify-center space-x-4">
-        <Button
-          onClick={() => setIsExpiredModalOpen(true)}
-          className="bg-gray-100 text-black border border-gray-300 hover:bg-gray-200"
-        >
-          마감지난 퀘스트들 ({expiredQuests.length})
-        </Button>
-        <Button
-          onClick={() => setIsCompletedModalOpen(true)}
-          className="bg-gray-100 text-black border border-gray-300 hover:bg-gray-200"
-        >
-          승인완료된 퀘스트들 ({approvedQuests.length})
-        </Button>
-      </div>
-
-      {/* 하단 획득 현황 */}
-      <Card className="border-2 border-gray-300 mt-6">
-        <CardHeader>
-          <CardTitle className="text-black text-center">현재 보유 재화</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="p-3 border border-gray-200 rounded">
-              <p className="text-sm text-gray-600">획득한 코랄</p>
-              <p className="text-xl font-medium text-black">{currentUser.coral}</p>
-            </div>
-            <div className="p-3 border border-gray-200 rounded">
-              <p className="text-sm text-gray-600">획득한 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{currentUser.research_data}</p>
-            </div>
+      {/* 메인 퀘스트 목록 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">오늘의 퀘스트</div>
+          <div className="title-bar-controls">
+            <button aria-label="Minimize" />
+            <button aria-label="Maximize" />
+            <button aria-label="Close" />
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* 승인완료된 퀘스트 모달 */}
-      <Dialog open={isCompletedModalOpen} onOpenChange={setIsCompletedModalOpen}>
-        <DialogContent className="bg-white border-2 border-gray-300 max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-black">승인완료된 퀘스트들</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {approvedQuests.length === 0 && <p className="text-gray-500 text-center">승인 완료된 퀘스트가 없습니다.</p>}
-            {approvedQuests.map((quest) => (
-              <Card key={quest.assignment_id} className="border-2 border-gray-300">
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-black line-clamp-1 mb-1">{quest.title}</h3>
-                          <div className="flex items-center space-x-2 text-sm">
-                            {getStatusBadge(quest.status)}
-                            <span className="text-sm text-gray-600">
-                              완료일: {formatDateTime(quest.submission?.submitted_at)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <Button
-                          onClick={() => {
-                            setSelectedQuest(quest);
-                            setIsCommentOpen(true);
-                          }}
-                          className="px-3 py-1 text-sm bg-gray-800 text-white hover:bg-gray-900"
-                          size="sm"
-                        >
-                          코멘트 확인
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center space-x-4 text-sm">
-                        <span className="text-black font-semibold"><span className="text-blue-600">C</span> {quest.reward_coral_personal}</span>
-                        <span className="text-black font-semibold"><span className="text-purple-600">R</span> {quest.reward_research_data_personal}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        <div className="window-body">
+          <div style={{ textAlign: "center", marginBottom: "15px", fontWeight: "bold" }}>
+            수행할 퀘스트 목록
           </div>
-          <div className="flex justify-center mt-4">
-            <Button
-              onClick={() => setIsCompletedModalOpen(false)}
-              className="bg-black text-white hover:bg-gray-800"
-            >
-              닫기
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* 마감된 퀘스트 모달 */}
-      <Dialog open={isExpiredModalOpen} onOpenChange={setIsExpiredModalOpen}>
-        <DialogContent className="bg-white border-2 border-gray-300 max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-black">마감지난 퀘스트</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {expiredQuests.length === 0 && <p className="text-gray-500 text-center">마감 지난 퀘스트가 없습니다.</p>}
-            {expiredQuests.map((quest) => (
-              <div key={quest.assignment_id} className="p-3 border border-gray-300 rounded">
-                <h3 className="font-medium text-black">{quest.title}</h3>
-                <p className="text-sm text-gray-600">생성일: {formatDateTime(quest.created_at)}</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-center mt-4">
-            <Button
-              onClick={() => setIsExpiredModalOpen(false)}
-              className="bg-black text-white hover:bg-gray-800"
-            >
-              닫기
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 선생님 코멘트 모달 */}
-      <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
-        <DialogContent className="bg-white border-2 border-gray-300">
-          <DialogHeader>
-            <DialogTitle className="text-black">선생님 코멘트</DialogTitle>
-          </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-black mb-2">{selectedQuest?.title}</h3>
-              <p className="text-sm text-gray-600">제출일: {formatDateTime(selectedQuest?.submission?.submitted_at)}</p>
-            </div>
+            {activeQuests.length === 0 && (
+              <div className="sunken-panel" style={{ padding: "20px", textAlign: "center" }}>
+                진행 중인 퀘스트가 없습니다.
+              </div>
+            )}
 
-            <div className="border-2 border-gray-300 p-4 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-600 mb-2">선생님 피드백</h4>
-              <p className="text-black leading-relaxed whitespace-pre-wrap">
-                {selectedQuest?.submission?.comment || "추가 코멘트가 없습니다."}
-              </p>
-            </div>
+            {activeQuests.map((quest) => (
+              <fieldset key={quest.assignment_id} style={{ marginBottom: "10px", padding: "10px" }}>
+                <legend style={{ fontWeight: "bold" }}>{quest.title}</legend>
 
-            <div className="flex justify-center">
-              <Button
-                onClick={() => setIsCommentOpen(false)}
-                className="bg-black text-white hover:bg-gray-800"
-              >
-                확인
-              </Button>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ marginBottom: "4px" }}>
+                      {getStatusBadge(quest.status)}
+                      <span style={{ marginLeft: "8px", fontSize: "12px", color: "#666" }}>
+                        {quest.status === 'SUBMITTED' ? `제출: ${formatDateTime(quest.submission?.submitted_at)}` : `생성: ${formatDateTime(quest.created_at)}`}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "12px" }}>
+                      보상: <span style={{ color: "blue" }}>C {quest.reward_coral_personal}</span> / <span style={{ color: "purple" }}>R {quest.reward_research_data_personal}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleQuestAction(quest)}
+                    disabled={isButtonDisabled(quest.status)}
+                    style={{ minWidth: "80px", fontWeight: "bold" }}
+                  >
+                    {getButtonText(quest.status)}
+                  </button>
+                </div>
+              </fieldset>
+            ))}
+          </div>
+
+          {/* 하단 버튼들 */}
+          <div style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
+            <button onClick={() => setIsExpiredModalOpen(true)} style={{ minWidth: "140px" }}>
+              마감된 퀘스트 ({expiredQuests.length})
+            </button>
+            <button onClick={() => setIsCompletedModalOpen(true)} style={{ minWidth: "140px" }}>
+              완료된 퀘스트 ({approvedQuests.length})
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 내 재화 현황 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">보유 재화</div>
+        </div>
+        <div className="window-body">
+          <div style={{ display: "flex", gap: "10px" }}>
+            <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
+              <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>코랄</p>
+              <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.coral}</p>
+            </div>
+            <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
+              <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>탐사데이터</p>
+              <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.research_data}</p>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
-      {/* 제출 모달 */}
-      <Dialog open={isSubmitOpen} onOpenChange={(isOpen: Boolean) => { if (!isOpen) setIsSubmitOpen(false); }}>
-        <DialogContent className="bg-white border-2 border-gray-300">
-          <DialogHeader>
-            <DialogTitle className="text-black">퀘스트 제출</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
-            <p className="font-semibold text-black">{selectedQuest?.title}</p>
-            <p className="text-sm text-gray-600 border p-2 rounded-md bg-gray-50">
-              {selectedQuest?.teacher_content}
-            </p>
-
-            {/* 반려된 경우, 반려 사유 표시 */}
-            {selectedQuest?.status === 'REJECTED' && (
-              <Alert variant="destructive">
-                <AlertTitle>반려 사유</AlertTitle>
-                <AlertDescription>
-                  {selectedQuest.submission?.comment || "사유가 없습니다. 다시 제출해주세요."}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Textarea
-              value={submitText}
-              onChange={(e) => setSubmitText(e.target.value)}
-              placeholder="수행 내용을 입력하세요..."
-              className="border-gray-300 bg-white text-black"
-              rows={4}
-            />
-
-            {/* 첨부파일 섹션 */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-black">첨부파일 (10MB 이하)</label>
-                <Input
-                  type="file"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                  accept=".pdf, .jpg, .jpeg, .png, .doc, .docx"
-                />
-                <Button
-                  type="button"
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                  className="bg-gray-100 text-black border border-gray-300 hover:bg-gray-200"
-                >
-                  파일 선택
-                </Button>
+      {/* [모달] 완료된 퀘스트 목록 */}
+      {isCompletedModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="window" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="title-bar">
+              <div className="title-bar-text">승인 완료 목록</div>
+              <div className="title-bar-controls">
+                <button aria-label="Close" onClick={() => setIsCompletedModalOpen(false)} />
               </div>
-
-              {/* 첨부된 파일 목록 */}
-              {attachedFiles.length > 0 && (
-                <div className="space-y-2">
-                  {attachedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 border border-gray-300 rounded">
-                      <div className="flex items-center space-x-2 overflow-hidden">
-                        <FileIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                        <span className="text-sm text-black truncate">{file.name}</span>
-                        <span className="text-xs text-gray-500 flex-shrink-0">
-                          ({(file.size / 1024).toFixed(1)} KB)
-                        </span>
+            </div>
+            <div className="window-body" style={{ overflowY: 'auto', flex: 1 }}>
+              <div className="space-y-3">
+                {approvedQuests.length === 0 && <p style={{ textAlign: 'center', color: '#666' }}>완료된 퀘스트가 없습니다.</p>}
+                {approvedQuests.map((quest) => (
+                  <fieldset key={quest.assignment_id} style={{ padding: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontWeight: "bold" }}>{quest.title}</div>
+                        <div style={{ fontSize: "12px", color: "#666" }}>완료일: {formatDateTime(quest.submission?.submitted_at)}</div>
                       </div>
-                      <Button
-                        type="button"
-                        onClick={() => handleRemoveFile(index)}
-                        className="bg-gray-100 text-black border border-gray-300 hover:bg-gray-200 p-1 h-6 w-6"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                      <button onClick={() => { setSelectedQuest(quest); setIsCommentOpen(true); }}>
+                        코멘트
+                      </button>
                     </div>
+                  </fieldset>
+                ))}
+              </div>
+              <div style={{ textAlign: "center", marginTop: "15px" }}>
+                <button onClick={() => setIsCompletedModalOpen(false)}>닫기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* [모달] 마감된 퀘스트 목록 */}
+      {isExpiredModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="window" style={{ width: '90%', maxWidth: '600px' }}>
+            <div className="title-bar">
+              <div className="title-bar-text">마감된 퀘스트</div>
+              <div className="title-bar-controls">
+                <button aria-label="Close" onClick={() => setIsExpiredModalOpen(false)} />
+              </div>
+            </div>
+            <div className="window-body">
+              <div className="sunken-panel" style={{ height: '200px', overflowY: 'auto', background: 'var(--color-white)', padding: '8px' }}>
+                {expiredQuests.length === 0 && <p style={{ textAlign: 'center', color: '#666' }}>마감된 퀘스트가 없습니다.</p>}
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {expiredQuests.map((quest) => (
+                    <li key={quest.assignment_id} style={{ borderBottom: '1px dotted #ccc', padding: '4px 0' }}>
+                      <span style={{ color: '#666' }}>[만료]</span> {quest.title}
+                      <span style={{ float: 'right', fontSize: '11px' }}>{formatDateTime(quest.created_at)}</span>
+                    </li>
                   ))}
+                </ul>
+              </div>
+              <div style={{ textAlign: "center", marginTop: "10px" }}>
+                <button onClick={() => setIsExpiredModalOpen(false)}>확인</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* [모달] 코멘트 확인 */}
+      {isCommentOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="window" style={{ width: '90%', maxWidth: '500px' }}>
+            <div className="title-bar">
+              <div className="title-bar-text">선생님 피드백</div>
+              <div className="title-bar-controls">
+                <button aria-label="Close" onClick={() => setIsCommentOpen(false)} />
+              </div>
+            </div>
+            <div className="window-body">
+              <p style={{ fontWeight: "bold", marginBottom: "5px" }}>{selectedQuest?.title}</p>
+              <p style={{ fontSize: "12px", marginBottom: "15px" }}>제출일: {formatDateTime(selectedQuest?.submission?.submitted_at)}</p>
+
+              <fieldset style={{ padding: "10px", backgroundColor: "var(--color-white)" }}>
+                <legend>Teacher's Comment</legend>
+                <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>
+                  {selectedQuest?.submission?.comment || "작성된 코멘트가 없습니다."}
+                </p>
+              </fieldset>
+
+              <div style={{ textAlign: "center", marginTop: "15px" }}>
+                <button onClick={() => setIsCommentOpen(false)} style={{ minWidth: "80px" }}>확인</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* [모달] 퀘스트 제출 */}
+      {isSubmitOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="window" style={{ width: '90%', maxWidth: '600px' }}>
+            <div className="title-bar">
+              <div className="title-bar-text">퀘스트 제출</div>
+              <div className="title-bar-controls">
+                <button aria-label="Close" onClick={() => setIsSubmitOpen(false)} />
+              </div>
+            </div>
+            <div className="window-body">
+              <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                <div style={{ marginBottom: "10px" }}>
+                  <label style={{ fontWeight: "bold" }}>{selectedQuest?.title}</label>
+                  <div className="sunken-panel" style={{ padding: "8px", marginTop: "4px", background: "#eee" }}>
+                    {selectedQuest?.teacher_content}
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {submitError && (
-              <Alert variant="destructive">
-                <AlertDescription>{submitError}</AlertDescription>
-              </Alert>
-            )}
+                {/* 반려 사유 */}
+                {selectedQuest?.status === 'REJECTED' && (
+                  <div style={{ border: "2px solid red", padding: "8px", marginBottom: "10px", backgroundColor: "#ffcccc" }}>
+                    <strong>[반려 사유]</strong><br />
+                    {selectedQuest.submission?.comment || "사유가 없습니다. 다시 제출해주세요."}
+                  </div>
+                )}
 
-            <div className="flex space-x-2">
-              <Button
-                type="submit"
-                className="flex-1 bg-black text-white hover:bg-gray-800"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (selectedQuest?.status === 'REJECTED' ? '다시 제출' : '제출하기')}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setIsSubmitOpen(false)}
-                className="flex-1 bg-white text-black border border-gray-300 hover:bg-gray-50"
-              >
-                취소
-              </Button>
+                <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                  <label>수행 내용</label>
+                  <textarea
+                    value={submitText}
+                    onChange={(e) => setSubmitText(e.target.value)}
+                    rows={5}
+                    style={{ width: "100%" }}
+                  ></textarea>
+                </div>
+
+                <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                  <label>첨부파일 (10MB 이하)</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                    <input
+                      type="file"
+                      onChange={handleFileUpload}
+                      id="file-upload"
+                      accept=".pdf, .jpg, .jpeg, .png, .doc, .docx"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                </div>
+
+                {attachedFiles.length > 0 && (
+                  <div style={{ marginBottom: "10px", padding: "4px", border: "1px dotted black" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px" }}>
+                        <FileIcon size={14} />
+                        <span>{attachedFiles[0].name}</span>
+                      </div>
+                      <button type="button" onClick={() => handleRemoveFile(0)} style={{ padding: "0 4px" }}>X</button>
+                    </div>
+                  </div>
+                )}
+
+                {submitError && (
+                  <p style={{ color: "red", textAlign: "center", marginBottom: "10px" }}>{submitError}</p>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "15px" }}>
+                  <button type="submit" disabled={isSubmitting} style={{ minWidth: "100px", fontWeight: "bold" }}>
+                    {isSubmitting ? "전송 중..." : (selectedQuest?.status === 'REJECTED' ? '다시 제출' : '제출하기')}
+                  </button>
+                  <button type="button" onClick={() => setIsSubmitOpen(false)} style={{ minWidth: "80px" }}>
+                    취소
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
