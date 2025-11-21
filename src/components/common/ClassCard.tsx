@@ -27,7 +27,6 @@ function ClassCardInner({
         <CardTitle className="text-black">{class_name}</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <h3 className="mb-4">{class_name}</h3>
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between border-b border-gray-300 pb-2">
             <span className="text-gray-600">학생 수</span>
