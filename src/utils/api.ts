@@ -5,49 +5,6 @@
  * - refresh token 실패 시 자동 로그아웃
  */
 
-// 환경변수에서 API URL 가져오기
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
-
-// 개발 환경에서 환경변수 로드 확인 (디버깅용)
-if (import.meta.env.DEV) {
-  console.log('🔧 개발 환경변수:', {
-    VITE_API_URL: import.meta.env.VITE_API_URL,
-    API_BASE_URL: API_BASE_URL,
-    MODE: import.meta.env.MODE
-  });
-}
-
-// URL을 완전한 경로로 변환하는 헬퍼 함수
-export function getFullUrl(url: string): string {
-  // 이미 전체 URL인 경우 그대로 반환
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-  
-  // 개발 환경에서는 항상 상대 경로 사용 (Vite 프록시 사용)
-  if (import.meta.env.DEV) {
-    if (import.meta.env.DEV) {
-      console.log(`🌐 API 요청 (개발): ${url} → 프록시 사용`);
-    }
-    return url;
-  }
-  
-  // 프로덕션 환경에서만 환경변수 사용
-  if (API_BASE_URL) {
-    // URL이 이미 base URL로 시작하면 중복 추가하지 않음
-    if (url.startsWith(API_BASE_URL)) {
-      return url;
-    }
-    
-    // 환경변수 사용: baseURL + 상대 경로
-    const fullUrl = `${API_BASE_URL}${url}`;
-    return fullUrl;
-  } else {
-    // 환경변수가 없으면 상대 경로 그대로 사용
-    return url;
-  }
-}
-
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
@@ -79,8 +36,7 @@ async function refreshAccessToken(): Promise<string> {
     throw new Error('No refresh token available');
   }
 
-  const refreshUrl = getFullUrl('/api/v1/auth/refresh');
-  const response = await fetch(refreshUrl, {
+  const response = await fetch('/api/v1/auth/refresh', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -136,8 +92,7 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
   }
 
   // 첫 번째 시도
-  const fullUrl = getFullUrl(url);
-  let response = await fetch(fullUrl, {
+  let response = await fetch(url, {
     ...restOptions,
     headers: defaultHeaders,
     body,
@@ -159,7 +114,7 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
 
       // 새 토큰으로 원래 요청 재시도
       (defaultHeaders as Record<string, string>).Authorization = `Bearer ${newAccessToken}`;
-      response = await fetch(fullUrl, {
+      response = await fetch(url, {
         ...restOptions,
         headers: defaultHeaders,
         body,
@@ -189,8 +144,7 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
       // 토큰 갱신이 완료되면 원래 요청 재시도
       const accessToken = localStorage.getItem('accessToken');
       (defaultHeaders as Record<string, string>).Authorization = `Bearer ${accessToken}`;
-      const retryUrl = getFullUrl(url);
-      return fetch(retryUrl, {
+      return fetch(url, {
         ...restOptions,
         headers: defaultHeaders,
         body,

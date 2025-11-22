@@ -29,19 +29,8 @@ export const FISH_ICONS: { [key: number]: { column: number, row: number, isAnima
     7: { column: 2, row: 1 },
 
     // RARE (4개) - 각각 독립적인 애니메이션
-    // 8: Turtle - 독립 애니메이션
+    // 8: Stingray - 독립 애니메이션 (Electric Eel 애니메이션 사용)
     8: {
-        column: 0,
-        row: 0,
-        isAnimated: true,
-        animation: {
-            url: turtle_anim, 
-            frames: 6,
-            duration: 0.8
-        }
-    },
-    // 9: Stingray - 독립 애니메이션 (Electric Eel 애니메이션 사용)
-    9: {
         column: 0,
         row: 0,
         isAnimated: true,
@@ -51,8 +40,8 @@ export const FISH_ICONS: { [key: number]: { column: number, row: number, isAnima
             duration: 0.8
         }
     },
-    // 10: Shark - 독립 애니메이션
-    10: {
+    // 9: Shark - 독립 애니메이션
+    9: {
         column: 0,
         row: 0,
         isAnimated: true,
@@ -62,8 +51,8 @@ export const FISH_ICONS: { [key: number]: { column: number, row: number, isAnima
             duration: 0.6
         }
     },
-    // 11: Orca - 독립 애니메이션
-    11: {
+    // 10: Orca - 독립 애니메이션
+    10: {
         column: 0,
         row: 0,
         isAnimated: true,
@@ -73,6 +62,16 @@ export const FISH_ICONS: { [key: number]: { column: number, row: number, isAnima
             duration: 0.8
         }
     },
-    // LEGENDARY (5개) - 빈칸으로 표시 (fish_id 12-16)
-    // 백엔드에서 fish_name이 '???'인 경우 프론트엔드에서 ❓로 표시됨
+    // 11: Turtle - 독립 애니메이션
+    11: {
+        column: 0,
+        row: 0,
+        isAnimated: true,
+        animation: {
+            url: turtle_anim, 
+            frames: 6,
+            duration: 0.8
+        }
+    }
+    // LEGENDARY (2개) - 빈칸으로 표시 (fish_id 12-13, 매핑 없음)
 };

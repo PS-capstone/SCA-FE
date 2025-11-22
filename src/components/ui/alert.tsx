@@ -29,7 +29,6 @@ function Alert({
       data-slot="alert"
       role="alert"
       className={cn(alertVariants({ variant }), className)}
-      style={{ writingMode: 'horizontal-tb', ...props.style }}
       {...props}
     />
   );
@@ -40,10 +39,9 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="alert-title"
       className={cn(
-        "col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight whitespace-normal",
+        "col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight",
         className,
       )}
-      style={{ writingMode: 'horizontal-tb', ...props.style }}
       {...props}
     />
   );
@@ -57,10 +55,9 @@ function AlertDescription({
     <div
       data-slot="alert-description"
       className={cn(
-        "text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed whitespace-normal",
+        "text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed",
         className,
       )}
-      style={{ writingMode: 'horizontal-tb', ...props.style }}
       {...props}
     />
   );

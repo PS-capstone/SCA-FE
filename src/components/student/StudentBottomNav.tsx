@@ -27,9 +27,11 @@ export function StudentBottomNav() {
         borderTop: "2px solid var(--border-top)",
         boxShadow: "0 -1px 0 var(--box-shadow)",
         padding: "6px",
-        zIndex: 1000
+        zIndex: 100
       }}
     >
+
+
       <div className="max-w-md mx-auto">
         <div className="flex gap-1 overflow-x-auto no-scrollbar" style={{ paddingBottom: "2px" }}>
           {navItems.map((item) => {
@@ -41,6 +43,7 @@ export function StudentBottomNav() {
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 style={{
+                  // 기본 리셋
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -48,16 +51,21 @@ export function StudentBottomNav() {
                   flex: "1 0 auto",
                   minWidth: "60px",
                   height: "50px",
+
                   boxShadow: isActive ? BUTTON_SUNKEN : BUTTON_RAISED,
                   backgroundColor: isActive ? "var(--border-top)" : "var(--bg-gray)", 
+                
                   border: "none",
                   outline: "none",
                   cursor: "pointer",
                   padding: "4px",
                   margin: 0,
+
+                  
                   transform: isActive ? "translate(1px, 1px)" : "none",
                 }}
               >
+                
                 <IconComponent
                   size={20}
                   style={{

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from "lucide-react";
-import { useAuth, TeacherUser, StudentUser } from "../../contexts/AppContext";
-import { post, get } from "../../utils/api";
+import { useAuth } from "../../contexts/AppContext";
+import { post } from "../../utils/api";
 
 type FormErrors = {
   username: string | null;
@@ -12,7 +12,7 @@ type FormErrors = {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, updateUser } = useAuth();
+  const { login } = useAuth();
   const { role } = useParams<{ role: string }>();
 
   const [formData, setFormData] = useState({
@@ -41,6 +41,7 @@ export function LoginPage() {
   // 역할에 따라 제목과 로그인 로직을 분기
   const title = role === 'teacher' ? '선생님 로그인' : '학생 로그인';
 
+
   //백엔드 api 호출용
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) {
@@ -63,23 +64,13 @@ export function LoginPage() {
         role: role
       }, { skipAuth: true });
 
+
       if (!response.ok) {
         const status = response.status;
-        let data;
-        try {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-          } else {
-            const text = await response.text();
-            data = { message: text || '로그인에 실패했습니다.' };
-          }
-        } catch (e) {
-          data = { message: '서버 응답을 처리할 수 없습니다.' };
-        }
+        const data = await response.json();
 
         if (status === 401) {
-          setFormErrors(prev => ({ ...prev, formGeneral: data.message || '인증 정보가 올바르지 않습니다.' }));
+          setFormErrors(prev => ({ ...prev, formGeneral: data.message || '아이디 또는 비밀번호가 일치하지 않습니다.' }));
           return;
         }
         if (status === 400 && data.error_code === 'INVALID_INPUT' && data.data) {
@@ -90,79 +81,15 @@ export function LoginPage() {
         return;
       }
 
-      let responseData;
-      try {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          responseData = await response.json();
-        } else {
-          const text = await response.text();
-          throw new Error('서버 응답이 JSON 형식이 아닙니다.');
-        }
-      } catch (e) {
-        setFormErrors(prev => ({ ...prev, formGeneral: '서버 응답을 처리할 수 없습니다. 백엔드가 실행 중인지 확인해주세요.' }));
-        setIsLoading(false);
-        return;
-      }
-      
-      const {data} = responseData;
+      const { data } = await response.json();
 
-      // 학생인 경우 전체 사용자 정보를 StudentUser 형식으로 변환하여 저장
-      if (role === 'student') {
-        const studentUser = {
-          id: String(data.student_id),
-          real_name: data.real_name,
-          nickname: data.nickname,
-          username: data.username,
-          email: data.email,
-          invite_code: '', // 로그인 응답에 없으면 빈 문자열
-          coral: data.coral ?? 0,
-          research_data: data.research_data ?? 0,
-          mainFish: '', // 로그인 응답에 없으면 빈 문자열
-        };
-        login(studentUser, role as 'teacher' | 'student', data.access_token, data.refresh_token);
-        navigate('/student/dashboard');
+
+      login(data.username, role as 'teacher' | 'student', data.access_token, data.refresh_token);
+
+      if (role === 'teacher') {
+        navigate('/teacher/dashboard');
       } else {
-        // Teacher인 경우: 먼저 기본 정보로 로그인하고, classes를 가져와서 업데이트
-        const teacherUser = {
-          id: String(data.teacher_id),
-          real_name: data.real_name,
-          nickname: data.nickname,
-          username: data.username,
-          email: data.email,
-          classes: [] as string[], // 일단 빈 배열로 시작
-        };
-        // 먼저 localStorage에 직접 저장 (동기적으로)
-        localStorage.setItem('user', JSON.stringify(teacherUser));
-        localStorage.setItem('userType', 'teacher');
-        localStorage.setItem('accessToken', data.access_token);
-        localStorage.setItem('refreshToken', data.refresh_token);
-        
-        // 그 다음 login() 함수 호출 (React 상태 업데이트)
-        login(teacherUser, role as 'teacher' | 'student', data.access_token, data.refresh_token);
-        
-        // classes 정보 가져오기 (비동기, 실패해도 계속 진행)
-        get('/api/v1/classes')
-          .then(classesResponse => {
-            if (classesResponse.ok) {
-              return classesResponse.json();
-            }
-            return null;
-          })
-          .then(classesData => {
-            if (classesData?.data?.classes) {
-              const classIds = (classesData.data.classes || []).map((c: any) => String(c.class_id || c.classId));
-              if (classIds.length > 0) {
-                updateUser({ classes: classIds });
-              }
-            }
-          })
-          .catch(err => {
-            console.error('Failed to fetch classes:', err);
-          });
-        
-        // 즉시 대시보드로 이동 (localStorage에 이미 저장됨)
-        window.location.href = '/teacher/dashboard';
+        navigate('/student/dashboard');
       }
 
     } catch (error) {
@@ -183,7 +110,7 @@ export function LoginPage() {
           <div className="title-bar-controls">
             <button aria-label="Minimize" />
             <button aria-label="Maximize" />
-            <button aria-label="Close" onClick={() => navigate('/')} />
+            <button aria-label="Close" />
           </div>
         </div>
         <div className="window-body">
@@ -202,76 +129,72 @@ export function LoginPage() {
               뒤로
             </button>
           </div>
-          <form onSubmit={handleLogin}>
-            <div className="field-row-stacked" style={{ marginBottom: "12px" }}>
-              <label htmlFor="username">아이디</label>
-              <input
-                id="username"
-                type="text"
-                placeholder="아이디를 입력하세요"
-                style={{ width: "100%" }}
-                value={formData.username}
-                onChange={handleChange}
-              />
-              {formErrors.username && (
-                <p style={{ color: "red", marginTop: "4px", margin: 0, fontSize: "11px" }}>{formErrors.username}</p>
-              )}
-            </div>
-            <div className="field-row-stacked" style={{ marginBottom: "20px" }}>
-              <label htmlFor="password">비밀번호</label>
-              <input
-                id="password"
-                type="password"
-                placeholder="비밀번호를 입력하세요"
-                style={{ width: "100%" }}
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {formErrors.password && (
-                <p style={{ color: "red", marginTop: "4px", margin: 0, fontSize: "11px" }}>{formErrors.password}</p>
-              )}
-            </div>
-            {/* 공통 에러 메시지 */}
-            {formErrors.formGeneral && (
-              <div className="sunken-panel" style={{ padding: "8px", marginBottom: "12px", background: "#fff" }}>
-                <p style={{ color: "red", textAlign: "center", margin: 0, fontSize: "11px" }}>
-                  {formErrors.formGeneral}
-                </p>
-              </div>
-            )}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
-              <button
-                type="submit"
-                disabled={isLoading}
-                style={{
-                  minWidth: "100px",
-                  fontWeight: "bold",
-                  padding: "6px 12px"
-                }}
-              >
-                {isLoading ? '접속 중...' : '확인'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate('/signup')}
-                style={{
-                  minWidth: "auto",
-                  padding: "0",
-                  border: "none",
-                  background: "none",
-                  boxShadow: "none",
-                  color: "blue",
-                  textDecoration: "underline",
-                  cursor: "pointer",
-                  fontSize: "11px"
-                }}
-              >
-                회원가입하기
-              </button>
-            </div>
-          </form>
         </div>
+        <form onSubmit={handleLogin}>
+          <div className="field-row-stacked" style={{ marginBottom: "12px" }}>
+            <label htmlFor="username">아이디</label>
+            <input
+              id="username"
+              type="text"
+              placeholder="아이디를 입력하세요"
+              style={{ width: "100%" }}
+              value={formData.username}
+              onChange={handleChange}
+            />
+            {formErrors.username && (
+              <p style={{ color: "red", marginTop: "4px", margin: 0 }}>{formErrors.username}</p>
+            )}
+          </div>
+          <div className="field-row-stacked" style={{ marginBottom: "20px" }}>
+            <label htmlFor="password">비밀번호</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="비밀번호를 입력하세요"
+              style={{ width: "100%" }}
+              value={formData.password}
+              onChange={handleChange}
+            />
+            {formErrors.password && (
+              <p style={{ color: "red", marginTop: "4px", margin: 0 }}>{formErrors.password}</p>
+            )}
+          </div>
+          {/* 공통 에러 메시지 */}
+          {formErrors.formGeneral && (
+            <p style={{ color: "red", textAlign: "center", marginBottom: "12px" }}>
+              {formErrors.formGeneral}
+            </p>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{
+                minWidth: "100px",
+                fontWeight: "bold",
+                padding: "6px 12px"
+              }}
+            >
+              {isLoading ? '접속 중...' : '확인'}
+            </button>
+
+            <button
+              onClick={() => navigate('/signup')}
+              style={{
+                minWidth: "auto",
+                padding: "0",
+                border: "none",
+                background: "none",
+                boxShadow: "none",
+                color: "blue",
+                textDecoration: "underline",
+                cursor: "pointer"
+              }}
+            >
+              회원가입하기
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

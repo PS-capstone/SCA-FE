@@ -10,15 +10,15 @@ import { useNavigate, useParams } from "react-router-dom";
 
 export function StudentDetailPage() {
   const navigate = useNavigate();
-  const { classId, id } = useParams<{ classId?: string; id: string }>();
+  const { id } = useParams<{ id: string }>();
   
   const handleNavigate = (page: string) => {
     const routeMap: Record<string, string> = {
       'teacher-dashboard': '/teacher/dashboard',
       'quest-create-new': '/teacher/quest',
-      'class-manage': classId ? `/teacher/class/${classId}` : '/teacher/class',
+      'class-manage': '/teacher/class',
       'class-create': '/teacher/class/create',
-      'student-list': classId ? `/teacher/students/${classId}` : '/teacher/students',
+      'student-list': '/teacher/students',
       'raid-create-new': '/teacher/raid/create',
       'raid-manage': '/teacher/raid/manage',
       'quest-approval': '/teacher/quest/approval',
@@ -101,7 +101,9 @@ export function StudentDetailPage() {
   ];
 
   return (
-    <>
+    <div className="min-h-screen bg-white flex">
+      
+      <div className="flex-1 border-l-2 border-gray-300">
         {/* Header */}
         <div className="border-b-2 border-gray-300 p-6">
           <div className="flex items-start gap-4">
@@ -208,6 +210,7 @@ export function StudentDetailPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
 
       {/* 승인 모달 */}
       <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
@@ -230,6 +233,6 @@ export function StudentDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
