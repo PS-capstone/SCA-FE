@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { useAuth } from "../../contexts/AppContext";
 import { get, post } from "../../utils/api";
-import { Loader2 } from 'lucide-react';
+import { IMAGES } from '../../styles/images';
+import { FishIcon } from '../FishIcon';
+import { FishAnimation } from '../FishAnimation';
+import { FISH_ICONS } from '../../utils/sprite-helpers';
 
 interface Fish {
   fish_id: number;
@@ -12,6 +15,9 @@ interface Fish {
   current_count: number;
   image_url: string;
 }
+
+const BASE_SPRITE_SIZE = 24;
+const MODAL_SCALE = 3;
 
 export function StudentGacha() {
   const { user, isAuthenticated, userType, access_token } = useAuth();
@@ -124,7 +130,7 @@ export function StudentGacha() {
       } finally {
         setIsDrawing(false); // 애니메이션 종료
       }
-    }, 1000); // 1초 지연
+    }, 2500); // 2.5초 지연
   };
 
   const getRarityBadge = (grade: Fish['grade']) => {
@@ -146,8 +152,43 @@ export function StudentGacha() {
     }
   };
 
+  const renderGachaFish = (fish: Fish) => {
+    const scale = MODAL_SCALE;
+    const finalSize = scale * BASE_SPRITE_SIZE;
+
+    const spriteInfo = FISH_ICONS[fish.fish_id];
+    const isAnimated = spriteInfo?.isAnimated;
+    const animationData = spriteInfo?.animation;
+
+    const IconComponent = isAnimated && animationData ? (
+      <FishAnimation
+        spriteUrl={animationData.url}
+        totalFrames={animationData.frames}
+        scale={scale}
+        duration={animationData.duration}
+      />
+    ) : (
+      <FishIcon
+        fishId={fish.fish_id}
+        scale={scale}
+      />
+    );
+
+    return (
+      <div style={{
+        width: `${finalSize}px`,
+        height: `${finalSize}px`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {IconComponent}
+      </div>
+    );
+  };
+
   return (
-    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ backgroundColor: "var(--bg-color)", minHeight: "100vh" }}>
+    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
 
       {/* 가챠 머신 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
@@ -176,7 +217,11 @@ export function StudentGacha() {
             {isDrawing ? (
               // 애니메이션 중일 때 로딩 스피너 표시
               <div className="gacha-animation">
-                <Loader2 className="w-10 h-10 animate-spin" style={{ color: "#000080" }} />
+                <img
+                  src={IMAGES.loadingFish}
+                  alt="Gacha Loading..."
+                  style={{ height: "100px", objectFit: "cover", imageRendering: "pixelated" }}
+                />
               </div>
             ) : (
               // 평소에는 "DRAW" 텍스트 또는 이미지
@@ -236,11 +281,7 @@ export function StudentGacha() {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 background: resultFish.grade === 'LEGENDARY' ? '#fffacd' : '#fff'
               }}>
-                {resultFish.image_url ? (
-                  <img src={resultFish.image_url} alt={resultFish.fish_name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                ) : (
-                  <span style={{ fontSize: "40px" }}>🐟</span> // 이미지 없을 때 폴백 이모지
-                )}
+                {renderGachaFish(resultFish)}
               </div>
 
               {resultFish.is_new && (
@@ -307,6 +348,11 @@ export function StudentGacha() {
           0% { opacity: 1; }
           50% { opacity: 0; }
           100% { opacity: 1; }
+        }
+        @keyframes flash {
+          0% { color: blue; }
+          50% { color: red; }
+          100% { color: blue; }
         }
         .gacha-animation {
           position: absolute;

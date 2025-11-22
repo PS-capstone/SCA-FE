@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Badge } from '../ui/badge';
 import { useAuth } from "../../contexts/AppContext";
 import { get } from "../../utils/api";
-
-// 이미지 임시 경로
-const IMG_URL = "https://placehold.co";
+import { FishIcon } from '../FishIcon';
+import { FishAnimation } from '../FishAnimation';
+import { FISH_ICONS } from '../../utils/sprite-helpers';
 
 type FishGrade = 'COMMON' | 'RARE' | 'LEGENDARY';
 
@@ -44,8 +44,9 @@ const getGradeColor = (grade: FishGrade) => {
 
 const getFishSize = (grade: FishGrade) => {
   switch (grade) {
-    case 'LEGENDARY': return 64;
-    default: return 32;
+    case 'LEGENDARY': return 3;
+    case 'RARE': return 2;
+    default: return 2;
   }
 };
 
@@ -53,6 +54,7 @@ export function StudentCollection() {
   const { user, isAuthenticated, userType, access_token } = useAuth();
   const [currentView, setCurrentView] = useState<'aquarium' | 'book'>('aquarium');
   const [fishList, setFishList] = useState<UIFish[]>([]);
+  const [aquariumInstances, setAquariumInstances] = useState<{ id: string; fish: UIFish }[]>([]);
   const [selectedFish, setSelectedFish] = useState<UIFish | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -60,6 +62,14 @@ export function StudentCollection() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fishTankRef = useRef<HTMLDivElement | null>(null);
+  const bubbleContainerRef = useRef<HTMLDivElement | null>(null);
+  const BASE_SPRITE_SIZE = 24;
+
+  const bubbleFrequency = 400;
+  const bubbleRiseMinSpeed = 50;
+  const bubbleRiseMaxSpeed = 80;
+  const bubbleMinSize = 4;
+  const bubbleMaxSize = 8;
 
   // API 호출 함수
   const fetchData = async () => {
@@ -89,10 +99,10 @@ export function StudentCollection() {
 
       } else {
         // 도감 조회
-          const response = await get('/api/v1/collection/encyclopedia');
-          if (!response.ok) throw new Error('도감 정보를 불러오는데 실패했습니다.');
-          const resJson = await response.json();
-          const data = resJson.data;
+        const response = await get('/api/v1/collection/encyclopedia');
+        if (!response.ok) throw new Error('도감 정보를 불러오는데 실패했습니다.');
+        const resJson = await response.json();
+        const data = resJson.data;
 
         const converted: UIFish[] = (data.fish_list as EncyclopediaFishItem[]).map(item => ({
           fish_id: item.fish_id,
@@ -113,6 +123,40 @@ export function StudentCollection() {
     }
   };
 
+  const renderFishSprite = (fish: UIFish, scaleOverride?: number) => {
+    const finalScale = scaleOverride ?? fish.size;
+    const finalSize = finalScale * BASE_SPRITE_SIZE;
+    const spriteInfo = FISH_ICONS[fish.fish_id];
+    const isAnimated = spriteInfo?.isAnimated;
+    const animationData = spriteInfo?.animation;
+
+    const IconComponent = isAnimated && animationData ? (
+      <FishAnimation
+        spriteUrl={animationData.url}
+        totalFrames={animationData.frames}
+        scale={finalScale}
+        duration={animationData.duration}
+      />
+    ) : (
+      <FishIcon
+        fishId={fish.fish_id}
+        scale={finalScale}
+      />
+    );
+
+    return (
+      <div style={{
+        width: `${finalSize}px`,
+        height: `${finalSize}px`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {IconComponent}
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (isAuthenticated && userType === 'student') {
       fetchData();
@@ -127,50 +171,42 @@ export function StudentCollection() {
   useEffect(() => {
     if (currentView !== "aquarium" || isLoading || error) return;
 
-    const tank = fishTankRef.current;
-    if (!tank) return;
-
-    while (tank.firstChild) tank.removeChild(tank.firstChild);
-
-    const fishElements: HTMLElement[] = [];
-    fishList.forEach((fish) => {
-      Array.from({ length: fish.current_count }).forEach(() => {
-        const fishContainer = document.createElement("div");
-        fishContainer.style.position = "absolute";
-        fishContainer.style.width = fish.size + "px";
-        fishContainer.style.height = fish.size + "px";
-        fishContainer.style.cursor = "pointer";
-        fishContainer.onclick = () => handleFishClick(fish);
-
-        const img = document.createElement("img");
-        img.src = `${IMG_URL}`;
-        img.alt = fish.fish_name;
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.objectFit = "contain";
-
-        img.onerror = (e: any) => {
-          (e.target as HTMLImageElement).style.display = 'none';
-          const fallbackText = document.createElement("span");
-          fallbackText.innerText = "🐟";
-          fallbackText.style.fontSize = `${fish.size / 1.5}px`;
-          fallbackText.style.display = "block";
-          fallbackText.style.textAlign = "center";
-          fishContainer.appendChild(fallbackText);
-        };
-        fishContainer.appendChild(img);
-        tank.appendChild(fishContainer);
-        fishElements.push(fishContainer); // 물고기 요소 배열에 추가
-
-        setRandomPosition(fishContainer, tank);
-        moveFishRandomly(fishContainer, tank);
+    const instances: { id: string; fish: UIFish }[] = [];
+    fishList.forEach((fish, fishIndex) => {
+      Array.from({ length: fish.current_count }).forEach((_, countIndex) => {
+        instances.push({
+          id: `${fish.fish_id}-${fishIndex}-${countIndex}`, // 고유 키 생성
+          fish: fish,
+        });
       });
     });
 
-    return () => {
-      fishElements.forEach(fish => clearTimeout((fish as any).moveTimer));
+    setAquariumInstances(instances);
+
+    const cleanup = () => {
+      const tank = fishTankRef.current;
+      if (tank) {
+        const fishElements = Array.from(tank.children) as HTMLElement[];
+        fishElements.forEach(fish => clearTimeout((fish as any).moveTimer));
+      }
     };
+    return cleanup;
+
   }, [currentView, fishList, isLoading])
+
+  useEffect(() => {
+    if (currentView !== "aquarium" || aquariumInstances.length === 0) return;
+
+    const tank = fishTankRef.current;
+    if (!tank) return;
+
+    const fishElements = Array.from(tank.children) as HTMLElement[];
+    fishElements.forEach(fishContainer => {
+      setRandomPosition(fishContainer, tank);
+      moveFishRandomly(fishContainer, tank);
+    });
+
+  }, [aquariumInstances]);
 
   function setRandomPosition(fish: HTMLElement, tank: HTMLDivElement) {
     const rect = tank.getBoundingClientRect();
@@ -182,18 +218,24 @@ export function StudentCollection() {
   function moveFishRandomly(fish: HTMLElement, tank: HTMLDivElement) {
     const animate = () => {
       const rect = tank.getBoundingClientRect();
-      const oldX = parseFloat(fish.style.left) || 0;
+      const currentLeft = parseFloat(fish.style.left) || 0;
       const padding = 10;
       const newX = Math.random() * (rect.width - fish.offsetWidth - padding * 2) + padding;
       const newY = Math.random() * (rect.height - fish.offsetWidth - padding * 2) + padding;
 
-      fish.style.transform = newX > oldX ? "scaleX(1)" : "scaleX(-1)";
-      fish.style.transition = "left 6s linear, top 6s linear";
+      const minDuration = 4;
+      const maxDuration = 8;
+      const duration = Math.random() * (maxDuration - minDuration) + minDuration;
+
+      fish.style.transform = newX > currentLeft ? "scaleX(1)" : "scaleX(-1)";
+      fish.style.transition = `left ${duration}s ease-in-out, top ${duration}s ease-in-out`;
       fish.style.left = `${newX}px`;
       fish.style.top = `${newY}px`;
 
       if ((fish as any).moveTimer) clearTimeout((fish as any).moveTimer);
-      (fish as any).moveTimer = setTimeout(animate, 3000 + Math.random() * 3000);
+
+      const pauseTime = Math.random() * 500;
+      (fish as any).moveTimer = setTimeout(animate, (duration * 1000) + pauseTime);
     };
     animate();
   }
@@ -205,6 +247,66 @@ export function StudentCollection() {
 
     return <Badge className={bgClass}>{grade}</Badge>;
   };
+
+  useEffect(() => {
+    if (currentView !== 'aquarium' || !fishTankRef.current || !bubbleContainerRef.current) return;
+
+    const tank = fishTankRef.current;
+    const bubbleContainer = bubbleContainerRef.current;
+
+    const containerWidth = tank.offsetWidth;
+    const containerHeight = tank.offsetHeight;
+
+    const createBubble = () => {
+      // 1. DOM 요소 생성 및 스타일링
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble-sprite';
+
+      const size = bubbleMinSize + Math.random() * (bubbleMaxSize - bubbleMinSize);
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      bubble.style.left = `${Math.random() * (containerWidth - size)}px`;
+      bubble.style.bottom = '0px';
+      bubble.style.opacity = (0.6 + Math.random() * 0.4).toFixed(2);
+      bubble.style.position = 'absolute';
+
+      bubbleContainer.appendChild(bubble);
+
+      let y = 0;
+      const intervalSpeed = bubbleRiseMinSpeed + Math.random() * (bubbleRiseMaxSpeed - bubbleRiseMinSpeed);
+
+      // 2. 기포 상승 애니메이션 (setInterval)
+      const riseInterval = setInterval(() => {
+        y += 2; // 매 틱마다 2px씩 상승
+        bubble.style.bottom = `${y}px`;
+
+        // 3. 제거 조건 (상단 경계를 벗어나면)
+        if (y > containerHeight) {
+          clearInterval(riseInterval);
+          bubble.remove();
+        }
+      }, intervalSpeed);
+
+      // 안전을 위해 interval ID를 요소에 저장
+      (bubble as any).riseInterval = riseInterval;
+    };
+
+    // 4. 기포 생성 간격 설정
+    const generationInterval = setInterval(createBubble, bubbleFrequency);
+
+    // 5. 클린업 (컴포넌트 언마운트/뷰 변경 시 정리)
+    return () => {
+      clearInterval(generationInterval);
+
+      // 현재 남아있는 모든 기포의 interval 정리 및 DOM에서 제거
+      const existingBubbles = Array.from(bubbleContainer.children) as HTMLElement[];
+      existingBubbles.forEach(b => {
+        if ((b as any).riseInterval) clearInterval((b as any).riseInterval);
+        b.remove();
+      });
+    };
+
+  }, [currentView, fishList]);
 
   //로그인 여부 확인
   if (!isAuthenticated || !user) {
@@ -239,9 +341,44 @@ export function StudentCollection() {
                 내 수족관: 총 {fishList.reduce((acc, cur) => acc + cur.current_count, 0)}마리 헤엄치는 중
               </div>
 
-              <div className="sunken-panel" style={{ width: "100%", height: "300px", background: "#e0f7fa", position: "relative", overflow: "hidden" }} ref={fishTankRef}>
-                {/* 수조 */}
+              <div
+                className="sunken-panel"
+                style={{ width: "100%", height: "400px", backgroundImage: "var(--fg-aquarium), var(--bg-aquarium)", backgroundRepeat: "repeat-x, repeat", backgroundPosition: "bottom, center", position: "relative", overflow: "hidden" }}
+                ref={fishTankRef}
+              >
+                <div
+                  ref={bubbleContainerRef}
+                  style={{ position: 'absolute', inset: 0, zIndex: 0 }}
+                />
+                {/* 수조 내부 */}
+                {aquariumInstances.map(({ id, fish }) => {
+                  const finalSize = fish.size * BASE_SPRITE_SIZE;
+                  return (
+                    <div
+                      key={id}
+                      onClick={() => handleFishClick(fish)}
+                      style={{
+                        position: "absolute",
+                        width: `${finalSize}px`,
+                        height: `${finalSize}px`,
+                        cursor: "pointer",
+                        zIndex: 1,
+                      }}
+                    >
+                      {renderFishSprite(fish)}
+                    </div>
+                  );
+                })}
               </div>
+              <style>{`
+        .bubble-sprite {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+            transition: opacity 0.3s;
+        }
+      `}</style>
             </>
           )}
 
@@ -266,17 +403,9 @@ export function StudentCollection() {
                       }}
                     >
                       <div className="window-body" style={{ textAlign: "center", padding: "5px" }}>
-                        <div style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "5px" }}>
+                        <div style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "5px", objectFit: "contain" }}>
                           {fish.is_owned ? (
-                            <img
-                              src={`${IMG_URL}`}
-                              alt={fish.fish_name}
-                              style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
-                              onError={(e) => {
-                                (e.target as HTMLElement).style.display = 'none';
-                                e.currentTarget.parentElement!.innerText = "🐟";
-                              }}
-                            />
+                            renderFishSprite(fish, 2)
                           ) : (
                             <span style={{ fontSize: "30px" }}>❓</span>
                           )}
@@ -310,22 +439,13 @@ export function StudentCollection() {
             </div>
             <div className="window-body text-center">
               <div className="sunken-panel" style={{ width: "100px", height: "100px", margin: "0 auto 10px auto", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
-                <img
-                  src={`${IMG_URL}`}
-                  alt={selectedFish.fish_name}
-                  style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                    e.currentTarget.parentElement!.innerText = "🐟";
-                  }}
-                />
+                {renderFishSprite(selectedFish, 2)}
               </div>
               <h4 style={{ margin: "5px 0" }}>{selectedFish.fish_name}</h4>
               <div style={{ marginBottom: "10px" }}>{getRarityBadge(selectedFish.grade)}</div>
               <fieldset>
                 <legend>정보</legend>
                 <p style={{ fontSize: "12px", margin: "4px 0" }}>보유 수량: {selectedFish.current_count}마리</p>
-                <p style={{ fontSize: "12px", margin: "4px 0" }}>등급: {selectedFish.size}</p>
               </fieldset>
               <div style={{ marginTop: "15px" }}>
                 <button onClick={() => setIsDetailOpen(false)}>닫기</button>
