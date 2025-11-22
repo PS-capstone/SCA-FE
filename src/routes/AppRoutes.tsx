@@ -56,8 +56,10 @@ const StudentLayout: React.FC = () => {
   }, [location.search, location.pathname, navigate]);
 
   return (
-    <div className="min-h-screen bg-white">
-      <Outlet />
+    <div className="retro-layout h-screen flex flex-col bg-gray overflow-hidden">
+      <div className="flex-1 overflow-y-auto no-scrollbar" style={{backgroundImage: "var(--bg-url)"}}>
+        <Outlet />
+      </div>
       <StudentBottomNav />
     </div>
   );
@@ -66,9 +68,9 @@ const StudentLayout: React.FC = () => {
 // Teacher Layout Component
 const TeacherLayout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="h-screen bg-white flex overflow-hidden">
       <Sidebar />
-      <main className="flex-1 ml-64 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
     </div>

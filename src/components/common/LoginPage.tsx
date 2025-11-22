@@ -1,11 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from "lucide-react";
-import { useAuth, TeacherUser, StudentUser } from "../../contexts/AppContext";
+import { useAuth } from "../../contexts/AppContext";
 import { post } from "../../utils/api";
 
 type FormErrors = {
@@ -47,7 +43,10 @@ export function LoginPage() {
 
 
   //백엔드 api 호출용
-  const handleLogin = async () => {
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
 
     if (role !== 'teacher' && role !== 'student') {
       alert("잘못된 접근입니다.");
@@ -82,7 +81,7 @@ export function LoginPage() {
         return;
       }
 
-      const {data} = await response.json();
+      const { data } = await response.json();
 
 
       login(data.username, role as 'teacher' | 'student', data.access_token, data.refresh_token);
@@ -104,76 +103,99 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-2 border-gray-300">
-        <CardHeader className="text-center border-b-2 border-gray-300 relative">
-          {/* 역할 선택 페이지('/')로 돌아가는 '뒤로가기' 버튼 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 border border-gray-300 hover:bg-gray-100"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="w-16 h-16 bg-gray-300 rounded mx-auto mb-4"></div>
-          <CardTitle className="text-black">{title}</CardTitle>
-        </CardHeader>
-
-        <CardContent className="p-6 space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="username">아이디</Label>
-            <Input
+    <div className="retro-layout min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "var(--bg-color)" }}>
+      <div className="window" style={{ width: "100%", maxWidth: "400px" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">&nbsp;{title}</div>
+          <div className="title-bar-controls">
+            <button aria-label="Minimize" />
+            <button aria-label="Maximize" />
+            <button aria-label="Close" />
+          </div>
+        </div>
+        <div className="window-body">
+          <div style={{ marginBottom: "20px", display: "flex", alignItems: "center" }}>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "4px 8px",
+                minWidth: "auto"
+              }}
+              title="뒤로가기"
+            >
+              <ArrowLeft size={16} style={{ marginRight: "4px", color: "black" }} />
+              뒤로
+            </button>
+          </div>
+        </div>
+        <form onSubmit={handleLogin}>
+          <div className="field-row-stacked" style={{ marginBottom: "12px" }}>
+            <label htmlFor="username">아이디</label>
+            <input
               id="username"
+              type="text"
               placeholder="아이디를 입력하세요"
-              className="border-2 border-gray-300 rounded-lg"
+              style={{ width: "100%" }}
               value={formData.username}
               onChange={handleChange}
             />
             {formErrors.username && (
-              <p className="text-sm text-red-600 pt-1">{formErrors.username}</p>
+              <p style={{ color: "red", marginTop: "4px", margin: 0 }}>{formErrors.username}</p>
             )}
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">비밀번호</Label>
-            <Input
+          <div className="field-row-stacked" style={{ marginBottom: "20px" }}>
+            <label htmlFor="password">비밀번호</label>
+            <input
               id="password"
               type="password"
               placeholder="비밀번호를 입력하세요"
-              className="border-2 border-gray-300 rounded-lg"
+              style={{ width: "100%" }}
               value={formData.password}
               onChange={handleChange}
             />
             {formErrors.password && (
-              <p className="text-sm text-red-600 pt-1">{formErrors.password}</p>
+              <p style={{ color: "red", marginTop: "4px", margin: 0 }}>{formErrors.password}</p>
             )}
           </div>
-
-          {/* API 에러 메시지를 사용자에게 표시 */}
+          {/* 공통 에러 메시지 */}
           {formErrors.formGeneral && (
-            <p className="text-sm text-red-600 text-center">{formErrors.formGeneral}</p>
+            <p style={{ color: "red", textAlign: "center", marginBottom: "12px" }}>
+              {formErrors.formGeneral}
+            </p>
           )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{
+                minWidth: "100px",
+                fontWeight: "bold",
+                padding: "6px 12px"
+              }}
+            >
+              {isLoading ? '접속 중...' : '확인'}
+            </button>
 
-          <Button
-            className="w-full bg-black hover:bg-gray-800 text-white rounded-lg h-12"
-            onClick={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? '로그인 중...' : '로그인'}
-          </Button>
-
-          <div className="text-center pt-2">
-            {/* Link 컴포넌트를 사용해 통합 회원가입 페이지로 이동 */}
-            <Link
-              to="/signup" // SignupPage.tsx
-              className="text-black underline"
+            <button
+              onClick={() => navigate('/signup')}
+              style={{
+                minWidth: "auto",
+                padding: "0",
+                border: "none",
+                background: "none",
+                boxShadow: "none",
+                color: "blue",
+                textDecoration: "underline",
+                cursor: "pointer"
+              }}
             >
               회원가입하기
-            </Link>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </form>
+      </div>
     </div>
   );
 }

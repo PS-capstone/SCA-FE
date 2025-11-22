@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { get, post } from "../../utils/api";
 
 interface AiRecommendation {
   student_id: number;
@@ -105,16 +106,20 @@ export function IndividualQuestCreatePage() {
 
       try {
         // 전체 학생 목록 조회
-        const response = await fetch(`/api/v1/classes/${currentClassId}/students`, {
-          headers: {
-            'Authorization': `Bearer ${access_token}`
-          }
-        });
+        const response = await get(`/api/v1/classes/${currentClassId}/students`);
         if (!response.ok) {
           throw new Error('학생 목록을 불러오는 데 실패했습니다.');
         }
         const data = await response.json();
-        setAllStudents(data.students || []);
+        console.log(data)
+        // API 응답을 프론트엔드 형식에 맞게 변환
+        const students = (data.data.students || []).map((student: any) => ({
+          id: student.student_id.toString(),
+          real_name: student.name,
+          coral: student.coral,
+          research_data: student.research_data
+        }));
+        setAllStudents(students);
       } catch (err) {
         const message = (err instanceof Error) ? err.message : "알 수 없는 에러 발생";
         setFetchError(message);
@@ -152,18 +157,11 @@ export function IndividualQuestCreatePage() {
 
     setIsAiLoading(true);
     try {
-      const response = await fetch('/api/v1/quests/personal/ai-recommend', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          quest_title: questData.title,
-          quest_content: questData.teacher_content,
-          difficulty: questData.difficulty || 3,
-          student_ids: selectedStudents.map(Number)
-        })
+      const response = await post('/api/v1/quests/personal/ai-recommend', {
+        quest_title: questData.title,
+        quest_content: questData.teacher_content,
+        difficulty: questData.difficulty || 3,
+        student_ids: selectedStudents.map(Number)
       });
 
       const data = await response.json();
@@ -332,20 +330,12 @@ export function IndividualQuestCreatePage() {
 
       console.log("퀘스트 등록 페이로드:", JSON.stringify(payload, null, 2));
 
-      const response = await fetch('/api/v1/quests/personal', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${access_token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await post('/api/v1/quests/personal', payload);
 
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        const errorData = await response.json().catch(() => ({ message: "서버 응답이 올바르지 않습니다." }));
-        throw new Error(errorData.message || "퀘스트 등록에 실패했습니다.");
+        throw new Error(result.message || "퀘스트 등록에 실패했습니다.");
       }
 
       alert(result.message || `[SUCCESS] 개인 퀘스트가 등록되었습니다!`);

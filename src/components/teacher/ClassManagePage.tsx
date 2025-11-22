@@ -124,7 +124,7 @@ export function ClassManagePage() {
   }
 
   // classDetails에서 데이터 추출
-  const { class_name, ongoing_group_quests, ongoing_raid, invite_code } = classDetails;
+  const { class_name, ongoing_group_quests=[], ongoing_raid, invite_code } = classDetails;
 
   // 레이드 상세 모달용 변수
   const activeRaid = ongoing_raid;
@@ -194,6 +194,22 @@ export function ClassManagePage() {
             >
               <Plus className="w-4 h-4 mr-2" />
               반 생성하기
+            </Button>
+            <Button 
+              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+              variant="outline"
+              onClick={() => navigate('/teacher/quest')}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              퀘스트 등록
+            </Button>
+            <Button 
+              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+              variant="outline"
+              onClick={() => navigate('/teacher/raid/create')}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              레이드 등록
             </Button>
           </div>
 
