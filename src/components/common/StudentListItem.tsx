@@ -12,6 +12,7 @@ interface StudentListItemProps {
   research_data: number;
   className?: string;
   classId?: number | string;
+  grade?: number;
 }
 
 function StudentListItemInner({

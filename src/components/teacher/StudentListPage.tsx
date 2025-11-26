@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { StudentListItem } from "../common/StudentListItem";
-import { get } from "../../utils/api";
+import { get, put } from "../../utils/api";
 import { useAuth } from "../../contexts/AppContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save, X, Pencil } from "lucide-react";
 
 interface ApiStudent {
   student_id: number;
@@ -11,6 +11,7 @@ interface ApiStudent {
   pending_quests: number;
   coral: number;
   research_data: number;
+  grade: number;
 }
 
 interface StudentListData {
@@ -28,6 +29,36 @@ export function StudentListPage() {
   const [listData, setListData] = useState<StudentListData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedStudents, setEditedStudents] = useState<ApiStudent[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // 데이터 로드
+  const fetchStudents = async (targetId: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await get(`/api/v1/classes/${targetId}/students`);
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "학생 목록을 불러오는데 실패했습니다.");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setListData(data.data);
+        // 데이터를 불러올 때 에디팅용 State도 초기화
+        setEditedStudents(data.data.students);
+      } else {
+        throw new Error(data.message || "데이터 포맷 오류");
+      }
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : "알 수 없는 오류 발생");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!currentClassId || !access_token) {
@@ -89,6 +120,64 @@ export function StudentListPage() {
     fetchStudents();
   }, [urlClassId, currentClassId, access_token, navigate]);
 
+  // --- 수정 모드 진입/취소 ---
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // 취소 시: 원래 데이터로 원복
+      if (listData) {
+        setEditedStudents(listData.students);
+      }
+    }
+    setIsEditing(!isEditing);
+  };
+
+  // --- 입력 값 변경 ---
+  const handleInputChange = (studentId: number, value: string) => {
+    const numValue = Number(value);
+    if (isNaN(numValue) || numValue < 0) return; // 음수 방지 및 숫자 체크
+
+    setEditedStudents((prev) =>
+      prev.map((student) =>
+        student.student_id === studentId
+          ? { ...student, grade: numValue }
+          : student
+      )
+    );
+  };
+
+  // --- 저장 ---
+  const handleSave = async () => {
+    if (!listData) return;
+    setIsSaving(true);
+    try {
+      // API: 성적(Grade) 정보만 업데이트
+      const response = await put(`/api/v1/classes/${listData.class_id}/students`, {
+        students: editedStudents.map(s => ({
+          student_id: s.student_id,
+          grade: s.grade // coral, research_data 제외
+        }))
+      });
+
+      if (!response.ok) {
+        throw new Error("저장에 실패했습니다.");
+      }
+
+      const resData = await response.json();
+      if (resData.success) {
+        // 저장 성공 시 목록 갱신 및 모드 종료
+        await fetchStudents(listData.class_id);
+        setIsEditing(false);
+        alert("성적이 저장되었습니다.");
+      } else {
+        throw new Error(resData.message || "저장 실패");
+      }
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // 로딩 중
   if (isLoading) {
     return (
@@ -133,28 +222,105 @@ export function StudentListPage() {
                 {listData.class_name} - 총 {listData.student_count}명
               </p>
             </div>
+            {/* 우측 상단 버튼 영역 */}
+            <div className="flex gap-2">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleEditToggle}
+                    disabled={isSaving}
+                    className="flex items-center px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    취소
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="flex items-center px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    저장
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleEditToggle}
+                  className="flex items-center px-4 py-2 text-sm text-white bg-green-600 rounded-md hover:bg-green-700"
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  성적 입력
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="p-6 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            {listData.students.length > 0 ? (
-              listData.students.map((student) => (
-                <StudentListItem
-                  key={student.student_id}
-                  id={student.student_id}
-                  name={student.name}
-                  pendingQuests={student.pending_quests}
-                  coral={student.coral}
-                  research_data={student.research_data}
-                  classId={listData.class_id} // 현재 보고 있는 반 ID 전달
-                />
-              ))
+            {isEditing ? (
+              // 수정 모드: Coral/Data는 읽기 전용, Grade는 입력 가능
+              editedStudents.length > 0 ? (
+                editedStudents.map((student) => (
+                  <div key={student.student_id} className="border rounded-lg p-4 shadow-sm bg-white border-blue-200 ring-2 ring-blue-100">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="font-bold text-lg">{student.name}</span>
+                      <span className="text-xs text-gray-500">ID: {student.student_id}</span>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* 읽기 전용 정보 (Coral, Research Data) */}
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                        <div>
+                          <span className="block text-xs text-gray-400">Coral</span>
+                          <span className="font-medium">{student.coral}</span>
+                        </div>
+                        <div>
+                          <span className="block text-xs text-gray-400">R.Data</span>
+                          <span className="font-medium">{student.research_data}</span>
+                        </div>
+                      </div>
+
+                      {/* 수정 가능한 정보 (Grade) */}
+                      <div>
+                        <label className="block text-sm font-bold text-blue-700 mb-1">
+                          Grade (성적)
+                        </label>
+                        <input
+                          type="number"
+                          value={student.grade}
+                          onChange={(e) => handleInputChange(student.student_id, e.target.value)}
+                          placeholder="점수 입력"
+                          className="w-full p-2 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-right"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 col-span-full text-center py-10">학생이 없습니다.</p>
+              )
             ) : (
-              <p className="text-gray-500 col-span-full text-center py-10">
-                반에 등록된 학생이 없습니다.
-              </p>
+              // 조회 모드
+              listData.students.length > 0 ? (
+                listData.students.map((student) => (
+                  <StudentListItem
+                    key={student.student_id}
+                    id={student.student_id}
+                    name={student.name}
+                    pendingQuests={student.pending_quests}
+                    coral={student.coral}
+                    research_data={student.research_data}
+                    classId={listData.class_id}
+                    grade={student.grade} 
+                  />
+                ))
+              ) : (
+                <p className="text-gray-500 col-span-full text-center py-10">
+                  반에 등록된 학생이 없습니다.
+                </p>
+              )
             )}
           </div>
         </div>
