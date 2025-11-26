@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "../../contexts/AppContext";
-import { post } from "../../utils/api";
+import { post, get } from "../../utils/api";
 
 type FormErrors = {
   username: string | null;
@@ -12,7 +12,7 @@ type FormErrors = {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, updateUser } = useAuth();
   const { role } = useParams<{ role: string }>();
 
   const [formData, setFormData] = useState({
@@ -64,7 +64,6 @@ export function LoginPage() {
         role: role
       }, { skipAuth: true });
 
-
       if (!response.ok) {
         const status = response.status;
         const data = await response.json();
@@ -83,13 +82,54 @@ export function LoginPage() {
 
       const { data } = await response.json();
 
-
-      login(data.username, role as 'teacher' | 'student', data.access_token, data.refresh_token);
-
-      if (role === 'teacher') {
-        navigate('/teacher/dashboard');
-      } else {
+      // 학생인 경우 전체 사용자 정보를 StudentUser 형식으로 변환하여 저장
+      if (role === 'student') {
+        const studentUser = {
+          id: String(data.student_id),
+          real_name: data.real_name,
+          nickname: data.nickname,
+          username: data.username,
+          email: data.email,
+          invite_code: '', // 로그인 응답에 없으면 빈 문자열
+          coral: data.coral ?? 0,
+          research_data: data.research_data ?? 0
+        };
+        login(studentUser, 'student', data.access_token, data.refresh_token);
         navigate('/student/dashboard');
+      } else {
+        // Teacher인 경우: 먼저 기본 정보로 로그인하고, classes를 가져와서 업데이트
+        const teacherUser = {
+          id: String(data.teacher_id),
+          real_name: data.real_name,
+          nickname: data.nickname,
+          username: data.username,
+          email: data.email,
+          classes: [] as string[], // 일단 빈 배열로 시작
+        };
+        login(teacherUser, 'teacher', data.access_token, data.refresh_token);
+
+        try {
+          // login() 덕분에 access_token이 저장된 상태이므로 API 호출 가능
+          const classesResponse = await get('/api/v1/classes');
+
+          if (classesResponse.ok) {
+            const classesData = await classesResponse.json();
+            if (classesData?.data?.classes) {
+              const classIds = (classesData.data.classes || []).map((c: any) => String(c.class_id || c.classId));
+
+              if (classIds.length > 0) {
+                // 반 정보 업데이트
+                updateUser({ classes: classIds });
+              }
+            }
+          }
+        } catch (classErr) {
+          console.error('반 정보를 불러오는 중 오류 발생 (로그인은 진행됨):', classErr);
+          // 반 정보 로드 실패해도 대시보드 진입은 허용
+        }
+
+        // 2-3. 모든 데이터 로드 후 이동 (새로고침 없이 navigate 사용)
+        navigate('/teacher/dashboard');
       }
 
     } catch (error) {

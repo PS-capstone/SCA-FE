@@ -65,7 +65,7 @@ export function RoleSelection() {
                 textDecoration: "underline",
                 cursor: "pointer",
                 padding: 0,
-                minWidth: "auto" // 98.css 버튼 기본 min-width 제거
+                minWidth: "auto"
               }}
             >
               회원가입하기

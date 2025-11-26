@@ -219,13 +219,23 @@ export function StudentCollection() {
     const animate = () => {
       const rect = tank.getBoundingClientRect();
       const currentLeft = parseFloat(fish.style.left) || 0;
+      const currentTop = parseFloat(fish.style.top) || 0;
       const padding = 10;
+
       const newX = Math.random() * (rect.width - fish.offsetWidth - padding * 2) + padding;
       const newY = Math.random() * (rect.height - fish.offsetWidth - padding * 2) + padding;
 
-      const minDuration = 4;
-      const maxDuration = 8;
-      const duration = Math.random() * (maxDuration - minDuration) + minDuration;
+      const deltaX = newX - currentLeft;
+      const deltaY = newY - currentTop;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      const baseSpeed = 50; // 기준 속도 (픽셀/초). 숫자가 클수록 빠름.
+
+      const randomFactor = 0.5 + Math.random();
+      const currentSpeed = baseSpeed * randomFactor;
+
+      let duration = distance / currentSpeed;
+      if (duration < 1.5) duration = 1.5;
 
       fish.style.transform = newX > currentLeft ? "scaleX(1)" : "scaleX(-1)";
       fish.style.transition = `left ${duration}s ease-in-out, top ${duration}s ease-in-out`;
@@ -320,12 +330,12 @@ export function StudentCollection() {
   if (error) return <div className="p-4" style={{ color: "red" }}>오류: {error}</div>;
 
   return (
-    <div className="p-4 space-y-4 pb-20 max-w-screen-xl mx-auto" style={{ backgroundColor: "var(--bg-color)", minHeight: "100vh" }}>
+    <div className="p-4 space-y-4 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh", gap: "0" }}>
       <menu role="tablist" style={{ margin: "0 0 -2px 0" }}>
-        <li role="tab" aria-selected={currentView === 'aquarium'}>
+        <li role="tab" aria-selected={currentView === 'aquarium'} style={{ backgroundColor: "var(--bg-gray)" }}>
           <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('aquarium'); }}>수족관</a>
         </li>
-        <li role="tab" aria-selected={currentView === 'book'}>
+        <li role="tab" aria-selected={currentView === 'book'} style={{ backgroundColor: "var(--bg-gray)" }}>
           <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('book'); }}>도감</a>
         </li>
       </menu>

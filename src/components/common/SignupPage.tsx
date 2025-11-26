@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Checkbox } from "../ui/checkbox";
 import { post } from "../../utils/api";
 
 type FormErrors = {
@@ -53,11 +59,8 @@ export function SignupPage() {
         }
     };
 
-
     //백엔드 api 호출용
-    const handleSignup = async (e?: React.FormEvent) => {
-        if (e) e.preventDefault();
-
+    const handleSignup = async () => {
         if (formData.password !== formData.confirmPassword) {
             setFormErrors(prev => ({ ...prev, confirmPassword: "비밀번호가 일치하지 않습니다." }));
             return;
@@ -178,123 +181,123 @@ export function SignupPage() {
                         </div>
                     </fieldset>
                     <form onSubmit={handleSignup}>
-                    <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
-                        <label htmlFor="username">아이디 *</label>
-                        <input
-                            id="username"
-                            type="text"
-                            value={formData.username}
-                            onChange={handleChange}
-                            placeholder="아이디를 입력하세요"
-                            style={{ width: "100%" }}
-                        />
-                        {formErrors.username && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.username}</p>}
-                    </div>
-                    <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
-                        <label htmlFor="password">비밀번호 *</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="비밀번호를 입력하세요"
-                            style={{ width: "100%" }}
-                        />
-                        {formErrors.password && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.password}</p>}
-                    </div>
-                    <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
-                        <label htmlFor="confirmPassword">비밀번호 확인 *</label>
-                        <input
-                            id="confirmPassword"
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            placeholder="비밀번호를 다시 입력하세요"
-                            style={{ width: "100%" }}
-                        />
-                        {formErrors.confirmPassword && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.confirmPassword}</p>}
-                    </div>
-                    <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
-                        <label htmlFor="real_name">이름 (실명) *</label>
-                        <input
-                            id="real_name"
-                            type="text"
-                            value={formData.real_name}
-                            onChange={handleChange}
-                            placeholder="이름을 입력하세요"
-                            style={{ width: "100%" }}
-                        />
-                        {formErrors.real_name && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.real_name}</p>}
-                    </div>
-                    <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
-                        <label htmlFor="nickname">닉네임 *</label>
-                        <input
-                            id="nickname"
-                            type="text"
-                            value={formData.nickname}
-                            onChange={handleChange}
-                            placeholder="닉네임을 입력하세요"
-                            style={{ width: "100%" }}
-                        />
-                        {formErrors.nickname && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.nickname}</p>}
-                    </div>
-                    <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
-                        <label htmlFor="email">이메일 *</label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="이메일을 입력하세요"
-                            style={{ width: "100%" }}
-                        />
-                        {formErrors.email && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.email}</p>}
-                    </div>
-                    {role === 'student' && (
                         <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
-                            <label htmlFor="invite_code">반 코드 *</label>
+                            <label htmlFor="username">아이디 *</label>
                             <input
-                                id="invite_code"
+                                id="username"
                                 type="text"
-                                value={formData.invite_code}
+                                value={formData.username}
                                 onChange={handleChange}
-                                placeholder="선생님께 받은 반 코드를 입력하세요"
+                                placeholder="아이디를 입력하세요"
                                 style={{ width: "100%" }}
                             />
-                            {formErrors.invite_code && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.invite_code}</p>}
+                            {formErrors.username && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.username}</p>}
                         </div>
-                    )}
-                    {/* 약관 동의 체크박스 */}
-                    <div className="field-row" style={{ marginTop: "20px", marginBottom: "20px", alignItems: "flex-start" }}>
-                        <input
-                            id="terms"
-                            type="checkbox"
-                            checked={agreed}
-                            onChange={(e) => setAgreed(e.target.checked)}
-                        />
-                        <label htmlFor="terms" style={{ lineHeight: "1.4", display: "inline-block", paddingTop: "2px" }}>
-                            서비스 이용약관에 동의합니다.<br />
-                            <span style={{ fontSize: "0.9em", color: "#666" }}>
-                                개인정보 처리방침 및 이용약관을 확인하였으며 이에 동의합니다.
-                            </span>
-                        </label>
-                    </div>
+                        <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                            <label htmlFor="password">비밀번호 *</label>
+                            <input
+                                id="password"
+                                type="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="비밀번호를 입력하세요"
+                                style={{ width: "100%" }}
+                            />
+                            {formErrors.password && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.password}</p>}
+                        </div>
+                        <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                            <label htmlFor="confirmPassword">비밀번호 확인 *</label>
+                            <input
+                                id="confirmPassword"
+                                type="password"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                placeholder="비밀번호를 다시 입력하세요"
+                                style={{ width: "100%" }}
+                            />
+                            {formErrors.confirmPassword && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.confirmPassword}</p>}
+                        </div>
+                        <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                            <label htmlFor="real_name">이름 (실명) *</label>
+                            <input
+                                id="real_name"
+                                type="text"
+                                value={formData.real_name}
+                                onChange={handleChange}
+                                placeholder="이름을 입력하세요"
+                                style={{ width: "100%" }}
+                            />
+                            {formErrors.real_name && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.real_name}</p>}
+                        </div>
+                        <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                            <label htmlFor="nickname">닉네임 *</label>
+                            <input
+                                id="nickname"
+                                type="text"
+                                value={formData.nickname}
+                                onChange={handleChange}
+                                placeholder="닉네임을 입력하세요"
+                                style={{ width: "100%" }}
+                            />
+                            {formErrors.nickname && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.nickname}</p>}
+                        </div>
+                        <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                            <label htmlFor="email">이메일 *</label>
+                            <input
+                                id="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="이메일을 입력하세요"
+                                style={{ width: "100%" }}
+                            />
+                            {formErrors.email && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.email}</p>}
+                        </div>
+                        {role === 'student' && (
+                            <div className="field-row-stacked" style={{ marginBottom: "10px" }}>
+                                <label htmlFor="invite_code">반 코드 *</label>
+                                <input
+                                    id="invite_code"
+                                    type="text"
+                                    value={formData.invite_code}
+                                    onChange={handleChange}
+                                    placeholder="선생님께 받은 반 코드를 입력하세요"
+                                    style={{ width: "100%" }}
+                                />
+                                {formErrors.invite_code && <p style={{ color: "red", margin: "2px 0" }}>{formErrors.invite_code}</p>}
+                            </div>
+                        )}
+                        {/* 약관 동의 체크박스 */}
+                        <div className="field-row" style={{ marginTop: "20px", marginBottom: "20px", alignItems: "flex-start" }}>
+                            <input
+                                id="terms"
+                                type="checkbox"
+                                checked={agreed}
+                                onChange={(e) => setAgreed(e.target.checked)}
+                            />
+                            <label htmlFor="terms" style={{ lineHeight: "1.4", display: "inline-block", paddingTop: "2px" }}>
+                                서비스 이용약관에 동의합니다.<br />
+                                <span style={{ fontSize: "0.9em", color: "#666" }}>
+                                    개인정보 처리방침 및 이용약관을 확인하였으며 이에 동의합니다.
+                                </span>
+                            </label>
+                        </div>
 
-                    {/* 일반 에러 메시지 */}
-                    {formErrors.formGeneral && (
-                        <p style={{ color: "red", textAlign: "center", marginBottom: "10px" }}>{formErrors.formGeneral}</p>
-                    )}
+                        {/* 일반 에러 메시지 */}
+                        {formErrors.formGeneral && (
+                            <p style={{ color: "red", textAlign: "center", marginBottom: "10px" }}>{formErrors.formGeneral}</p>
+                        )}
 
-                    {/* 하단 버튼 영역 */}
-                    <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "20px", marginBottom: "10px" }}>
-                        <button
-                            onClick={handleSignup}
-                            disabled={isLoading}
-                            style={{ padding: "6px 20px", fontWeight: "bold", width: "100%" }}
-                        >
-                            {isLoading ? '진행 중...' : '회원가입'}
-                        </button>
-                    </div>
+                        {/* 하단 버튼 영역 */}
+                        <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginTop: "20px", marginBottom: "10px" }}>
+                            <button
+                                onClick={handleSignup}
+                                disabled={isLoading}
+                                style={{ padding: "6px 20px", fontWeight: "bold", width: "100%" }}
+                            >
+                                {isLoading ? '진행 중...' : '회원가입'}
+                            </button>
+                        </div>
                     </form>
 
                     {/* 로그인 링크 */}
