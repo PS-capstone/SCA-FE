@@ -1,403 +1,400 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Progress } from '../ui/progress';
-import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { useAuth, StudentUser } from "../../contexts/AppContext";
+import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from "../../contexts/AppContext";
+import { get, post } from "../../utils/api";
 
-interface RaidData {
-  name: string;
-  bossName: string;
-  currentHp: number;
-  maxHp: number;
-  timeLeft: string;
-  skillGauge: number;
-  maxSkillGauge: number;
-  skillReady: boolean;
+interface BossHp {
+  total: number;
+  current: number;
+  percentage: number;
+}
+
+interface MyContribution {
+  total_damage: number;
+  last_attack_at: string | null;
+}
+
+interface RaidInfo {
+  raid_id: number;
+  template: string;
+  template_name: string;
+  raid_name: string;
+  difficulty: string;
+  status: "ACTIVE" | "COMPLETED" | "Failed";
+  boss_hp: BossHp;
+  end_date: string;
+  remaining_time: string;
+  reward_coral: number;
+  participants: number;
+  my_contribution: MyContribution;
+  my_research_data: number;
+}
+
+interface AttackLog {
+  log_id: number;
+  student_name: string;
+  damage: number;
+  timestamp: string;
+  time_ago: string;
 }
 
 export function StudentRaid() {
-  const { user, isAuthenticated, userType } = useAuth();
+  const { user, isAuthenticated, userType, access_token } = useAuth();
+
+  const [raidInfo, setRaidInfo] = useState<RaidInfo | null>(null);
+  const [logs, setLogs] = useState<AttackLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [isContributeOpen, setIsContributeOpen] = useState(false);
   const [contributeAmount, setContributeAmount] = useState(0);
+
+  const [isDiceRolling, setIsDiceRolling] = useState(false);
+  const [diceResult, setDiceResult] = useState<number | null>(null);
   const [lastContributeResult, setLastContributeResult] = useState<{
     base: number;
     bonus: number;
     total: number;
     diceResult: number;
   } | null>(null);
-  const [isDiceRolling, setIsDiceRolling] = useState(false);
-  const [diceResult, setDiceResult] = useState<number | null>(null);
 
-  const raidData: RaidData = {
-    name: '레이드: 중간고사 마왕',
-    bossName: '수학의 악마',
-    currentHp: 6500,
-    maxHp: 10000,
-    timeLeft: '48:15',
-    skillGauge: 1000,
-    maxSkillGauge: 1000,
-    skillReady: true
+  // 1. 레이드 정보 및 로그 조회
+  const fetchRaidData = async () => {
+    if (!access_token) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const raidRes = await get('/api/v1/raids/my-raid');
+      if (raidRes.status === 404) {
+        setError("진행 중인 레이드가 없습니다.");
+        setRaidInfo(null);
+        return;
+      }
+      if (!raidRes.ok) throw new Error("레이드 정보를 불러오는데 실패했습니다.");
+
+      const raidJson = await raidRes.json();
+      setRaidInfo(raidJson.data);
+
+      // 로그 조회 (REST 방식)
+      const logsRes = await get(`/api/v1/raids/{raidId}/logs`);
+      if (logsRes.ok) {
+        const logsJson = await logsRes.json();
+        setLogs(logsJson.data.logs);
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  //로그인 여부 확인
-  if (!isAuthenticated || !user) {
-    return <div className="p-4">로그인 정보 로딩 중...</div>;
-  }
+  useEffect(() => {
+    if (isAuthenticated && userType === 'student') {
+      fetchRaidData();
+    }
+  }, [isAuthenticated, userType, access_token]);
 
-  if (userType !== 'student') {
-    return <div className="p-6">학생 전용 페이지입니다.</div>;
-  }
-
-  const currentUser = user as StudentUser;
+  // 2. 에너지 주입 (공격)
   const handleEnergyContribute = () => {
-    if (contributeAmount <= 0 || contributeAmount > currentUser.research_data) {
+    if (!raidInfo) return;
+    if (contributeAmount <= 0 || contributeAmount > raidInfo.my_research_data) {
       alert('올바른 기여량을 입력해주세요.');
       return;
     }
 
-    // 주사위 굴리기 애니메이션 시작
     setIsDiceRolling(true);
     setDiceResult(null);
 
-    // 주사위 굴리기 애니메이션 (2초)
-    setTimeout(() => {
-      const diceResult = Math.floor(Math.random() * 6) + 1;
-      const bonusMultiplier = diceResult / 6; // 0.16 ~ 1.0
+    // 주사위 애니메이션 (2초)
+    setTimeout(async () => {
+      // 1. 주사위 결과 및 데미지 계산 (Client Side)
+      const dice = Math.floor(Math.random() * 6) + 1;
+      const bonusMultiplier = dice / 6; // 0.16 ~ 1.0
       const bonus = Math.floor(contributeAmount * bonusMultiplier);
-      const total = contributeAmount + bonus;
+      const totalDamage = contributeAmount + bonus;
 
-      setDiceResult(diceResult);
+      setDiceResult(dice);
       setIsDiceRolling(false);
 
       setLastContributeResult({
         base: contributeAmount,
         bonus: bonus,
-        total: total,
-        diceResult: diceResult
+        total: totalDamage,
+        diceResult: dice
       });
 
-      // 실제로는 API 호출
-      console.log('Energy contribution:', {
-        userId: currentUser.id,
-        baseAmount: contributeAmount,
-        bonusAmount: bonus,
-        totalAmount: total,
-        diceResult: diceResult
-      });
+      try {
+        const response = await post(`/api/v1/raids/${raidInfo.raid_id}/attack`, {
+          research_data_amount: contributeAmount,
+          total_damage: totalDamage
+        });
 
-      setIsContributeOpen(false);
-      setContributeAmount(0);
+        const result = await response.json();
 
-      alert(`기여 완료! 기본 ${contributeAmount} + 보너스 ${bonus} = 총 ${total} 기여`);
+        if (!response.ok) {
+          throw new Error(result.message || "공격 실패");
+        }
+
+        if (result.success) {
+          const data = result.data;
+          setRaidInfo(prev => prev ? ({
+            ...prev,
+            boss_hp: {
+              total: prev.boss_hp.total,
+              current: data.boss_hp.after,
+              percentage: data.boss_hp.percentage
+            },
+            my_research_data: data.my_stats.remaining_research_data
+          }) : null);
+
+          fetchRaidData();
+          alert(result.message);
+        }
+      } catch (err) {
+        alert((err as Error).message);
+      } finally {
+        setIsContributeOpen(false);
+        setContributeAmount(0);
+      }
+
     }, 2000);
   };
 
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':');
-    return `${hours}시간 ${minutes}분`;
-  };
+  //로그인 여부 확인
+  if (!isAuthenticated || !user) {
+    return <div className="p-6">로그인 정보 확인 중...</div>;
+  }
+
+  if (userType !== 'student') {
+    return <div className="p-6">접근 권한이 없습니다.</div>;
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 flex flex-col justify-center items-center min-h-screen" style={{ backgroundColor: "var(--bg-color)" }}>
+        <div className="window" style={{ width: "300px" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">로딩 중</div>
+          </div>
+          <div className="window-body text-center p-4">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+            <span>레이드 정보를 수신 중...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !raidInfo) {
+    return (
+      <div className="p-6 flex flex-col justify-center items-center min-h-screen" style={{ backgroundColor: "var(--bg-color)" }}>
+        <div className="window" style={{ width: "300px" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">알림</div>
+            <div className="title-bar-controls">
+              <button aria-label="Close" />
+            </div>
+          </div>
+          <div className="window-body text-center p-4">
+            <p>{error || "진행 중인 레이드가 없습니다."}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 space-y-4 bg-white min-h-screen pb-20">
-      {/* 레이드 헤더 */}
-      <Card className="border-2 border-gray-300">
-        <CardHeader className="text-center">
-          <CardTitle className="text-black">{raidData.name}</CardTitle>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">남은 시간</span>
-            <span className="text-black font-medium">{formatTime(raidData.timeLeft)}</span>
+    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ backgroundColor: "var(--bg-color)", minHeight: "100vh" }}>
+      {/* 1. 보스 & 레이드 정보 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">&nbsp;{raidInfo.raid_name} ({raidInfo.difficulty})</div>
+          <div className="title-bar-controls">
+            <button aria-label="Minimize" />
+            <button aria-label="Maximize" />
+            <button aria-label="Close" />
           </div>
-        </CardHeader>
-      </Card>
+        </div>
+        <div className="window-body">
 
-      {/* 보스 영역 */}
-      <Card className="border-2 border-gray-300">
-        <CardContent className="p-6">
-          {/* 보스 이미지 */}
-          <div className="w-full h-48 bg-black rounded mb-4 flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="w-20 h-20 bg-gray-400 rounded-full mx-auto mb-2"></div>
-              <p className="font-medium">{raidData.bossName}</p>
+          {/* 보스 이미지 영역 */}
+          <div className="sunken-panel" style={{
+            height: "180px", display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            background: "#000", color: "#fff", marginBottom: "10px"
+          }}>
+            {/* 보스 이미지 Placeholder */}
+            <div style={{ width: "80px", height: "80px", background: "#808080", borderRadius: "50%", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px" }}>
+              🐙
             </div>
-          </div>
-
-          {/* 보스 HP 바 */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-black font-medium">보스 HP</span>
-              <span className="text-black">
-                {raidData.currentHp.toLocaleString()} / {raidData.maxHp.toLocaleString()}
-              </span>
-            </div>
-            <Progress
-              value={(raidData.currentHp / raidData.maxHp) * 100}
-              className="h-6 bg-gray-200"
-              style={{
-                '--progress-background': '#ef4444',
-                '--progress-foreground': '#dc2626'
-              } as React.CSSProperties}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 개인 기여 영역 */}
-      <Card className="border-2 border-gray-300">
-        <CardHeader>
-          <CardTitle className="text-black text-center">개인 기여</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* 보유 자원 및 상태 */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className="text-center p-3 border border-gray-200 rounded">
-              <p className="text-sm text-gray-600">보유 탐사데이터</p>
-              <p className="text-xl font-medium text-black">{currentUser.research_data}</p>
-            </div>
+            <h3 style={{ margin: 0 }}>{raidInfo.template_name}</h3>
+            <div style={{ fontSize: "12px", color: "#ccc" }}>남은 시간: {raidInfo.remaining_time}</div>
           </div>
 
-          {/* 액션 버튼들 */}
-          <div className="space-y-3">
-            <Button
-              onClick={() => setIsContributeOpen(true)}
-              className="w-full bg-black text-white hover:bg-gray-800 h-12"
-              disabled={currentUser.research_data <= 0}
-            >
-              에너지 주입
-            </Button>
-          </div>
-
-          {/* 마지막 기여 결과 */}
-          {lastContributeResult && (
-            <Card className="bg-gray-50 border border-gray-200">
-              <CardContent className="p-3">
-                <p className="text-center text-sm text-gray-600 mb-2">마지막 기여 결과</p>
-                <div className="text-center space-y-1">
-                  <p className="text-black">
-                    기본: {lastContributeResult.base} + 보너스: {lastContributeResult.bonus}
-                  </p>
-                  <p className="font-medium text-black">
-                    총 기여: {lastContributeResult.total}
-                  </p>
-                  <Badge className="bg-gray-600">
-                    주사위: {lastContributeResult.diceResult}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 레이드 완료 시 보상 */}
-      <Card className="border-2 border-gray-300">
-        <CardHeader>
-          <CardTitle className="text-black text-center">레이드 완료 시 보상</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center p-3 border border-gray-200 rounded">
-            <p className="text-sm text-gray-600 mb-1">특별 보상</p>
-            <p className="text-lg font-medium text-black">아이스크림</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 레이드 로그 */}
-      <Card className="border-2 border-gray-300">
-        <CardHeader>
-          <CardTitle className="text-black">
-            레이드 로그
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-64 overflow-y-auto space-y-3 border-2 border-gray-300 rounded-lg p-3">
-            {/* 최근 활동들 */}
-            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">김학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">2분 전</span>
-              </div>
+          {/* 체력바 */}
+          <div style={{ marginBottom: "15px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+              <span>HP Status</span>
+              <span>{raidInfo.boss_hp.current.toLocaleString()} / {raidInfo.boss_hp.total.toLocaleString()}</span>
             </div>
-
-            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">이학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">5분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">박학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">8분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">최학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">12분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">정학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">15분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">한학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">18분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">조학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">22분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-white border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">윤학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">25분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-gray-100 border-l-4 border-gray-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-black rounded-full"></span>
-                  <span className="text-sm font-medium text-black">강학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-gray-600 bg-gray-200 px-2 py-1 rounded">28분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-rose-50 border-l-4 border-rose-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-rose-800">임학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-rose-600 bg-rose-100 px-2 py-1 rounded">32분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-lime-50 border-l-4 border-lime-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-lime-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-lime-800">서학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-lime-600 bg-lime-100 px-2 py-1 rounded">35분 전</span>
-              </div>
-            </div>
-
-            <div className="bg-emerald-50 border-l-4 border-emerald-400 p-3 rounded-r">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-emerald-800">오학생님이 에너지를 주입했습니다</span>
-                </div>
-                <span className="text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded">38분 전</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 기여 모달 */}
-      <Dialog open={isContributeOpen} onOpenChange={setIsContributeOpen}>
-        <DialogContent className="bg-white border-2 border-gray-300">
-          <DialogHeader>
-            <DialogTitle className="text-black">에너지 주입</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-600 mb-2">
-                보유 탐사데이터: {currentUser.research_data}
-              </p>
-              <input
-                type="number"
-                value={contributeAmount}
-                onChange={(e) => setContributeAmount(Number(e.target.value))}
-                max={currentUser.research_data}
-                min={1}
-                className="w-full p-3 border border-gray-300 rounded bg-white text-black"
-                placeholder="기여할 양을 입력하세요"
+            <div className="progress-indicator segmented" style={{ width: "100%", height: "24px", border: "2px inset #dfdfdf" }}>
+              <div
+                className="progress-indicator-bar"
+                style={{
+                  width: `${raidInfo.boss_hp.percentage}%`,
+                  background: "linear-gradient(90deg, #d32f2f 0 16px, transparent 0 2px)",
+                  backgroundColor: "transparent"
+                }}
               />
             </div>
+          </div>
 
-            <div className="bg-gray-50 p-3 rounded space-y-2">
-              <p className="text-sm text-gray-600 mb-1">기여 계산 방식:</p>
-              <p className="text-xs text-black">
-                기본 기여량 + 주사위 보너스(1-6) = 최종 기여량
-              </p>
-              <div className="flex items-center justify-center">
-                {isDiceRolling ? (
-                  <div className="w-12 h-12 border-2 border-gray-300 rounded bg-gray-400 flex items-center justify-center animate-spin">
-                    <span className="text-white text-xs">🎲</span>
+          {/* 보상 정보 */}
+          <fieldset style={{ padding: "10px" }}>
+            <legend>Clear Reward</legend>
+            <div style={{ textAlign: "center", fontWeight: "bold" }}>
+              보상: 코랄 {raidInfo.reward_coral}개
+            </div>
+          </fieldset>
+        </div>
+      </div>
+
+      {/* 2. 내 행동 (기여) 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">&nbsp;개인 기여</div>
+        </div>
+        <div className="window-body">
+
+          {/* 내 자원 현황 */}
+          <div className="status-bar" style={{ marginBottom: "15px" }}>
+            <p className="status-bar-field">보유 탐사데이터</p>
+            <p className="status-bar-field" style={{ textAlign: "right", fontWeight: "bold" }}>
+              {raidInfo.my_research_data}
+            </p>
+          </div>
+
+          {/* 액션 버튼 */}
+          <button
+            onClick={() => setIsContributeOpen(true)}
+            disabled={raidInfo.my_research_data <= 0}
+            style={{ width: "100%", height: "40px", fontWeight: "bold", marginBottom: "10px" }}
+          >
+            ⚡ 에너지 주입
+          </button>
+
+          {/* 마지막 결과 표시 */}
+          {lastContributeResult && (
+            <div className="sunken-panel" style={{ padding: "10px", background: "#fff" }}>
+              <div style={{ textAlign: "center", fontSize: "12px", color: "#666", marginBottom: "5px" }}>-- Last Attack Log --</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div>기본: {lastContributeResult.base}</div>
+                  <div>보너스: +{lastContributeResult.bonus}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontWeight: "bold", fontSize: "16px", color: "blue" }}>DMG: {lastContributeResult.total}</div>
+                  <div style={{ fontSize: "11px", background: "#e0e0e0", padding: "2px 4px", display: "inline-block", marginTop: "2px" }}>
+                    Dice: {lastContributeResult.diceResult}
                   </div>
-                ) : diceResult ? (
-                  <div className="w-12 h-12 border-2 border-gray-300 rounded bg-gray-600 flex items-center justify-center">
-                    <span className="text-white text-lg font-bold">{diceResult}</span>
-                  </div>
-                ) : (
-                  <div className="w-12 h-12 border-2 border-gray-300 rounded bg-white flex items-center justify-center text-xs">
-                    주사위
-                  </div>
-                )}
+                </div>
               </div>
             </div>
+          )}
+        </div>
+      </div>
 
-            <div className="flex space-x-2">
-              <Button
-                onClick={handleEnergyContribute}
-                className="flex-1 bg-black text-white"
-                disabled={contributeAmount <= 0 || contributeAmount > currentUser.research_data || isDiceRolling}
-              >
-                {isDiceRolling ? '주사위 굴리는 중...' : '기여하기'}
-              </Button>
-              <Button
-                onClick={() => setIsContributeOpen(false)}
-                className="flex-1 bg-white text-black border border-gray-300"
-              >
-                취소
-              </Button>
+      {/* 3. 레이드 로그 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">레이드 로그</div>
+        </div>
+        <div className="window-body">
+          <div className="sunken-panel" style={{ height: "200px", overflowY: "auto", background: "#fff", padding: "6px" }}>
+            {logs.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "20px", color: "#999" }}>기록된 레이드 로그가 없습니다.</div>
+            ) : (
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {logs.map((log) => (
+                  <li key={log.log_id} style={{ marginBottom: "6px", borderBottom: "1px dotted #ccc", paddingBottom: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>
+                        <strong style={{ color: "#000080" }}>{log.student_name}</strong>님이
+                        <span style={{ color: "#d32f2f", fontWeight: "bold", marginLeft: "4px" }}>{log.damage}</span> 데미지를 입혔습니다.
+                      </span>
+                      <span style={{ fontSize: "11px", color: "#666" }}>{log.time_ago}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* [모달] 에너지 주입 */}
+      {isContributeOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="window" style={{ width: '90%', maxWidth: '350px' }}>
+            <div className="title-bar">
+              <div className="title-bar-text">에너지 주입</div>
+              <div className="title-bar-controls">
+                <button aria-label="Close" onClick={() => setIsContributeOpen(false)} />
+              </div>
+            </div>
+            <div className="window-body">
+
+              <div className="field-row-stacked" style={{ marginBottom: "15px" }}>
+                <label>주입할 데이터 양 (보유: {raidInfo.my_research_data})</label>
+                <input
+                  type="number"
+                  value={contributeAmount}
+                  onChange={(e) => setContributeAmount(Number(e.target.value))}
+                  max={raidInfo.my_research_data}
+                  min={1}
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <fieldset style={{ marginBottom: "15px" }}>
+                <legend>Dice Bonus Chance</legend>
+                <p style={{ margin: "5px 0", fontSize: "12px" }}>주사위를 굴려 추가 데미지를 입힙니다!</p>
+
+                <div style={{ display: "flex", justifyContent: "center", padding: "10px" }}>
+                  {isDiceRolling ? (
+                    <div className="window" style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Loader2 className="animate-spin" />
+                    </div>
+                  ) : diceResult ? (
+                    <div className="window" style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: "bold" }}>
+                      {diceResult}
+                    </div>
+                  ) : (
+                    <div className="window" style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>
+                      🎲
+                    </div>
+                  )}
+                </div>
+              </fieldset>
+
+              <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                <button
+                  onClick={handleEnergyContribute}
+                  disabled={contributeAmount <= 0 || contributeAmount > raidInfo.my_research_data || isDiceRolling}
+                  style={{ minWidth: "80px", fontWeight: "bold" }}
+                >
+                  {isDiceRolling ? "굴리는 중..." : "확인"}
+                </button>
+                <button onClick={() => setIsContributeOpen(false)} style={{ minWidth: "80px" }}>
+                  취소
+                </button>
+              </div>
+
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

@@ -195,6 +195,22 @@ export function ClassManagePage() {
               <Plus className="w-4 h-4 mr-2" />
               반 생성하기
             </Button>
+            <Button 
+              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+              variant="outline"
+              onClick={() => navigate('/teacher/quest')}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              퀘스트 등록
+            </Button>
+            <Button 
+              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+              variant="outline"
+              onClick={() => navigate('/teacher/raid/create')}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              레이드 등록
+            </Button>
           </div>
 
           {/* Active Quests */}

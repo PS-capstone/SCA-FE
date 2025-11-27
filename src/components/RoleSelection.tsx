@@ -1,48 +1,78 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { User, GraduationCap } from "lucide-react";
 
 export function RoleSelection() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-2 border-gray-300">
-        <CardHeader className="text-center border-b-2 border-gray-300">
-          {/* <div className="w-16 h-16 bg-gray-300 rounded mx-auto mb-4"></div> */}
-          <CardTitle className="text-black">학습 관리 시스템</CardTitle>
-          <p className="text-gray-600 pt-2">역할을 선택하여 로그인하세요.</p>
-        </CardHeader>
+    <div className="retro-layout min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "var(--bg-color)" }}>
+      <div className="window" style={{ width: "100%", maxWidth: "400px" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">&nbsp;학습 관리 시스템</div>
+          <div className="title-bar-controls">
+            <button aria-label="Minimize" />
+            <button aria-label="Maximize" />
+            <button aria-label="Close" />
+          </div>
+        </div>
+        <div className="window-body">
+          <p style={{ textAlign: "center", fontSize: "13px", marginBottom: "15px", marginTop: "15px" }}>
+            역할을 선택하여 로그인하세요.
+          </p>
 
-        <CardContent className="p-6 space-y-4">
-          <Button
-            className="w-full h-16 text-lg bg-black hover:bg-gray-800 text-white rounded-lg"
-            onClick={() => navigate('/login/teacher')}
-          >
-            <User className="w-5 h-5 mr-2" />
-            선생님으로 로그인
-          </Button>
+          <div className="space-y-4" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <button
+              onClick={() => navigate('/login/teacher')}
+              style={{
+                height: "50px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "16px",
+                fontWeight: "bold"
+              }}
+            >
+              <User size={20} style={{ marginRight: "8px" }} />
+              선생님으로 로그인
+            </button>
 
-          <Button
-            className="w-full h-16 text-lg bg-black hover:bg-gray-800 text-white rounded-lg"
-            onClick={() => navigate('/login/student')}
-          >
-            <GraduationCap className="w-5 h-5 mr-2" />
-            학생으로 로그인
-          </Button>
+            <button
+              onClick={() => navigate('/login/student')}
+              style={{
+                height: "50px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "16px",
+                fontWeight: "bold"
+              }}
+            >
+              <GraduationCap size={20} style={{ marginRight: "8px" }} />
+              학생으로 로그인
+            </button>
+          </div>
 
-          <div className="text-center pt-4">
+          {/* 하단 링크 영역 */}
+          <div className="text-center pt-4" style={{ marginTop: "20px", textAlign: "center" }}>
             <span className="text-gray-700">계정이 없으신가요? </span>
-            <Button
-              variant="link"
+            {/* 링크 스타일 버튼 */}
+            <button
               onClick={() => navigate('/signup')}
-              className="text-black underline p-0"
+              style={{
+                border: "none",
+                background: "none",
+                boxShadow: "none",
+                color: "blue",
+                textDecoration: "underline",
+                cursor: "pointer",
+                padding: 0,
+                minWidth: "auto" // 98.css 버튼 기본 min-width 제거
+              }}
             >
               회원가입하기
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
