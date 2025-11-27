@@ -67,9 +67,6 @@ export function StudentQuests() {
         get('/api/v1/quests/personal/my?status=ACTIVE'),
         get('/api/v1/quests/personal/my?status=APPROVED'),
         get('/api/v1/quests/personal/my?status=EXPIRED')
-        get('/api/v1/quests/personal/my?status=ACTIVE'),
-        get('/api/v1/quests/personal/my?status=APPROVED'),
-        get('/api/v1/quests/personal/my?status=EXPIRED')
       ]);
 
       if (!activeRes.ok || !approvedRes.ok || !expiredRes.ok) {
@@ -80,9 +77,9 @@ export function StudentQuests() {
       const approvedData = await approvedRes.json();
       const expiredData = await expiredRes.json();
 
-      setActiveQuests(activeData.data.quests || []);
-      setApprovedQuests(approvedData.data.quests || []);
-      setExpiredQuests(expiredData.data.quests || []);
+      setActiveQuests(activeData.data.active_quests || []);
+      setApprovedQuests(approvedData.data.approved_quests || []);
+      setExpiredQuests(expiredData.data.expired_quests || []);
 
     } catch (err) {
       setError((err as Error).message);
@@ -192,8 +189,6 @@ export function StudentQuests() {
     const endpoint = `/api/v1/quests/personal/${selectedQuest.assignment_id}/submit`;
 
     try {
-      // apiCall이 FormData를 자동으로 감지하여 적절한 Content-Type을 설정
-      const response = await apiCall(endpoint, {
       // apiCall이 FormData를 자동으로 감지하여 적절한 Content-Type을 설정
       const response = await apiCall(endpoint, {
         method: method,

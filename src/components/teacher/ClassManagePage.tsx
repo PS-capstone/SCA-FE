@@ -150,20 +150,37 @@ export function ClassManagePage() {
   }, [urlClassId, selectedClassId, currentClassId, navigate, setCurrentClass]);
 
   const loadClassDetail = useCallback(async (classId: number) => {
+    console.log('[ClassManagePage] API 요청 시작:', `/api/v1/classes/${classId}`);
     setIsLoading(true);
     setError(null);
     try {
       const response = await get(`/api/v1/classes/${classId}`);
+      console.log('[ClassManagePage] API 응답 상태:', response.status, response.ok);
+
       const json = await response.json();
+      console.log('[ClassManagePage] API 응답 전체:', json);
+
       if (!response.ok) {
         throw new Error(json?.message ?? '반 상세 정보를 불러오지 못했습니다.');
       }
       if (json.success) {
+        console.log('[ClassManagePage] 레이드 정보:', {
+          ongoing_raid: json.data?.ongoing_raid,
+          hasOngoingRaid: !!json.data?.ongoing_raid,
+          raidDetails: json.data?.ongoing_raid ? {
+            raid_id: json.data.ongoing_raid.raid_id,
+            title: json.data.ongoing_raid.title,
+            boss_hp: json.data.ongoing_raid.boss_hp,
+            participants: json.data.ongoing_raid.participants,
+            end_date: json.data.ongoing_raid.end_date
+          } : null
+        });
         setClassDetails(json.data);
       } else {
         throw new Error(json.message || "데이터 포맷 오류");
       }
     } catch (err: any) {
+      console.error('[ClassManagePage] 데이터 로드 실패:', err);
       setError(err.message ?? '반 상세 정보를 불러오지 못했습니다.');
       setClassDetails(null);
     } finally {
@@ -205,7 +222,6 @@ export function ClassManagePage() {
 
   const handleTerminateRaid = async () => {
     if (!activeRaid) return;
-    const terminatedRaidId = activeRaid.raid_id;
     setIsTerminating(true);
     setRaidActionMessage(null);
     try {
@@ -218,12 +234,6 @@ export function ClassManagePage() {
       if (selectedClassId) {
         loadClassDetail(selectedClassId);
       }
-      navigate('/teacher/raid/manage', {
-        state: {
-          initialFilter: 'ENDED',
-          focusRaidId: terminatedRaidId
-        }
-      });
     } catch (err: any) {
       setRaidActionMessage(err.message ?? '레이드 종료에 실패했습니다.');
     } finally {

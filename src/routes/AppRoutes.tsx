@@ -156,9 +156,9 @@ export const AppRoutes: React.FC = () => {
           <Route path="raid/manage" element={<RaidManagePage />} />
 
           {/* Teacher Class Routes */}
-          <Route path="class/:classId?" element={<ClassManagePage />} />
           <Route path="class/create" element={<ClassCreatePage />} />
           <Route path="class/:classId/dashboard" element={<ClassActivityDashboard />} />
+          <Route path="class/:classId?" element={<ClassManagePage />} />
           <Route path="students/:classId?" element={<StudentListPage />} />
           <Route path="students/:classId/:id" element={<StudentDetailPage />} />
 
