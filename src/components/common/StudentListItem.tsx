@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
@@ -10,18 +11,31 @@ interface StudentListItemProps {
   coral: number;
   research_data: number;
   className?: string;
+  classId?: number | string;
+  grade?: number;
 }
 
-function StudentListItemInner({ 
-  id, 
-  name,  
-  pendingQuests, 
-  coral, 
-  research_data, 
-  className = ""
+function StudentListItemInner({
+  id,
+  name,
+  pendingQuests,
+  coral,
+  research_data,
+  className = "",
+  classId
 }: StudentListItemProps) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (classId) {
+      navigate(`/teacher/students/${classId}/${id}`);
+    } else {
+      navigate(`/teacher/students/${id}`);
+    }
+  };
+
   return (
-    <Card 
+    <Card
       className={`border-2 border-gray-300 rounded-lg cursor-default ${className}`}
     >
       <CardContent className="p-4">

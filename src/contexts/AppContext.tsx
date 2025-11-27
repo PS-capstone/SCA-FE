@@ -60,6 +60,7 @@ export interface AppState {
 export type AppAction =
   | { type: 'SET_USER'; payload: { user: User; userType: 'student' | 'teacher'; accessToken: string; refreshToken: string } }
   | { type: 'CLEAR_USER' }
+  | { type: 'UPDATE_USER'; payload: Partial<User> }
   | { type: 'SET_CURRENT_CLASS'; payload: string }
   | { type: 'SET_THEME'; payload: Partial<Theme> }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -127,6 +128,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
         currentClassId: firstClassId
       };
     }
+
+    case 'UPDATE_USER':
+      if (!state.user) {
+        return state;
+      }
+      const updatedUser = { ...state.user, ...action.payload } as User;
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return {
+        ...state,
+        user: updatedUser
+      };
 
     case 'CLEAR_USER':
       localStorage.removeItem('user');
@@ -232,6 +244,10 @@ export function useAuth() {
     dispatch({ type: 'CLEAR_USER' });
   };
 
+  const updateUser = (payload: Partial<User>) => {
+    dispatch({ type: 'UPDATE_USER', payload });
+  };
+
   const setCurrentClass = (classId: string) => {
     dispatch({ type: 'SET_CURRENT_CLASS', payload: classId });
   };
@@ -244,7 +260,8 @@ export function useAuth() {
     currentClassId: state.currentClassId,
     setCurrentClass,
     login,
-    logout
+    logout,
+    updateUser
   };
 }
 

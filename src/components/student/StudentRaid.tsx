@@ -172,7 +172,7 @@ export function StudentRaid() {
 
   if (loading) {
     return (
-      <div className="p-6 flex flex-col justify-center items-center min-h-screen" style={{ backgroundColor: "var(--bg-color)" }}>
+      <div className="p-6 flex flex-col justify-center items-center min-h-screen">
         <div className="window" style={{ width: "300px" }}>
           <div className="title-bar">
             <div className="title-bar-text">로딩 중</div>
@@ -188,7 +188,7 @@ export function StudentRaid() {
 
   if (error || !raidInfo) {
     return (
-      <div className="p-6 flex flex-col justify-center items-center min-h-screen" style={{ backgroundColor: "var(--bg-color)" }}>
+      <div className="p-6 flex flex-col justify-center items-center min-h-screen">
         <div className="window" style={{ width: "300px" }}>
           <div className="title-bar">
             <div className="title-bar-text">알림</div>

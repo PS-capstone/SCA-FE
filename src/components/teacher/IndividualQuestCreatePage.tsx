@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { User, Plus, X, Info, Sparkles, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Switch } from "../ui/switch";
+import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useAuth, StudentUser, TeacherUser } from "../../contexts/AppContext";
 import {
@@ -36,6 +36,7 @@ type FormErrors = {
   selectedStudents?: string | null;
   formGeneral?: string | null;
 };
+
 type EditFormState = {
   coral: string;
   research: string;
@@ -44,7 +45,7 @@ type EditFormState = {
 
 export function IndividualQuestCreatePage() {
   const navigate = useNavigate();
-  const { isAuthenticated, userType, user, access_token, currentClassId } = useAuth();
+  const { isAuthenticated, userType, user, access_token, currentClassId, setCurrentClass } = useAuth();
 
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [showDifficultyGuide, setShowDifficultyGuide] = useState(false);
@@ -60,12 +61,13 @@ export function IndividualQuestCreatePage() {
   });
 
   const [aiModeEnabled, setAiModeEnabled] = useState(false);
-
   const [aiRecommendations, setAiRecommendations] = useState<Map<string, AiRecommendation>>(new Map());
   const [personalRewards, setPersonalRewards] = useState<Map<string, { coral: number, research: number, memo?: string }>>(new Map());
+
   const [allStudents, setAllStudents] = useState<StudentUser[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -88,48 +90,81 @@ export function IndividualQuestCreatePage() {
   };
 
   useEffect(() => {
+    // 권한 체크
     if (!isAuthenticated || userType !== 'teacher') {
       setIsLoadingStudents(false);
       setFetchError("접근 권한이 없습니다.");
       return;
     }
 
-    if (!currentClassId) {
-      setIsLoadingStudents(false);
-      setFetchError("선택된 반이 없습니다. 반을 먼저 선택해주세요.");
-      return;
-    }
+    const controller = new AbortController();
+    const signal = controller.signal;
 
     const fetchStudents = async () => {
       setIsLoadingStudents(true);
       setFetchError(null);
 
       try {
-        // 전체 학생 목록 조회
-        const response = await get(`/api/v1/classes/${currentClassId}/students`);
-        if (!response.ok) {
-          throw new Error('학생 목록을 불러오는 데 실패했습니다.');
+        let classIdToUse = currentClassId;
+
+        // currentClassId가 없으면 Teacher 정보에서 첫 번째 반을 찾아 설정 시도
+        if (!classIdToUse && user) {
+          const teacherUser = user as TeacherUser;
+          if (teacherUser.classes && teacherUser.classes.length > 0) {
+            classIdToUse = teacherUser.classes[0];
+            if (setCurrentClass) setCurrentClass(classIdToUse);
+          }
         }
-        const data = await response.json();
-        console.log(data)
-        // API 응답을 프론트엔드 형식에 맞게 변환
-        const students = (data.data.students || []).map((student: any) => ({
-          id: student.student_id.toString(),
-          real_name: student.name,
-          coral: student.coral,
-          research_data: student.research_data
+
+        if (!classIdToUse) {
+          setFetchError("선택된 반이 없습니다. 반 관리 페이지에서 반을 선택해주세요.");
+          setAllStudents([]);
+          return;
+        }
+
+        // API 호출
+        const response = await get(`/api/v1/classes/${classIdToUse}/students`, undefined);
+
+        if (signal.aborted) return;
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || '학생 목록을 불러오지 못했습니다.');
+        }
+
+        const json = await response.json();
+        const studentsData = json.data?.students || [];
+
+        const mappedStudents: StudentUser[] = studentsData.map((s: any) => ({
+          id: String(s.student_id || s.studentId || s.id),
+          real_name: s.name || s.real_name || '이름 없음',
+          nickname: s.nickname || '',
+          email: s.email || '',
+          coral: s.coral || 0,
+          research_data: s.researchData || s.research_data || 0,
+          username: s.username || '',
+          invite_code: s.invite_code || ''
         }));
-        setAllStudents(students);
-      } catch (err) {
-        const message = (err instanceof Error) ? err.message : "알 수 없는 에러 발생";
-        setFetchError(message);
+
+        setAllStudents(mappedStudents);
+
+      } catch (err: any) {
+        if (signal.aborted) return;
+        console.error('학생 목록 Fetch Error:', err);
+        setFetchError(err.message || "알 수 없는 에러 발생");
       } finally {
-        setIsLoadingStudents(false);
+        if (!signal.aborted) {
+          setIsLoadingStudents(false);
+        }
       }
     };
 
     fetchStudents();
-  }, [isAuthenticated, userType, user, access_token, currentClassId]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [isAuthenticated, userType, currentClassId, user?.id, (user as TeacherUser)?.classes?.length]);
 
   const toggleStudent = (studentId: string) => {
     setSelectedStudents(prev =>
@@ -145,13 +180,27 @@ export function IndividualQuestCreatePage() {
     setAiModeEnabled(false);
   };
 
+  const toggleSelectAll = () => {
+    if (allStudents.length === 0) return;
+
+    if (selectedStudents.length === allStudents.length) {
+      // 모두 선택되어 있으면 모두 해제
+      setSelectedStudents([]);
+    } else {
+      // 모두 선택
+      setSelectedStudents(allStudents.map(s => s.id));
+    }
+    if (formErrors.selectedStudents) {
+      setFormErrors(prev => ({ ...prev, selectedStudents: null }));
+    }
+    setAiRecommendations(new Map());
+    setPersonalRewards(new Map());
+    setAiModeEnabled(false);
+  };
+
   const handleAiRecommend = async () => {
     if (selectedStudents.length === 0) {
       alert("AI 추천을 받으려면 대상 학생을 1명 이상 선택해야 합니다.");
-      return;
-    }
-    if (!access_token) {
-      alert("인증 정보가 없습니다. 다시 로그인해주세요.");
       return;
     }
 
@@ -163,14 +212,13 @@ export function IndividualQuestCreatePage() {
         difficulty: questData.difficulty || 3,
         student_ids: selectedStudents.map(Number)
       });
+      const json = await response.json();
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error('AI 추천에 실패했습니다.');
+      if (!response.ok || !json.success) {
+        throw new Error(json?.message ?? 'AI 추천에 실패했습니다.');
       }
 
-      const responseData = data.data;
+      const responseData = json.data;
 
       setQuestData(prev => ({
         ...prev,
@@ -196,7 +244,7 @@ export function IndividualQuestCreatePage() {
       setAiRecommendations(newAiRecsMap);
       setPersonalRewards(newPersonalRewardsMap);
 
-      setShowAIReward(false); // 성공 시 모달 닫기
+      setShowAIReward(false);
       setShowAiStudentModal(true);
       setAiModeEnabled(true);
 
@@ -209,7 +257,6 @@ export function IndividualQuestCreatePage() {
 
   };
 
-  // 학생 보상 수정 모달 열기 핸들러
   const handleOpenEditModal = (studentId: string) => {
     const student = allStudents.find(s => s.id === studentId);
     if (!student) return;
@@ -225,14 +272,12 @@ export function IndividualQuestCreatePage() {
     setShowAiStudentEditModal(true);
   };
 
-  // 학생 보상 수정 취소
   const handleCancelEdit = () => {
     setShowAiStudentEditModal(false);
     setCurrentEditingStudentId(null);
     setEditForm({ coral: "", research: "", memo: "" });
   };
 
-  // 학생 보상 수정 확정
   const handleConfirmEdit = () => {
     if (!currentEditingStudentId) return;
 
@@ -252,13 +297,11 @@ export function IndividualQuestCreatePage() {
     handleCancelEdit();
   };
 
-  // 학생별 보상 모달 - '전체 확정'
   const handleConfirmAllAiRecs = () => {
     setShowAiStudentModal(false);
     alert("AI 추천 보상이 적용되었습니다!");
   };
 
-  // 학생별 보상 모달 - '취소'
   const handleCancelAllAiRecs = () => {
     setAiRecommendations(new Map());
     setPersonalRewards(new Map());
@@ -267,21 +310,18 @@ export function IndividualQuestCreatePage() {
   };
 
   const handleSubmit = async () => {
-    if (!questData.title || !questData.teacher_content || selectedStudents.length === 0) {
-      setFormErrors({
-        title: !questData.title ? "퀘스트 제목을 입력해주세요." : null,
-        teacher_content: !questData.teacher_content ? "퀘스트 설명을 입력해주세요." : null,
-        selectedStudents: selectedStudents.length === 0 ? "대상 학생을 1명 이상 선택해주세요." : null
-      });
-      return;
-    };
+    const errors: FormErrors = {};
+    if (!questData.title.trim()) errors.title = "퀘스트 제목을 입력해주세요.";
+    if (!questData.teacher_content.trim()) errors.teacher_content = "퀘스트 설명을 입력해주세요.";
+    if (selectedStudents.length === 0) errors.selectedStudents = "대상 학생을 1명 이상 선택해주세요.";
 
-    if (!isAuthenticated || userType !== 'teacher' || !user || !access_token) {
-      setFormErrors(prev => ({ ...prev, formGeneral: "로그인이 필요하거나 교사 계정이 아닙니다." }));
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
+
     if (!currentClassId) {
-      setFormErrors(prev => ({ ...prev, formGeneral: "교사 계정에 반 정보가 없습니다." }));
+      setFormErrors({ formGeneral: "반 정보가 없습니다." });
       return;
     }
 
@@ -310,10 +350,9 @@ export function IndividualQuestCreatePage() {
         return assignment;
       });
 
-      const localDate = questData.deadline ? new Date(questData.deadline) : null;
       let formattedDeadline: string | null = null;
       if (questData.deadline) {
-        formattedDeadline = questData.deadline + ":00";
+        formattedDeadline = questData.deadline.length === 16 ? questData.deadline + ":00" : questData.deadline;
       }
 
       const payload = {
@@ -331,15 +370,14 @@ export function IndividualQuestCreatePage() {
       console.log("퀘스트 등록 페이로드:", JSON.stringify(payload, null, 2));
 
       const response = await post('/api/v1/quests/personal', payload);
+      const json = await response.json();
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "퀘스트 등록에 실패했습니다.");
+      if (!response.ok || !json.success) {
+        throw new Error(json?.message ?? "퀘스트 등록에 실패했습니다.");
       }
 
-      alert(result.message || `[SUCCESS] 개인 퀘스트가 등록되었습니다!`);
-      navigate('/teacher/quest/individual');
+      alert(json.message || `[SUCCESS] 개인 퀘스트가 등록되었습니다!`);
+      navigate('/teacher/quest');
 
     } catch (err) {
       console.error("퀘스트 등록 실패:", err);
@@ -353,66 +391,74 @@ export function IndividualQuestCreatePage() {
     }
   };
 
-  // 현재 수정 모달에 필요한 데이터 가져오기
-  const currentEditStudent = allStudents.find(s => s.id === currentEditingStudentId);
+  // 수정 모달용 데이터
+  const currentEditStudent = currentEditingStudentId ? allStudents.find(s => s.id === currentEditingStudentId) : null;
   const currentEditAiRec = currentEditingStudentId ? aiRecommendations.get(currentEditingStudentId) : null;
 
   return (
     <>
       {/* Header */}
-      <div className="border-b-2 border-gray-300 p-6">
-        <div className="flex items-center gap-4">
+      <div className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
+        <div className="max-w-5xl mx-auto px-6 py-4">
           <div>
-            <h1 className="text-2xl font-bold text-black">개인 퀘스트 등록</h1>
-            <p className="text-gray-600 mt-1">특정 학생에게 할당할 개별 퀘스트를 등록합니다</p>
+            <h1 className="text-3xl font-bold text-gray-900">개인 퀘스트 등록</h1>
+            <p className="text-gray-500 mt-1.5 text-sm">특정 학생에게 할당할 개별 퀘스트를 등록합니다</p>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-6 max-w-4xl">
-        <div className="space-y-6">
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="space-y-8">
           {/* 퀘스트 기본 정보 */}
-          <Card className="border-2 border-gray-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-black">
-                <User className="w-5 h-5" />
-                퀘스트 정보
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Card className="border border-gray-200 shadow-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-xl font-semibold text-gray-900">
+                <User className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                <span className="whitespace-nowrap">퀘스트 기본 정보</span>
+              </div>
+            </div>
+            <CardContent className="pt-6 space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-black font-medium">퀘스트 제목 *</Label>
+                <Label htmlFor="title" className="text-sm font-semibold text-gray-700">
+                  퀘스트 제목 <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="title"
                   value={questData.title}
                   onChange={handleQuestDataChange}
                   placeholder="퀘스트 제목을 입력하세요"
-                  className="border-2 border-gray-300 rounded-lg"
+                  className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
                 {formErrors.title && (
-                  <p className="text-sm text-red-600 pt-1">{formErrors.title}</p>
+                  <p className="text-sm text-red-600 mt-1">{formErrors.title}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="teacher_content" className="text-black font-medium">퀘스트 설명 *</Label>
+                <Label htmlFor="teacher_content" className="text-sm font-semibold text-gray-700">
+                  퀘스트 설명 <span className="text-red-500">*</span>
+                </Label>
                 <Textarea
                   id="teacher_content"
                   value={questData.teacher_content}
                   onChange={handleQuestDataChange}
                   placeholder="퀘스트에 대한 자세한 설명을 입력하세요"
-                  className="border-2 border-gray-300 rounded-lg min-h-20"
+                  className="min-h-32 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none"
                 />
+                {formErrors.teacher_content && <p className="text-sm text-red-600 mt-1">{formErrors.teacher_content}</p>}
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="difficulty" className="text-black font-medium">난이도 *</Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="difficulty" className="text-sm font-semibold text-gray-700">
+                  난이도 <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex items-center gap-3">
                   <Select
                     value={questData.difficulty.toString()}
                     onValueChange={handleDifficultyChange}
                   >
-                    <SelectTrigger className="w-[280px] border-2 border-gray-300 rounded-lg">
+                    <SelectTrigger className="w-[300px] h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="난이도 선택" />
                     </SelectTrigger>
                     <SelectContent>
@@ -426,116 +472,156 @@ export function IndividualQuestCreatePage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+                    className="border-gray-300 hover:bg-gray-50 h-11"
                     onClick={() => setShowDifficultyGuide(true)}
                   >
+                    <Info className="w-4 h-4 mr-2" />
                     난이도 가이드
                   </Button>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="difficulty" className="text-black font-medium">대상 학생 선택 *</Label>
-                {isLoadingStudents && <p>학생 목록 로딩 중...</p>}
-                {fetchError && <p className="text-red-600">{fetchError}</p>}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {allStudents.map((student) => {
-                    const personalRec = personalRewards.get(student.id);
-                    const aiRec = aiRecommendations.get(student.id);
-                    return (
-                      <div
-                        key={student.id}
-                        className={`p-3 border-2 rounded-lg cursor-pointer transition-colors ${selectedStudents.includes(student.id)
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                        onClick={() => toggleStudent(student.id)}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="students" className="text-sm font-semibold text-gray-700">
+                    대상 학생 선택 <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    {!isLoadingStudents && !fetchError && allStudents.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={toggleSelectAll}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded border-2 ${selectedStudents.includes(student.id)
-                            ? 'bg-blue-500 border-blue-500'
-                            : 'border-gray-300'
-                            }`}>
-                            {selectedStudents.includes(student.id) && (
-                              <div className="w-full h-full bg-white rounded-sm flex items-center justify-center">
-                                <div className="w-2 h-2 bg-blue-500 rounded-sm"></div>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium text-black">{student.real_name}</p>
-                            {/* 학생 선택 + personalRewards에 값이 있을 때 (AI추천 확정 후) */}
-                            {selectedStudents.includes(student.id) && aiModeEnabled && personalRec && (
-                              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-                                <p className="font-semibold text-blue-700">
-                                  적용 보상: C {personalRec.coral} / R {personalRec.research}
-                                </p>
-                                {/* AI 원본 추천 사유가 있다면 표시 */}
-                                {aiRec?.reason && (
-                                  <p className="text-blue-600">AI 사유: {aiRec.reason}</p>
+                        {selectedStudents.length === allStudents.length ? '전체 해제' : '전체 선택'}
+                      </button>
+                    )}
+                    <span className="text-sm text-gray-500">
+                      {selectedStudents.length > 0 ? `${selectedStudents.length}명 선택됨` : '선택 안됨'}
+                    </span>
+                  </div>
+                </div>
+
+                {isLoadingStudents ? (
+                  <div className="flex items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-500 mr-3" />
+                    <p className="text-gray-600">학생 목록을 불러오는 중...</p>
+                  </div>
+                ) : fetchError ? (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                    <p className="text-red-600 text-sm font-medium">{fetchError}</p>
+                  </div>
+                ) : allStudents.length === 0 ? (
+                  <div className="p-8 text-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                    <p className="text-gray-500">등록된 학생이 없습니다.</p>
+                  </div>
+                ) : (
+                  <div className="border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
+                    <div className="max-h-[400px] overflow-y-auto px-4 py-3 space-y-2">
+                      {allStudents.map((student) => {
+                        const personalRec = personalRewards.get(student.id);
+                        const aiRec = aiRecommendations.get(student.id);
+                        const isSelected = selectedStudents.includes(student.id);
+
+                        return (
+                          <div
+                            key={student.id}
+                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${isSelected
+                              ? 'border-blue-500 bg-blue-50 shadow-sm'
+                              : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 bg-white'
+                              }`}
+                            onClick={() => toggleStudent(student.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleStudent(student.id)}
+                                onClick={(e: any) => e.stopPropagation()}
+                                className="shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <p className="font-semibold text-gray-900">{student.real_name}</p>
+                                  {isSelected && (
+                                    <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                      선택됨
+                                    </span>
+                                  )}
+                                </div>
+
+                                {isSelected && aiModeEnabled && personalRec && (
+                                  <div className="mt-2 p-2 bg-white border border-blue-200 rounded text-xs">
+                                    <p className="font-bold text-blue-800">
+                                      보상: C {personalRec.coral} / R {personalRec.research}
+                                    </p>
+                                    {aiRec?.reason && (
+                                      <p className="text-gray-600 mt-1 truncate" title={aiRec.reason}>
+                                        AI 사유: {aiRec.reason}
+                                      </p>
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {formErrors.selectedStudents && (
-                  <p className="text-sm text-red-600 pt-3">{formErrors.selectedStudents}</p>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
-                <p className="text-sm text-gray-600 mt-3">
-                  선택된 학생: {selectedStudents.length}명
-                </p>
+                {formErrors.selectedStudents && (
+                  <p className="text-sm text-red-600 mt-1">{formErrors.selectedStudents}</p>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-                    onClick={() => setShowAIReward(true)}
-                  >
-                    AI 보상 추천받기
-                  </Button>
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="deadline" className="text-black font-medium">마감일</Label>
+                  <Label htmlFor="deadline" className="text-sm font-semibold text-gray-700">마감일</Label>
                   <Input
                     id="deadline"
                     type="datetime-local"
                     value={questData.deadline}
                     onChange={handleQuestDataChange}
-                    className="border-2 border-gray-300 rounded-lg"
+                    className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
+
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-gray-300 hover:bg-gray-50 h-11"
+                    onClick={() => setShowAIReward(true)}
+                    disabled={selectedStudents.length === 0}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI 보상 추천받기
+                  </Button>
+                </div>
               </div>
-              {/* AI 모드가 아닐 때 (수동 입력) */}
+
               {!aiModeEnabled && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
                   <div className="space-y-2">
-                    <Label htmlFor="reward_coral_default" className="text-black font-medium">기본 코랄 보상</Label>
+                    <Label htmlFor="reward_coral_default" className="text-sm font-semibold text-gray-700">기본 코랄 보상</Label>
                     <Input
                       id="reward_coral_default"
                       type="number"
                       value={questData.reward_coral_default}
                       onChange={handleQuestDataChange}
                       placeholder="예: 50"
-                      className="border-2 border-gray-300 rounded-lg"
+                      className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="reward_research_data_default" className="text-black font-medium">기본 탐사 데이터 보상</Label>
+                    <Label htmlFor="reward_research_data_default" className="text-sm font-semibold text-gray-700">기본 탐사 데이터 보상</Label>
                     <Input
                       id="reward_research_data_default"
                       type="number"
                       value={questData.reward_research_data_default}
                       onChange={handleQuestDataChange}
                       placeholder="예: 30"
-                      className="border-2 border-gray-300 rounded-lg"
+                      className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                 </div>
@@ -543,25 +629,35 @@ export function IndividualQuestCreatePage() {
             </CardContent>
           </Card>
 
-          {/* '일반 에러' 메시지 */}
           {formErrors.formGeneral && (
-            <p className="text-sm text-red-600 text-center pt-2">{formErrors.formGeneral}</p>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{formErrors.formGeneral}</p>
+            </div>
           )}
 
           {/* 액션 버튼들 */}
-          <div className="flex gap-3 pt-6 border-t-2 border-gray-300">
+          <div className="flex gap-3 pt-6 border-t border-gray-200 sticky bottom-0 bg-white pb-4">
             <Button
               onClick={handleSubmit}
-              className="bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
+              className="bg-gray-900 hover:bg-gray-800 text-white h-11 px-8 flex-1"
               disabled={isSubmitting || isLoadingStudents}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              {isSubmitting ? "등록 중..." : "개인 퀘스트 등록"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  등록 중...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  개인 퀘스트 등록
+                </>
+              )}
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate('/teacher/quest/individual')}
-              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+              onClick={() => navigate('/teacher/quest')}
+              className="border-gray-300 hover:bg-gray-50 h-11 px-8"
             >
               취소
             </Button>
@@ -572,9 +668,11 @@ export function IndividualQuestCreatePage() {
       {/* 난이도 기준 모달 */}
       <Dialog open={showDifficultyGuide} onOpenChange={setShowDifficultyGuide}>
         <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>난이도 가이드</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
             <div className="bg-gray-100 p-4 rounded-lg">
-              <h3 className="font-semibold text-black mb-2">난이도 기준</h3>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li>• 1점 (EASY/개념 확인): 수업이나 교재에서 배운 핵심 개념이나 공식을 그대로 기억해서 풀 수 있는 문제(예: 일반적인 문제집의 '개념 체크', '보기' 문제)</li>
                 <li>• 2점 (BASIC/유형 적용): 배운 개념을 직접적으로 적용하는 가장 대표적인 유형의 문제(예: 쎈 B스텝 - 하)</li>
@@ -603,25 +701,20 @@ export function IndividualQuestCreatePage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-gray-100 p-4 rounded-lg">
-              <p className="text-sm text-gray-700">
-                선택한 학생들({selectedStudents.length}명)을 대상으로 AI가 개별 보상을 추천합니다.<br></br>
-                (현재 퀘스트 제목: "{questData.title || '미입력'}")
+              <p className="text-sm text-blue-800">
+                선택한 <strong>{selectedStudents.length}명</strong>의 학생에 대해 AI가 개별 보상을 추천합니다.<br />
+                학생의 평소 성취도와 퀘스트 난이도를 분석하여 산출됩니다.<br />
+                (* 최초 추천 시 학생 목록에서 학생 개별 성적을 입력하면 초기값을 맞춤으로 추천받을 수 있습니다.)
               </p>
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowAIReward(false)}
-                className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleAiRecommend}
-                className="bg-black hover:bg-gray-800 text-white rounded-lg"
-                disabled={isAiLoading}
-              >
-                {isAiLoading ? "추천 중..." : "추천받기"}
+              <Button variant="outline" onClick={() => setShowAIReward(false)}>취소</Button>
+              <Button onClick={handleAiRecommend} disabled={isAiLoading}>
+                {isAiLoading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> 분석 중...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4 mr-2" /> 추천받기</>
+                )}
               </Button>
             </div>
           </div>
@@ -634,67 +727,43 @@ export function IndividualQuestCreatePage() {
           <DialogHeader>
             <DialogTitle className="text-black">학생별 추천 보상</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <p className="text-sm text-gray-700 font-semibold">
-                퀘스트: {questData.title || "제목 없음"}
-              </p>
-            </div>
-            <div className="max-h-[60vh] overflow-y-auto space-y-3 p-1">
+
+          <div className="flex-1 overflow-y-auto p-1">
+            <div className="space-y-3">
               {selectedStudents.map(studentId => {
                 const student = allStudents.find(s => s.id === studentId);
                 const aiRec = aiRecommendations.get(studentId);
                 const personalRec = personalRewards.get(studentId);
-                if (!student) return null;
 
-                const isEdited = aiRec && personalRec &&
-                  (aiRec.recommended_coral !== personalRec.coral || aiRec.recommended_research_data !== personalRec.research);
+                if (!student || !aiRec || !personalRec) return null;
 
                 return (
-                  <div key={studentId} className="p-3 border rounded-lg bg-white shadow-sm">
-                    <p className="font-semibold text-black">{student.real_name}</p>
-                    {!aiRec || !personalRec ? (
-                      <p className="text-sm text-gray-500">AI 추천 정보를 불러올 수 없습니다.</p>
-                    ) : (
-                      <>
-                        <p className="text-sm text-blue-700">
-                          AI 추천: {aiRec.recommended_research_data} 탐사데이터, {aiRec.recommended_coral} 코랄
-                        </p>
-                        <p className={`text-sm font-medium ${isEdited ? 'text-green-700' : 'text-gray-700'}`}>
-                          적용 보상: {personalRec.research} 탐사데이터, {personalRec.coral} 코랄
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">이유: {aiRec.reason}</p>
-                        {personalRec.memo && (
-                          <p className="text-xs text-purple-600 mt-1">메모: {personalRec.memo}</p>
-                        )}
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800"
-                          onClick={() => handleOpenEditModal(studentId)}
-                        >
-                          [수정하기]
-                        </Button>
-                      </>
-                    )}
+                  <div key={studentId} className="p-4 border rounded-lg flex justify-between items-start bg-white">
+                    <div>
+                      <p className="font-bold text-gray-900">{student.real_name}</p>
+                      <p className="text-sm text-gray-500 mt-1">{aiRec.reason}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-blue-600">
+                        C {personalRec.coral} / R {personalRec.research}
+                      </div>
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-xs text-gray-400 hover:text-gray-600 mt-1"
+                        onClick={() => handleOpenEditModal(studentId)}
+                      >
+                        수정
+                      </Button>
+                    </div>
                   </div>
-                );
+                )
               })}
             </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={handleCancelAllAiRecs}
-                className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleConfirmAllAiRecs}
-                className="bg-black hover:bg-gray-800 text-white rounded-lg"
-              >
-                전체 확정
-              </Button>
-            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={handleCancelAllAiRecs}>취소</Button>
+            <Button onClick={handleConfirmAllAiRecs}>전체 확정</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -716,7 +785,6 @@ export function IndividualQuestCreatePage() {
                   </p>
                 </div>
 
-                {/* 탐사데이터 수정 */}
                 <div className="space-y-2">
                   <Label htmlFor="editResearch" className="text-black font-medium">수정값: 탐사데이터</Label>
                   <Input
@@ -738,7 +806,6 @@ export function IndividualQuestCreatePage() {
                   })()}
                 </div>
 
-                {/* 코랄 수정 */}
                 <div className="space-y-2">
                   <Label htmlFor="editCoral" className="text-black font-medium">수정값: 코랄</Label>
                   <Input
@@ -760,7 +827,6 @@ export function IndividualQuestCreatePage() {
                   })()}
                 </div>
 
-                {/* 메모 */}
                 <div className="space-y-2">
                   <Label htmlFor="editMemo" className="text-black font-medium">메모 (선택)</Label>
                   <Textarea

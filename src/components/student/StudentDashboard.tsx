@@ -89,7 +89,7 @@ export function StudentDashboard() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await get('/api/students/dashboard');
+        const response = await get('/api/v1/students/dashboard');
 
         if (!response.ok) {
           throw new Error('대시보드 정보를 불러오는데 실패했습니다.');
@@ -156,7 +156,7 @@ export function StudentDashboard() {
   ];
 
   return (
-    <div className="p-4 space-y-6 min-h-screen pb-20 max-w-screen-xl mx-auto" style={{ backgroundColor: "var(--bg-color)" }}>
+    <div className="p-4 space-y-6 min-h-screen pb-20 max-w-screen-xl mx-auto">
       {/* 1. 이벤트 & 공지 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
         <div className="title-bar">
