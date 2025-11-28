@@ -188,82 +188,83 @@ export function StudentGacha() {
   };
 
   return (
-    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto">
+    <>
+      <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto">
 
-      {/* 가챠 머신 윈도우 */}
-      <div className="window" style={{ width: "100%" }}>
-        <div className="title-bar">
-          <div className="title-bar-text">&nbsp;가챠 머신</div>
-          <div className="title-bar-controls">
-            <button aria-label="Help" onClick={() => setIsProbabilityOpen(true)} />
-          </div>
-        </div>
-
-        <div className="window-body text-center">
-          <p style={{ marginBottom: "10px" }}>새로운 물고기를 획득하세요!</p>
-
-          {/* 가챠 머신 시각화 - 슬롯 머신 형태로 변경 */}
-          <div className="sunken-panel" style={{
-            height: "150px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#e0e0e0",
-            marginBottom: "15px",
-            border: "2px outset #dfdfdf", // 98.css 스타일 테두리
-            boxShadow: "inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #dfdfdf",
-            position: "relative" // 애니메이션 자식 요소를 위해 relative
-          }}>
-            {isDrawing ? (
-              // 애니메이션 중일 때 로딩 스피너 표시
-              <div className="gacha-animation">
-                <img
-                  src={IMAGES.loadingFish}
-                  alt="Gacha Loading..."
-                  style={{ height: "100px", objectFit: "cover", imageRendering: "pixelated" }}
-                />
-              </div>
-            ) : (
-              // 평소에는 "DRAW" 텍스트 또는 이미지
-              <div style={{ fontSize: "2.5em", fontWeight: "bold", color: "#666" }}>DRAW</div>
-            )}
+        {/* 가챠 머신 윈도우 */}
+        <div className="window" style={{ width: "100%" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">&nbsp;가챠 머신</div>
+            <div className="title-bar-controls">
+              <button aria-label="Help" onClick={() => setIsProbabilityOpen(true)} />
+            </div>
           </div>
 
-          {/* 상태 표시창 */}
-          <fieldset style={{ marginBottom: "15px" }}>
-            <legend>Status</legend>
-            <div style={{ display: "flex", justifyContent: "space-around" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "12px", color: "#666" }}>보유 코랄</div>
-                <div style={{ fontSize: "18px", fontWeight: "bold" }}>{studentCoral}</div>
-              </div>
-              <div style={{ width: "2px", background: "#808080" }}></div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "12px", color: "#666" }}>필요한 코랄</div>
-                <div style={{ fontSize: "18px", fontWeight: "bold", color: studentCoral < gachaCost ? "red" : "black" }}>
-                  {gachaCost}
+          <div className="window-body text-center">
+            <p style={{ marginBottom: "10px" }}>새로운 물고기를 획득하세요!</p>
+
+            {/* 가챠 머신 시각화 - 슬롯 머신 형태로 변경 */}
+            <div className="sunken-panel" style={{
+              height: "150px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#e0e0e0",
+              marginBottom: "15px",
+              border: "2px outset #dfdfdf", // 98.css 스타일 테두리
+              boxShadow: "inset -1px -1px #0a0a0a, inset 1px 1px #ffffff, inset -2px -2px #808080, inset 2px 2px #dfdfdf",
+              position: "relative" // 애니메이션 자식 요소를 위해 relative
+            }}>
+              {isDrawing ? (
+                // 애니메이션 중일 때 로딩 스피너 표시
+                <div className="gacha-animation">
+                  <img
+                    src={IMAGES.loadingFish}
+                    alt="Gacha Loading..."
+                    style={{ height: "100px", objectFit: "cover", imageRendering: "pixelated" }}
+                  />
+                </div>
+              ) : (
+                // 평소에는 "DRAW" 텍스트 또는 이미지
+                <div style={{ fontSize: "2.5em", fontWeight: "bold", color: "#666" }}>DRAW</div>
+              )}
+            </div>
+
+            {/* 상태 표시창 */}
+            <fieldset style={{ marginBottom: "15px" }}>
+              <legend>Status</legend>
+              <div style={{ display: "flex", justifyContent: "space-around" }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "12px", color: "#666" }}>보유 코랄</div>
+                  <div style={{ fontSize: "18px", fontWeight: "bold" }}>{studentCoral}</div>
+                </div>
+                <div style={{ width: "2px", background: "#808080" }}></div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "12px", color: "#666" }}>필요한 코랄</div>
+                  <div style={{ fontSize: "18px", fontWeight: "bold", color: studentCoral < gachaCost ? "red" : "black" }}>
+                    {gachaCost}
+                  </div>
                 </div>
               </div>
-            </div>
-          </fieldset>
+            </fieldset>
 
-          {/* 뽑기 버튼 */}
-          <button
-            onClick={drawGacha}
-            disabled={studentCoral < gachaCost || isDrawing}
-            style={{ width: "100%", height: "40px", fontWeight: "bold", fontSize: "14px" }}
-          >
-            {isDrawing ? '뽑는 중...' : (studentCoral < gachaCost ? '코랄 부족' : '가챠 뽑기')}
-          </button>
-
-          <div style={{ marginTop: "10px" }}>
-            <button onClick={() => setIsProbabilityOpen(true)} style={{ minWidth: "120px" }}>
-              보상 가이드
+            {/* 뽑기 버튼 */}
+            <button
+              onClick={drawGacha}
+              disabled={studentCoral < gachaCost || isDrawing}
+              style={{ width: "100%", height: "40px", fontWeight: "bold", fontSize: "14px" }}
+            >
+              {isDrawing ? '뽑는 중...' : (studentCoral < gachaCost ? '코랄 부족' : '가챠 뽑기')}
             </button>
+
+            <div style={{ marginTop: "10px" }}>
+              <button onClick={() => setIsProbabilityOpen(true)} style={{ minWidth: "120px" }}>
+                보상 가이드
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
       {/* [모달] 가챠 결과 */}
       {isResultOpen && resultFish && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -364,7 +365,8 @@ export function StudentGacha() {
           background-color: #d0d0d0; /* 애니메이션 중 배경색 */
           z-index: 1;
         }
-      `}</style>
-    </div>
+      `}
+      </style>
+    </>
   );
 }

@@ -22,7 +22,7 @@ interface RaidInfo {
   template: string;
   template_name: string;
   difficulty: string;
-  status: "ACTIVE" | "COMPLETED" | "Failed";
+  status: string;
   boss_hp: BossHp;
   end_date: string;
   remaining_time: string;
@@ -37,11 +37,12 @@ interface RaidLog {
   log_id: number;
   student_name: string;
   damage: number;
-  created_at: string;
+  timestamp: string;
 }
 
 interface AttackResponseData {
   raid_id: number;
+  attack_log_id: number;
   research_data_used: number;
   damage_dealt: number;
   boss_hp: {
@@ -50,10 +51,15 @@ interface AttackResponseData {
     percentage: number;
   };
   raid_completed: boolean;
+  rewards: {
+    coral: number;
+    research_data: number;
+  } | null;
   my_stats: {
     total_damage: number;
     remaining_research_data: number;
   };
+  attacked_at: string;
 }
 
 export function StudentRaid() {
@@ -78,9 +84,14 @@ export function StudentRaid() {
 
   // 날짜 포맷팅 헬퍼 (로그용)
   const formatLogTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  if (!dateString) return '-';
+  // 1. ISO 문자열을 Date 객체로 변환
+  const date = new Date(dateString);
+  // 2. 유효성 검사
+  if (isNaN(date.getTime())) return 'Invalid Date';
+  // 3. 시간 포맷팅
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
   // 1. 레이드 정보 및 로그 조회
   const fetchRaidData = async () => {
@@ -129,7 +140,7 @@ export function StudentRaid() {
   const handleEnergyContribute = () => {
     if (!raidInfo) return;
     if (contributeAmount <= 0 || contributeAmount > raidInfo.my_research_data) {
-      alert('올바른 기여량을 입력해주세요.');
+      alert('보유한 데이터보다 많은 양을 사용할 수 없습니다.');
       return;
     }
 
@@ -166,31 +177,32 @@ export function StudentRaid() {
         }
 
         if (result.success) {
-          const responseData = result.data as AttackResponseData;
+          const data = result.data as AttackResponseData;
           setRaidInfo(prev => {
             if (!prev) return null;
             return {
               ...prev,
-              // 보스 체력 업데이트 (before/after 구조 -> total/current 구조)
+              // 보스 체력 업데이트
               boss_hp: {
                 total: prev.boss_hp.total, // Total은 변하지 않음
-                current: responseData.boss_hp.after,
-                percentage: responseData.boss_hp.percentage
+                current: data.boss_hp.after,
+                percentage: data.boss_hp.percentage
               },
               // 내 정보 업데이트
-              my_research_data: responseData.my_stats.remaining_research_data,
+              my_research_data: data.my_stats.remaining_research_data,
               my_contribution: {
                 ...prev.my_contribution,
-                total_damage: responseData.my_stats.total_damage
+                total_damage: data.my_stats.total_damage,
+                last_attack_at: data.attacked_at
               },
               // 레이드 완료 여부 체크 (필요시 status 업데이트)
-              status: responseData.raid_completed ? "COMPLETED" : prev.status
+              status: data.raid_completed ? "COMPLETED" : prev.status
             };
           });
 
           fetchRaidData();
-          if (responseData.raid_completed) {
-            alert("축하합니다! 레이드를 완료했습니다!");
+          if (data.raid_completed) {
+            alert("축하합니다! 레이드 보스를 처치했습니다!");
           }
         }
       } catch (err) {
@@ -200,7 +212,7 @@ export function StudentRaid() {
         setContributeAmount(0);
       }
 
-    }, 2000);
+    }, 1500);
   };
 
   //로그인 여부 확인
@@ -226,7 +238,7 @@ export function StudentRaid() {
     );
   }
 
-  if (error && !raidInfo) {
+  if (!raidInfo) {
     return (
       <div className="p-6 flex flex-col justify-center items-center min-h-screen">
         <div className="window" style={{ width: "300px" }}>
@@ -234,15 +246,13 @@ export function StudentRaid() {
             <div className="title-bar-text">알림</div>
             <div className="title-bar-controls"><button aria-label="Close" /></div>
           </div>
-          <div className="window-body text-center p-4">
-            <p>{error === "진행 중인 레이드가 없습니다." ? "현재 진행 중인 레이드가 없습니다." : error}</p>
+          <div className="window-body text-center p-3">
+            <p>현재 진행 중인 레이드가 없습니다.</p>
           </div>
         </div>
       </div>
     );
   }
-
-  if (!raidInfo) return null;
 
   // 템플릿 아이콘 결정(이미지로 변경 전 임시)
   const getBossIcon = (template: string) => {
@@ -252,139 +262,140 @@ export function StudentRaid() {
   };
 
   return (
-    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
-      {/* 1. 보스 & 레이드 정보 윈도우 */}
-      <div className="window" style={{ width: "100%" }}>
-        <div className="title-bar">
-          <div className="title-bar-text">&nbsp;{raidInfo.raid_name} ({raidInfo.difficulty})</div>
-          <div className="title-bar-controls">
-            <button aria-label="Minimize" />
-            <button aria-label="Maximize" />
-            <button aria-label="Close" />
-          </div>
-        </div>
-        <div className="window-body">
-
-          {/* 보스 이미지 영역 */}
-          <div className="sunken-panel" style={{
-            height: "180px", display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            background: "#000", color: "#fff", marginBottom: "10px"
-          }}>
-            {/* 보스 이미지 Placeholder */}
-            <div style={{ width: "80px", height: "80px", background: "#808080", borderRadius: "50%", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px" }}>
-              {getBossIcon(raidInfo.template)}
-            </div>
-            <h3 style={{ margin: 0 }}>{raidInfo.template_name}</h3>
-            <div style={{ fontSize: "12px", color: "#ccc" }}>남은 시간: {raidInfo.remaining_time}</div>
-          </div>
-
-          {/* 체력바 */}
-          <div style={{ marginBottom: "15px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
-              <span>HP Status</span>
-              <span>{raidInfo.boss_hp.current.toLocaleString()} / {raidInfo.boss_hp.total.toLocaleString()}</span>
-            </div>
-            <div className="progress-indicator segmented" style={{ width: "100%", height: "24px", border: "2px inset #dfdfdf" }}>
-              <div
-                className="progress-indicator-bar"
-                style={{
-                  width: `${raidInfo.boss_hp.percentage}%`,
-                  background: "linear-gradient(90deg, #d32f2f 0 16px, transparent 0 2px)",
-                  backgroundColor: "transparent"
-                }}
-              />
+    <>
+      <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
+        {/* 1. 보스 & 레이드 정보 윈도우 */}
+        <div className="window" style={{ width: "100%" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">&nbsp;{raidInfo.raid_name} ({raidInfo.difficulty})</div>
+            <div className="title-bar-controls">
+              <button aria-label="Minimize" />
+              <button aria-label="Maximize" />
+              <button aria-label="Close" />
             </div>
           </div>
+          <div className="window-body">
 
-          {/* 보상 정보 */}
-          <fieldset style={{ padding: "10px" }}>
-            <legend>Clear Reward</legend>
-            <div style={{ textAlign: "center", fontWeight: "bold" }}>
-              보상: 코랄 {raidInfo.reward_coral}개
-            </div>
-            {raidInfo.special_reward_description && (
-              <div style={{ textAlign: "center", fontSize: "12px", color: "blue", marginTop: "4px" }}>
-                🎁 {raidInfo.special_reward_description}
+            {/* 보스 이미지 영역 */}
+            <div className="sunken-panel" style={{
+              height: "180px", display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              background: "#000", color: "#fff", marginBottom: "10px"
+            }}>
+              {/* 보스 이미지 Placeholder */}
+              <div style={{ width: "80px", height: "80px", background: "#808080", borderRadius: "50%", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px" }}>
+                {getBossIcon(raidInfo.template)}
               </div>
-            )}
-          </fieldset>
-        </div>
-      </div>
+              <h3 style={{ margin: 0 }}>{raidInfo.template_name}</h3>
+              <div style={{ fontSize: "12px", color: "#ccc" }}>남은 시간: {raidInfo.remaining_time}</div>
+            </div>
 
-      {/* 2. 내 행동 (기여) 윈도우 */}
-      <div className="window" style={{ width: "100%" }}>
-        <div className="title-bar">
-          <div className="title-bar-text">&nbsp;개인 기여</div>
-        </div>
-        <div className="window-body">
+            {/* 체력바 */}
+            <div style={{ marginBottom: "15px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                <span>HP Status</span>
+                <span>{raidInfo.boss_hp.current.toLocaleString()} / {raidInfo.boss_hp.total.toLocaleString()}</span>
+              </div>
+              <div className="progress-indicator segmented" style={{ width: "100%", height: "24px", border: "2px inset #dfdfdf" }}>
+                <div
+                  className="progress-indicator-bar"
+                  style={{
+                    width: `${raidInfo.boss_hp.percentage}%`,
+                    background: "linear-gradient(90deg, #d32f2f 0 16px, transparent 0 2px)",
+                    backgroundColor: "transparent"
+                  }}
+                />
+              </div>
+            </div>
 
-          {/* 내 자원 현황 */}
-          <div className="status-bar" style={{ marginBottom: "15px" }}>
-            <p className="status-bar-field">보유 탐사데이터</p>
-            <p className="status-bar-field" style={{ textAlign: "right", fontWeight: "bold" }}>
-              {raidInfo.my_research_data}
-            </p>
-          </div>
-
-          {/* 액션 버튼 */}
-          <button
-            onClick={() => setIsContributeOpen(true)}
-            disabled={raidInfo.my_research_data <= 0 || raidInfo.status !== 'ACTIVE'}
-            style={{ width: "100%", height: "40px", fontWeight: "bold", marginBottom: "10px", cursor: raidInfo.status !== 'ACTIVE' ? 'not-allowed' : 'pointer' }}
-          >
-            {raidInfo.status === 'ACTIVE' ? '⚡ 에너지 주입 (공격)' : '레이드 종료됨'}
-          </button>
-
-          {/* 마지막 결과 표시 */}
-          {lastContributeResult && (
-            <div className="sunken-panel" style={{ padding: "10px", background: "#fff" }}>
-              <div style={{ textAlign: "center", fontSize: "12px", color: "#666", marginBottom: "5px" }}>-- Last Attack Log --</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "12px" }}>소모: {lastContributeResult.base}</div>
-                  <div style={{ fontSize: "12px", color: "green" }}>보너스: +{lastContributeResult.bonus}</div>
+            {/* 보상 정보 */}
+            <fieldset style={{ padding: "10px" }}>
+              <legend>Clear Reward</legend>
+              <div style={{ textAlign: "center", fontWeight: "bold" }}>
+                보상: 코랄 {raidInfo.reward_coral}개
+              </div>
+              {raidInfo.special_reward_description && (
+                <div style={{ textAlign: "center", fontSize: "12px", color: "blue", marginTop: "4px" }}>
+                  🎁 {raidInfo.special_reward_description}
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: "bold", fontSize: "16px", color: "blue" }}>DMG: {lastContributeResult.total}</div>
-                  <div style={{ fontSize: "11px", background: "#e0e0e0", padding: "2px 4px", display: "inline-block", marginTop: "2px" }}>
-                    Dice: {lastContributeResult.diceResult}
+              )}
+            </fieldset>
+          </div>
+        </div>
+
+        {/* 2. 내 행동 (기여) 윈도우 */}
+        <div className="window" style={{ width: "100%" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">&nbsp;개인 기여</div>
+          </div>
+          <div className="window-body">
+
+            {/* 내 자원 현황 */}
+            <div className="status-bar" style={{ marginBottom: "15px" }}>
+              <p className="status-bar-field">보유 탐사데이터</p>
+              <p className="status-bar-field" style={{ textAlign: "right", fontWeight: "bold" }}>
+                {raidInfo.my_research_data}
+              </p>
+            </div>
+
+            {/* 액션 버튼 */}
+            <button
+              onClick={() => setIsContributeOpen(true)}
+              disabled={raidInfo.my_research_data <= 0 || raidInfo.status !== 'ACTIVE'}
+              style={{ width: "100%", height: "40px", fontWeight: "bold", marginBottom: "10px", cursor: raidInfo.status !== 'ACTIVE' ? 'not-allowed' : 'pointer' }}
+            >
+              {raidInfo.status === 'ACTIVE' ? '⚡ 에너지 주입 (공격)' : '레이드 종료됨'}
+            </button>
+
+            {/* 마지막 결과 표시 */}
+            {lastContributeResult && (
+              <div className="sunken-panel" style={{ padding: "10px", background: "#fff" }}>
+                <div style={{ textAlign: "center", fontSize: "12px", color: "#666", marginBottom: "5px" }}>-- Last Attack Log --</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "12px" }}>소모: {lastContributeResult.base}</div>
+                    <div style={{ fontSize: "12px", color: "green" }}>보너스: +{lastContributeResult.bonus}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontWeight: "bold", fontSize: "16px", color: "blue" }}>DMG: {lastContributeResult.total}</div>
+                    <div style={{ fontSize: "11px", background: "#e0e0e0", padding: "2px 4px", display: "inline-block", marginTop: "2px" }}>
+                      Dice: {lastContributeResult.diceResult}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 3. 레이드 로그 윈도우 */}
-      <div className="window" style={{ width: "100%" }}>
-        <div className="title-bar">
-          <div className="title-bar-text">레이드 로그</div>
-        </div>
-        <div className="window-body">
-          <div className="sunken-panel" style={{ height: "200px", overflowY: "auto", background: "#fff", padding: "6px" }}>
-            {logs.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "20px", color: "#999" }}>아직 기록된 로그가 없습니다.</div>
-            ) : (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {logs.map((log) => (
-                  <li key={log.log_id} style={{ marginBottom: "6px", borderBottom: "1px dotted #ccc", paddingBottom: "4px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "13px" }}>
-                        <strong style={{ color: "#000080" }}>{log.student_name}</strong>님이
-                        <span style={{ color: "#d32f2f", fontWeight: "bold", marginLeft: "4px" }}>{log.damage.toLocaleString()}</span> 대미지를 입혔습니다!
-                      </span>
-                      <span style={{ fontSize: "11px", color: "#666" }}>{formatLogTime(log.created_at)}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
             )}
           </div>
         </div>
-      </div>
 
+        {/* 3. 레이드 로그 윈도우 */}
+        <div className="window" style={{ width: "100%" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">레이드 로그</div>
+          </div>
+          <div className="window-body">
+            <div className="sunken-panel" style={{ height: "200px", overflowY: "auto", background: "#fff", padding: "6px" }}>
+              {logs.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "20px", color: "#999" }}>아직 기록된 로그가 없습니다.</div>
+              ) : (
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {logs.map((log) => (
+                    <li key={log.log_id} style={{ marginBottom: "6px", borderBottom: "1px dotted #ccc", paddingBottom: "4px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "13px" }}>
+                          <strong style={{ color: "#000080" }}>{log.student_name}</strong>님이
+                          <span style={{ color: "#d32f2f", fontWeight: "bold", marginLeft: "4px" }}>{log.damage.toLocaleString()}</span> 대미지를 입혔습니다!
+                        </span>
+                        <span style={{ fontSize: "11px", color: "#666" }}>{formatLogTime(log.timestamp)}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
       {/* [모달] 에너지 주입 */}
       {isContributeOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -451,6 +462,6 @@ export function StudentRaid() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
