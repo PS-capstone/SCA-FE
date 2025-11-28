@@ -122,11 +122,8 @@ export function StudentListPage() {
 
   // --- 수정 모드 진입/취소 ---
   const handleEditToggle = () => {
-    if (isEditing) {
-      // 취소 시: 원래 데이터로 원복
-      if (listData) {
-        setEditedStudents(listData.students);
-      }
+    if (listData) {
+      setEditedStudents(listData.students.map(s => ({ ...s })));
     }
     setIsEditing(!isEditing);
   };
@@ -148,23 +145,41 @@ export function StudentListPage() {
   // --- 저장 ---
   const handleSave = async () => {
     if (!listData) return;
+
+    // 1. 변경된 데이터만 필터링 (최적화)
+    const changedStudents = editedStudents.filter(edited => {
+      const original = listData.students.find(s => s.student_id === edited.student_id);
+      // 값이 변경된 경우만 추출
+      return original && original.grade !== edited.grade;
+    });
+
+    // 변경사항이 없으면 바로 모드 종료
+    if (changedStudents.length === 0) {
+      setIsEditing(false);
+      return;
+    }
+
     setIsSaving(true);
     try {
-      // API: 성적(Grade) 정보만 업데이트
-      const response = await put(`/api/v1/classes/${listData.class_id}/students`, {
-        students: editedStudents.map(s => ({
+      // 2. API 요청 데이터 구성
+      const payload = {
+        student_scores: changedStudents.map(s => ({
           student_id: s.student_id,
-          grade: s.grade // coral, research_data 제외
+          initial_score: s.grade // UI의 'grade'를 API의 'initial_score'로 매핑
         }))
-      });
+      };
+
+      // 3. PUT 요청 전송
+      const response = await put(`/api/v1/classes/${listData.class_id}/students`, payload);
 
       if (!response.ok) {
         throw new Error("저장에 실패했습니다.");
       }
 
       const resData = await response.json();
+
       if (resData.success) {
-        // 저장 성공 시 목록 갱신 및 모드 종료
+        // 4. 성공 시 목록 갱신 (변경된 계수 등 최신 데이터 반영)
         await fetchStudents(listData.class_id);
         setIsEditing(false);
         alert("성적이 저장되었습니다.");
@@ -172,7 +187,8 @@ export function StudentListPage() {
         throw new Error(resData.message || "저장 실패");
       }
     } catch (e: any) {
-      alert(e.message);
+      console.error(e);
+      alert(e.message || "알 수 없는 오류가 발생했습니다.");
     } finally {
       setIsSaving(false);
     }
@@ -266,18 +282,17 @@ export function StudentListPage() {
                   <div key={student.student_id} className="border rounded-lg p-4 shadow-sm bg-white border-blue-200 ring-2 ring-blue-100">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-bold text-lg">{student.name}</span>
-                      <span className="text-xs text-gray-500">ID: {student.student_id}</span>
                     </div>
 
                     <div className="space-y-4">
                       {/* 읽기 전용 정보 (Coral, Research Data) */}
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
                         <div>
-                          <span className="block text-xs text-gray-400">Coral</span>
+                          <span className="block text-xs text-gray-400">코랄</span>
                           <span className="font-medium">{student.coral}</span>
                         </div>
                         <div>
-                          <span className="block text-xs text-gray-400">R.Data</span>
+                          <span className="block text-xs text-gray-400">탐사데이터</span>
                           <span className="font-medium">{student.research_data}</span>
                         </div>
                       </div>
@@ -313,7 +328,7 @@ export function StudentListPage() {
                     coral={student.coral}
                     research_data={student.research_data}
                     classId={listData.class_id}
-                    grade={student.grade} 
+                    grade={student.grade}
                   />
                 ))
               ) : (

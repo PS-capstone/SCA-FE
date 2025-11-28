@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
-import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 
 interface StudentListItemProps {
@@ -10,8 +9,7 @@ interface StudentListItemProps {
   pendingQuests: number;
   coral: number;
   research_data: number;
-  className?: string;
-  classId?: number | string;
+  classId: number;
   grade?: number;
 }
 
@@ -21,22 +19,14 @@ function StudentListItemInner({
   pendingQuests,
   coral,
   research_data,
-  className = "",
-  classId
+  classId,
+  grade = 0
 }: StudentListItemProps) {
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    if (classId) {
-      navigate(`/teacher/students/${classId}/${id}`);
-    } else {
-      navigate(`/teacher/students/${id}`);
-    }
-  };
-
   return (
     <Card
-      className={`border-2 border-gray-300 rounded-lg cursor-default ${className}`}
+      className={`border-2 border-gray-300 rounded-lg cursor-default`}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3 mb-4">
@@ -58,6 +48,10 @@ function StudentListItemInner({
           <div className="flex justify-between">
             <span className="text-gray-600">탐사데이터</span>
             <span>{research_data}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">점수</span>
+            <span>{grade}</span>
           </div>
         </div>
       </CardContent>
