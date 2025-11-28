@@ -106,10 +106,15 @@ export function LoginPage() {
           email: data.email,
           classes: [] as string[], // 일단 빈 배열로 시작
         };
+
+        // API 호출 전에 토큰을 먼저 localStorage에 저장
+        localStorage.setItem('accessToken', data.access_token);
+        localStorage.setItem('refreshToken', data.refresh_token);
+
         login(teacherUser, 'teacher', data.access_token, data.refresh_token);
 
         try {
-          // login() 덕분에 access_token이 저장된 상태이므로 API 호출 가능
+          // 토큰이 localStorage에 저장된 상태이므로 API 호출 가능
           const classesResponse = await get('/api/v1/classes');
 
           if (classesResponse.ok) {

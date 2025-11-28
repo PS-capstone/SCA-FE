@@ -58,7 +58,7 @@ const StudentLayout: React.FC = () => {
 
   return (
     <div className="retro-layout h-screen flex flex-col bg-gray overflow-hidden">
-      <div className="flex-1 overflow-y-auto no-scrollbar" style={{backgroundImage: "var(--bg-url)"}}>
+      <div className="flex-1 overflow-y-auto no-scrollbar mb-20" style={{backgroundImage: "var(--bg-url)"}}>
         <Outlet />
       </div>
       <StudentBottomNav />
@@ -156,9 +156,9 @@ export const AppRoutes: React.FC = () => {
           <Route path="raid/manage" element={<RaidManagePage />} />
 
           {/* Teacher Class Routes */}
-          <Route path="class/:classId?" element={<ClassManagePage />} />
           <Route path="class/create" element={<ClassCreatePage />} />
           <Route path="class/:classId/dashboard" element={<ClassActivityDashboard />} />
+          <Route path="class/:classId?" element={<ClassManagePage />} />
           <Route path="students/:classId?" element={<StudentListPage />} />
           <Route path="students/:classId/:id" element={<StudentDetailPage />} />
 

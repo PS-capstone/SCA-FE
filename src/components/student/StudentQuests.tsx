@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { useAuth, StudentUser } from "../../contexts/AppContext";
-import { Loader2, File as FileIcon, X } from 'lucide-react';
+import { Loader2, Send, File as FileIcon, X } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { get, apiCall } from '../../utils/api';
 
 interface MyPersonalQuest {
@@ -76,9 +77,9 @@ export function StudentQuests() {
       const approvedData = await approvedRes.json();
       const expiredData = await expiredRes.json();
 
-      setActiveQuests(activeData.data.quests || []);
-      setApprovedQuests(approvedData.data.quests || []);
-      setExpiredQuests(expiredData.data.quests || []);
+      setActiveQuests(activeData.data.active_quests || []);
+      setApprovedQuests(approvedData.data.approved_quests || []);
+      setExpiredQuests(expiredData.data.expired_quests || []);
 
     } catch (err) {
       setError((err as Error).message);
@@ -237,7 +238,7 @@ export function StudentQuests() {
   }
 
   return (
-    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
+    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto">
 
       {/* 메인 퀘스트 목록 윈도우 */}
       <div className="window" style={{ width: "100%" }}>

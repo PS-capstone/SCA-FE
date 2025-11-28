@@ -330,7 +330,7 @@ export function StudentCollection() {
   if (error) return <div className="p-4" style={{ color: "red" }}>오류: {error}</div>;
 
   return (
-    <div className="p-4 space-y-4 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh", gap: "0" }}>
+    <div className="p-4 space-y-4 pb-20 max-w-screen-xl mx-auto" style={{ gap: "0" }}>
       <menu role="tablist" style={{ margin: "0 0 -2px 0" }}>
         <li role="tab" aria-selected={currentView === 'aquarium'} style={{ backgroundColor: "var(--bg-gray)" }}>
           <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('aquarium'); }}>수족관</a>

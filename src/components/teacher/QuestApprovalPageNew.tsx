@@ -94,9 +94,9 @@ export function QuestApprovalPageNew() {
     setIsLoading(true);
     setError(null);
 
-    let url = '/api/v1/quests/personal?status=SUBMITTED';
+    let url = '/api/v1/quests/personal/pending';
     if (currentClassId) {
-      url += `&class_id=${currentClassId}`;
+      url += `?class_id=${currentClassId}`;
     }
 
     try {
@@ -166,15 +166,19 @@ export function QuestApprovalPageNew() {
         throw new Error(data.message || `${action} 처리에 실패했습니다.`);
       }
 
+      // 먼저 상세 모달 닫기 및 목록 업데이트
+      handleCloseDetailModal();
+      setPendingQuests(prev => prev.filter(q => q.assignment_id !== selectedQuestDetail.assignment_id));
+
+      // 상태 업데이트가 완료된 후 승인 성공 모달 표시
       if (action === 'approve') {
-        setShowApprovalModal(true);
+        // setTimeout을 사용하여 다음 이벤트 루프에서 실행
+        setTimeout(() => {
+          setShowApprovalModal(true);
+        }, 100);
       } else {
         alert("퀘스트가 반려되었습니다.");
       }
-
-      handleCloseDetailModal();
-      // 목록에서 제거하여 즉시 반영
-      setPendingQuests(prev => prev.filter(q => q.assignment_id !== selectedQuestDetail.assignment_id));
 
     } catch (error) {
       alert((error instanceof Error) ? error.message : "처리 중 오류가 발생했습니다.");

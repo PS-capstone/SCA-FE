@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from "../../contexts/AppContext";
 import { get, post } from "../../utils/api";
@@ -16,9 +16,11 @@ interface MyContribution {
 
 interface RaidInfo {
   raid_id: number;
+  class_id: number;
+  class_name: string;
+  raid_name: string;
   template: string;
   template_name: string;
-  raid_name: string;
   difficulty: string;
   status: "ACTIVE" | "COMPLETED" | "Failed";
   boss_hp: BossHp;
@@ -26,23 +28,39 @@ interface RaidInfo {
   remaining_time: string;
   reward_coral: number;
   participants: number;
+  special_reward_description?: string;
   my_contribution: MyContribution;
   my_research_data: number;
 }
 
-interface AttackLog {
+interface RaidLog {
   log_id: number;
   student_name: string;
   damage: number;
-  timestamp: string;
-  time_ago: string;
+  created_at: string;
+}
+
+interface AttackResponseData {
+  raid_id: number;
+  research_data_used: number;
+  damage_dealt: number;
+  boss_hp: {
+    before: number;
+    after: number;
+    percentage: number;
+  };
+  raid_completed: boolean;
+  my_stats: {
+    total_damage: number;
+    remaining_research_data: number;
+  };
 }
 
 export function StudentRaid() {
   const { user, isAuthenticated, userType, access_token } = useAuth();
 
   const [raidInfo, setRaidInfo] = useState<RaidInfo | null>(null);
-  const [logs, setLogs] = useState<AttackLog[]>([]);
+  const [logs, setLogs] = useState<RaidLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,29 +76,41 @@ export function StudentRaid() {
     diceResult: number;
   } | null>(null);
 
+  // 날짜 포맷팅 헬퍼 (로그용)
+  const formatLogTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   // 1. 레이드 정보 및 로그 조회
   const fetchRaidData = async () => {
     if (!access_token) return;
-    setLoading(true);
+    if (!raidInfo) setLoading(true);
     setError(null);
 
     try {
       const raidRes = await get('/api/v1/raids/my-raid');
       if (raidRes.status === 404) {
-        setError("진행 중인 레이드가 없습니다.");
         setRaidInfo(null);
+        setLoading(false);
         return;
       }
-      if (!raidRes.ok) throw new Error("레이드 정보를 불러오는데 실패했습니다.");
+      if (!raidRes.ok) {
+        const errJson = await raidRes.json();
+        throw new Error(errJson.message || "레이드 정보를 불러오는데 실패했습니다.");
+      }
 
       const raidJson = await raidRes.json();
+      const raidData = raidJson.data as RaidInfo;
       setRaidInfo(raidJson.data);
 
       // 로그 조회 (REST 방식)
-      const logsRes = await get(`/api/v1/raids/{raidId}/logs`);
-      if (logsRes.ok) {
-        const logsJson = await logsRes.json();
-        setLogs(logsJson.data.logs);
+      if (raidData && raidData.raid_id) {
+        const logsRes = await get(`/api/v1/raids/${raidData.raid_id}/logs`);
+        if (logsRes.ok) {
+          const logsJson = await logsRes.json();
+          setLogs(logsJson.data.logs || []);
+        }
       }
     } catch (err) {
       setError((err as Error).message);
@@ -110,46 +140,58 @@ export function StudentRaid() {
     setTimeout(async () => {
       // 1. 주사위 결과 및 데미지 계산 (Client Side)
       const dice = Math.floor(Math.random() * 6) + 1;
-      const bonusMultiplier = dice / 6; // 0.16 ~ 1.0
-      const bonus = Math.floor(contributeAmount * bonusMultiplier);
-      const totalDamage = contributeAmount + bonus;
+      const bonusMultiplier = 1 + (dice / 6); // 0.16 ~ 1.0
+      const calculatedDamage = Math.floor(contributeAmount * bonusMultiplier);
 
       setDiceResult(dice);
       setIsDiceRolling(false);
 
       setLastContributeResult({
         base: contributeAmount,
-        bonus: bonus,
-        total: totalDamage,
+        bonus: calculatedDamage - contributeAmount,
+        total: calculatedDamage,
         diceResult: dice
       });
 
       try {
-        const response = await post(`/api/v1/raids/${raidInfo.raid_id}/attack`, {
+        const payload = {
           research_data_amount: contributeAmount,
-          total_damage: totalDamage
-        });
-
+          total_damage: calculatedDamage
+        };
+        const response = await post(`/api/v1/raids/${raidInfo.raid_id}/attack`, payload);
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.message || "공격 실패");
+          throw new Error(result.message || "공격에 실패했습니다.");
         }
 
         if (result.success) {
-          const data = result.data;
-          setRaidInfo(prev => prev ? ({
-            ...prev,
-            boss_hp: {
-              total: prev.boss_hp.total,
-              current: data.boss_hp.after,
-              percentage: data.boss_hp.percentage
-            },
-            my_research_data: data.my_stats.remaining_research_data
-          }) : null);
+          const responseData = result.data as AttackResponseData;
+          setRaidInfo(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              // 보스 체력 업데이트 (before/after 구조 -> total/current 구조)
+              boss_hp: {
+                total: prev.boss_hp.total, // Total은 변하지 않음
+                current: responseData.boss_hp.after,
+                percentage: responseData.boss_hp.percentage
+              },
+              // 내 정보 업데이트
+              my_research_data: responseData.my_stats.remaining_research_data,
+              my_contribution: {
+                ...prev.my_contribution,
+                total_damage: responseData.my_stats.total_damage
+              },
+              // 레이드 완료 여부 체크 (필요시 status 업데이트)
+              status: responseData.raid_completed ? "COMPLETED" : prev.status
+            };
+          });
 
           fetchRaidData();
-          alert(result.message);
+          if (responseData.raid_completed) {
+            alert("축하합니다! 레이드를 완료했습니다!");
+          }
         }
       } catch (err) {
         alert((err as Error).message);
@@ -170,13 +212,11 @@ export function StudentRaid() {
     return <div className="p-6">접근 권한이 없습니다.</div>;
   }
 
-  if (loading) {
+  if (loading && !raidInfo) {
     return (
       <div className="p-6 flex flex-col justify-center items-center min-h-screen">
         <div className="window" style={{ width: "300px" }}>
-          <div className="title-bar">
-            <div className="title-bar-text">로딩 중</div>
-          </div>
+          <div className="title-bar"><div className="title-bar-text">로딩 중</div></div>
           <div className="window-body text-center p-4">
             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
             <span>레이드 정보를 수신 중...</span>
@@ -186,26 +226,33 @@ export function StudentRaid() {
     );
   }
 
-  if (error || !raidInfo) {
+  if (error && !raidInfo) {
     return (
       <div className="p-6 flex flex-col justify-center items-center min-h-screen">
         <div className="window" style={{ width: "300px" }}>
           <div className="title-bar">
             <div className="title-bar-text">알림</div>
-            <div className="title-bar-controls">
-              <button aria-label="Close" />
-            </div>
+            <div className="title-bar-controls"><button aria-label="Close" /></div>
           </div>
           <div className="window-body text-center p-4">
-            <p>{error || "진행 중인 레이드가 없습니다."}</p>
+            <p>{error === "진행 중인 레이드가 없습니다." ? "현재 진행 중인 레이드가 없습니다." : error}</p>
           </div>
         </div>
       </div>
     );
   }
 
+  if (!raidInfo) return null;
+
+  // 템플릿 아이콘 결정(이미지로 변경 전 임시)
+  const getBossIcon = (template: string) => {
+    if (template === 'KRAKEN') return '🐙';
+    if (template === 'ZELUS_INDUSTRY') return '🏭';
+    return '👾';
+  };
+
   return (
-    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ backgroundColor: "var(--bg-color)", minHeight: "100vh" }}>
+    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
       {/* 1. 보스 & 레이드 정보 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
         <div className="title-bar">
@@ -226,7 +273,7 @@ export function StudentRaid() {
           }}>
             {/* 보스 이미지 Placeholder */}
             <div style={{ width: "80px", height: "80px", background: "#808080", borderRadius: "50%", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px" }}>
-              🐙
+              {getBossIcon(raidInfo.template)}
             </div>
             <h3 style={{ margin: 0 }}>{raidInfo.template_name}</h3>
             <div style={{ fontSize: "12px", color: "#ccc" }}>남은 시간: {raidInfo.remaining_time}</div>
@@ -256,6 +303,11 @@ export function StudentRaid() {
             <div style={{ textAlign: "center", fontWeight: "bold" }}>
               보상: 코랄 {raidInfo.reward_coral}개
             </div>
+            {raidInfo.special_reward_description && (
+              <div style={{ textAlign: "center", fontSize: "12px", color: "blue", marginTop: "4px" }}>
+                🎁 {raidInfo.special_reward_description}
+              </div>
+            )}
           </fieldset>
         </div>
       </div>
@@ -278,10 +330,10 @@ export function StudentRaid() {
           {/* 액션 버튼 */}
           <button
             onClick={() => setIsContributeOpen(true)}
-            disabled={raidInfo.my_research_data <= 0}
-            style={{ width: "100%", height: "40px", fontWeight: "bold", marginBottom: "10px" }}
+            disabled={raidInfo.my_research_data <= 0 || raidInfo.status !== 'ACTIVE'}
+            style={{ width: "100%", height: "40px", fontWeight: "bold", marginBottom: "10px", cursor: raidInfo.status !== 'ACTIVE' ? 'not-allowed' : 'pointer' }}
           >
-            ⚡ 에너지 주입
+            {raidInfo.status === 'ACTIVE' ? '⚡ 에너지 주입 (공격)' : '레이드 종료됨'}
           </button>
 
           {/* 마지막 결과 표시 */}
@@ -290,8 +342,8 @@ export function StudentRaid() {
               <div style={{ textAlign: "center", fontSize: "12px", color: "#666", marginBottom: "5px" }}>-- Last Attack Log --</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div>기본: {lastContributeResult.base}</div>
-                  <div>보너스: +{lastContributeResult.bonus}</div>
+                  <div style={{ fontSize: "12px" }}>소모: {lastContributeResult.base}</div>
+                  <div style={{ fontSize: "12px", color: "green" }}>보너스: +{lastContributeResult.bonus}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontWeight: "bold", fontSize: "16px", color: "blue" }}>DMG: {lastContributeResult.total}</div>
@@ -313,17 +365,17 @@ export function StudentRaid() {
         <div className="window-body">
           <div className="sunken-panel" style={{ height: "200px", overflowY: "auto", background: "#fff", padding: "6px" }}>
             {logs.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "20px", color: "#999" }}>기록된 레이드 로그가 없습니다.</div>
+              <div style={{ textAlign: "center", padding: "20px", color: "#999" }}>아직 기록된 로그가 없습니다.</div>
             ) : (
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {logs.map((log) => (
                   <li key={log.log_id} style={{ marginBottom: "6px", borderBottom: "1px dotted #ccc", paddingBottom: "4px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "13px" }}>
                         <strong style={{ color: "#000080" }}>{log.student_name}</strong>님이
-                        <span style={{ color: "#d32f2f", fontWeight: "bold", marginLeft: "4px" }}>{log.damage}</span> 데미지를 입혔습니다.
+                        <span style={{ color: "#d32f2f", fontWeight: "bold", marginLeft: "4px" }}>{log.damage.toLocaleString()}</span> 대미지를 입혔습니다!
                       </span>
-                      <span style={{ fontSize: "11px", color: "#666" }}>{log.time_ago}</span>
+                      <span style={{ fontSize: "11px", color: "#666" }}>{formatLogTime(log.created_at)}</span>
                     </div>
                   </li>
                 ))}
@@ -346,14 +398,18 @@ export function StudentRaid() {
             <div className="window-body">
 
               <div className="field-row-stacked" style={{ marginBottom: "15px" }}>
-                <label>주입할 데이터 양 (보유: {raidInfo.my_research_data})</label>
+                <label>주입할 탐사데이터 양 (보유: {raidInfo.my_research_data})</label>
                 <input
                   type="number"
-                  value={contributeAmount}
-                  onChange={(e) => setContributeAmount(Number(e.target.value))}
+                  value={contributeAmount === 0 ? '' : contributeAmount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setContributeAmount(val === '' ? 0 : Number(val));
+                  }}
                   max={raidInfo.my_research_data}
                   min={1}
-                  style={{ width: "100%" }}
+                  style={{ width: "100%", marginTop: "5px" }}
+                  placeholder="주입할 탐사데이터 양 입력"
                 />
               </div>
 
@@ -384,7 +440,7 @@ export function StudentRaid() {
                   disabled={contributeAmount <= 0 || contributeAmount > raidInfo.my_research_data || isDiceRolling}
                   style={{ minWidth: "80px", fontWeight: "bold" }}
                 >
-                  {isDiceRolling ? "굴리는 중..." : "확인"}
+                  {isDiceRolling ? "계산 중..." : "공격 개시"}
                 </button>
                 <button onClick={() => setIsContributeOpen(false)} style={{ minWidth: "80px" }}>
                   취소
