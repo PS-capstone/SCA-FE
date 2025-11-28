@@ -51,23 +51,95 @@ function DialogContent({
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
+  // children에서 DialogTitle 찾기
+  let titleText = 'Dialog';
+
+  // 텍스트 추출 헬퍼 함수 (재귀적) - ReactNode에서 텍스트만 뽑아냄
+  const extractText = (node: React.ReactNode): string => {
+    if (typeof node === 'string' || typeof node === 'number') return String(node);
+    if (!node) return '';
+    if (Array.isArray(node)) return node.map(extractText).join('');
+    if (React.isValidElement(node)) {
+      const element = node as React.ReactElement<{ children?: React.ReactNode }>;
+      if (element.props && element.props.children) {
+        return extractText(element.props.children);
+      }
+    }
+    return '';
+  };
+
+  // DialogTitle 컴포넌트 찾기 헬퍼 함수 (재귀적)
+  const findTitle = (node: React.ReactNode): string | null => {
+    if (!node) return null;
+
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        const title = findTitle(child);
+        if (title) return title;
+      }
+      return null;
+    }
+
+    if (React.isValidElement(node)) {
+      const element = node as React.ReactElement<{ children?: React.ReactNode }>;
+      // displayName 체크를 위해 any로 캐스팅 (커스텀 컴포넌트 식별용)
+      const type = element.type as any;
+
+      if (type?.displayName === 'DialogTitle') {
+        // DialogTitle을 찾았으면 내부 텍스트 추출
+        const text = extractText(element.props.children);
+        return text || 'Dialog';
+      }
+
+      // 자식 요소가 있으면 계속 탐색
+      if (element.props && element.props.children) {
+        return findTitle(element.props.children);
+      }
+    }
+
+    return null;
+  };
+
+  const foundTitle = findTitle(children);
+  if (foundTitle) {
+    titleText = foundTitle;
+  }
+
   return (
-    <DialogPortal data-slot="dialog-portal">
+    <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Content
-        data-slot="dialog-content"
-        className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
-          <XIcon />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
+      <div className="window fixed top-[50%] left-[50%] z-50 translate-x-[-50%] translate-y-[-50%] max-w-[calc(100%-2rem)] sm:max-w-lg" style={{ 
+          margin: 0,
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 50,
+          backgroundColor: 'white', // 배경색 강제
+          display: 'flex',          // 98.css 스타일 보정
+          flexDirection: 'column',
+          minWidth: '300px'
+        }}>
+        <div className="title-bar">
+          <div className="title-bar-text">{titleText}</div>
+          <div className="title-bar-controls">
+            <DialogPrimitive.Close asChild>
+              <button aria-label="Close"></button>
+            </DialogPrimitive.Close>
+          </div>
+        </div>
+        <DialogPrimitive.Content
+          data-slot="dialog-content"
+          className={cn(
+            "window-body bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 gap-4 duration-200 p-6",
+            className,
+          )}
+          style={{ writingMode: 'horizontal-tb', ...props.style }}
+          {...props}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </div>
     </DialogPortal>
   );
 }

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Home, BookOpen, Gamepad2, Book, Sword, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AppContext';
@@ -30,10 +31,8 @@ export function StudentBottomNav() {
         zIndex: 100
       }}
     >
-
-
-      <div className="max-w-md mx-auto">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar" style={{ paddingBottom: "2px" }}>
+      <div className="max-w-lg mx-auto">
+        <div className="flex gap-1 p-2 overflow-x-auto no-scrollbar" style={{ paddingBottom: "2px" }}>
           {navItems.map((item) => {
             const IconComponent = item.icon;
             const isActive = location.pathname === item.path;
@@ -42,50 +41,22 @@ export function StudentBottomNav() {
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
-                style={{
-                  // 기본 리셋
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
+                className={`flex flex-col items-center justify-center h-12 min-w-5 p-1 m-0 cursor-pointer whitespace-nowrap`}
+                style={{ 
                   flex: "1 0 auto",
-                  minWidth: "60px",
-                  height: "50px",
-
-                  boxShadow: isActive ? BUTTON_SUNKEN : BUTTON_RAISED,
-                  backgroundColor: isActive ? "var(--border-top)" : "var(--bg-gray)", 
-                
                   border: "none",
                   outline: "none",
-                  cursor: "pointer",
-                  padding: "4px",
-                  margin: 0,
-
-                  
-                  transform: isActive ? "translate(1px, 1px)" : "none",
+                  boxShadow: isActive ? BUTTON_SUNKEN : BUTTON_RAISED, 
+                  backgroundColor: isActive ? "var(--border-top)" : "var(--bg-gray)", 
+                  transform: isActive ? "translate(1px, 1px)" : "none", 
                 }}
               >
-                
-                <IconComponent
-                  size={20}
-                  style={{
-                    color: "var(--text-color)",
-                    marginBottom: "4px"
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: isActive ? "bold" : "normal",
-                    color: "var(--text-color)"
-                  }}
-                >
-                  {item.label}
-                </span>
+                <IconComponent size={20} className="mb-1" style={{color: "var(--text-color)"}} />
+                <span className="text-xs mt-1" style={{ fontWeight: isActive ? "bold" : "normal", color: "var(--text-color)" }}>{item.label}</span>
               </button>
             );
           })}
-          
+
           <div style={{ width: "2px", borderLeft: "1px solid var(--button-shadow)", borderRight: "1px solid var(--color-white)", margin: "0 4px" }}></div>
 
           {/* 로그아웃 버튼 */}
@@ -94,19 +65,8 @@ export function StudentBottomNav() {
               logout();
               navigate('/');
             }}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: "60px",
-              height: "50px",
-              boxShadow: BUTTON_RAISED,
-              backgroundColor: "var(--bg-gray)",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-            }}
+            className="flex flex-col items-center justify-center h-12 min-w-10 p-1 cursor-pointer whitespace-nowrap"
+            style={{ boxShadow: BUTTON_RAISED, backgroundColor: "var(--bg-gray)", border: 'none' }}
           >
             <LogOut size={20} style={{ color: "#d32f2f", marginBottom: "4px" }} />
             <span style={{ fontSize: "11px", color: "#d32f2f" }}>로그아웃</span>
