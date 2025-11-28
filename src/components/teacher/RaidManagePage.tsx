@@ -8,35 +8,40 @@ import { useLocation } from "react-router-dom";
 
 interface RaidSummary {
   raid_id: number;
+  class_id: number;
   class_name: string;
   raid_name: string;
   status: 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'TERMINATED';
+  difficulty: string;
   current_boss_hp: number;
   total_boss_hp: number;
   participant_count: number;
   end_date: string;
-  difficulty: string;
 }
 
 interface RaidDetail {
   raid_id: number;
   class_id: number;
   class_name: string;
-  template: string;
   raid_name: string;
-  boss_hp: {
-    total: number;
-    current: number;
-    percentage: number;
-  };
+  template: string;
+  difficulty: string;
+  status: string;
   start_date: string;
   end_date: string;
-  remaining_time: string;
+  total_boss_hp: number;
+  current_boss_hp: number;
+  progress_percent: number;
   reward_coral: number;
   special_reward_description?: string;
-  participants: number;
-  total_students: number;
-  created_at: string;
+  participant_count: number;
+  remaining_seconds: number;
+  contributions: {
+    student_id: number;
+    student_name: string;
+    damage: number;
+    contribution_percent: number;
+  }[];
 }
 
 type StatusFilter = 'ACTIVE' | 'ENDED';
@@ -56,6 +61,19 @@ export function RaidManagePage() {
   const initialFocusRef = useRef<number | null>(locationState?.focusRaidId ?? null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialFilterRef.current);
   const [pendingFocusRaidId, setPendingFocusRaidId] = useState<number | null>(initialFocusRef.current);
+
+  const formatRemainingTime = (seconds: number) => {
+    if (seconds <= 0) return "종료됨";
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (days > 0) {
+      return `${days}일 ${hours}시간 ${minutes}분`;
+    }
+    return `${hours}시간 ${minutes}분`;
+  };
 
   const fetchRaids = async () => {
     setLoading(true);
@@ -95,6 +113,7 @@ export function RaidManagePage() {
           setRaidDetail(null);
         }
       } catch (err) {
+        console.error(err);
         setRaidDetail(null);
       } finally {
         setDetailLoading(false);
@@ -104,6 +123,8 @@ export function RaidManagePage() {
   }, [selectedRaidId]);
 
   const handleTerminate = async (raidId: number) => {
+    if (!window.confirm("정말 이 레이드를 강제 종료하시겠습니까?")) return;
+
     setActionMessage(null);
     try {
       const response = await post(`/api/v1/raids/${raidId}/terminate`);
@@ -114,7 +135,7 @@ export function RaidManagePage() {
       setActionMessage('레이드를 종료했습니다.');
       fetchRaids();
       if (selectedRaidId === raidId) {
-        setRaidDetail(null);
+        setRaidDetail(prev => prev ? { ...prev, status: 'TERMINATED' } : null);
       }
     } catch (err: any) {
       setActionMessage(err.message ?? '레이드 종료에 실패했습니다.');
@@ -129,20 +150,24 @@ export function RaidManagePage() {
   }, [raids, statusFilter]);
 
   useEffect(() => {
+    if (raids.length === 0) return;
+
     if (pendingFocusRaidId) {
-      setSelectedRaidId(pendingFocusRaidId);
+      const targetExists = raids.some(r => r.raid_id === pendingFocusRaidId);
+      if (targetExists) {
+        setSelectedRaidId(pendingFocusRaidId);
+        const target = raids.find(r => r.raid_id === pendingFocusRaidId);
+        if (target && target.status !== 'ACTIVE') setStatusFilter('ENDED');
+      }
       setPendingFocusRaidId(null);
       return;
     }
-    if (filteredRaids.length === 0) {
-      setSelectedRaidId(null);
-      return;
-    }
+
     const exists = filteredRaids.some((raid) => raid.raid_id === selectedRaidId);
-    if (!exists) {
+    if (!exists && filteredRaids.length > 0 && !selectedRaidId) {
       setSelectedRaidId(filteredRaids[0].raid_id);
     }
-  }, [filteredRaids, pendingFocusRaidId, selectedRaidId]);
+  }, [raids, filteredRaids, pendingFocusRaidId, selectedRaidId]);
 
   const selectedRaidSummary = useMemo(
     () => raids.find((raid) => raid.raid_id === selectedRaidId),
@@ -162,20 +187,26 @@ export function RaidManagePage() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b-2 border-gray-300 pb-4">
         <div>
           <h1>레이드 관리</h1>
-          <p className="text-sm text-gray-600 mt-1">레이드 상태를 확인하고 필요한 조치를 취하세요.</p>
+          <p className="text-sm text-gray-600 mt-1">레이드 상태를 확인하고 관리하세요.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
             variant={statusFilter === 'ACTIVE' ? 'default' : 'outline'}
             className={statusFilter === 'ACTIVE' ? 'bg-black text-white hover:bg-gray-800' : 'border-2 border-gray-300'}
-            onClick={() => setStatusFilter('ACTIVE')}
+            onClick={() => {
+              setStatusFilter('ACTIVE');
+              setSelectedRaidId(null);
+            }}
           >
             진행 중 레이드
           </Button>
           <Button
             variant={statusFilter === 'ENDED' ? 'default' : 'outline'}
             className={statusFilter === 'ENDED' ? 'bg-black text-white hover:bg-gray-800' : 'border-2 border-gray-300'}
-            onClick={() => setStatusFilter('ENDED')}
+            onClick={() => {
+              setStatusFilter('ENDED');
+              setSelectedRaidId(null);
+            }}
           >
             마감된 레이드
           </Button>
@@ -217,9 +248,9 @@ export function RaidManagePage() {
                   <div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">보스 HP</span>
-                      <span>{raid.current_boss_hp.toLocaleString()} / {raid.total_boss_hp.toLocaleString()}</span>
+                      <span>{(raid.current_boss_hp ?? 0).toLocaleString()} / {(raid.total_boss_hp ?? 0).toLocaleString()}</span>
                     </div>
-                    <Progress value={(raid.current_boss_hp / raid.total_boss_hp) * 100} className="h-2" />
+                    <Progress value={raid.total_boss_hp > 0 ? (raid.current_boss_hp / raid.total_boss_hp) * 100 : 0} className="h-2" />
                   </div>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>참여자</span>
@@ -241,14 +272,21 @@ export function RaidManagePage() {
               <>
                 <div>
                   <h3 className="text-lg font-semibold">{raidDetail.raid_name}</h3>
-                  <p className="text-sm text-gray-500">{raidDetail.class_name}</p>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <span>{raidDetail.class_name}</span>
+                    <Badge variant="outline">{raidDetail.difficulty}</Badge>
+                  </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">보스 HP</span>
-                    <span>{raidDetail.boss_hp.current.toLocaleString()} / {raidDetail.boss_hp.total.toLocaleString()}</span>
+                    <span className="text-gray-600">보스 HP 상태</span>
+                    <span>{raidDetail.progress_percent}% 남음</span>
                   </div>
-                  <Progress value={raidDetail.boss_hp.percentage} className="h-3" />
+                  <div className="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>현재: {raidDetail.current_boss_hp.toLocaleString()}</span>
+                    <span>전체: {raidDetail.total_boss_hp.toLocaleString()}</span>
+                  </div>
+                  <Progress value={raidDetail.progress_percent} className="h-4" />
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="space-y-1">
@@ -257,25 +295,36 @@ export function RaidManagePage() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-gray-600">남은 시간</p>
-                    <p className="font-semibold">{raidDetail.remaining_time}</p>
+                    <p className="font-semibold">{formatRemainingTime(raidDetail.remaining_seconds)}</p>
+                  </div>
+                  <div className="space-y-1">
+                     <p className="text-xs text-gray-500">참여자 수</p>
+                     <p className="font-bold">{raidDetail.participant_count}명</p>
+                  </div>
+                  <div className="space-y-1">
+                     <p className="text-xs text-gray-500">상태</p>
+                     <p className="font-bold">{raidDetail.status}</p>
                   </div>
                 </div>
+
                 {raidDetail.special_reward_description && (
                   <div>
                     <p className="text-sm text-gray-600">특별 보상</p>
                     <p className="text-sm">{raidDetail.special_reward_description}</p>
                   </div>
                 )}
-                <div className="flex justify-between text-sm border-t pt-2 mt-2">
-                  <span className="text-gray-600">총 학생 / 참여자</span>
-                  <span>{raidDetail.participants} / {raidDetail.total_students}명</span>
+
+                <div className="flex justify-between text-sm text-gray-500 pt-2">
+                   <span>시작일: {new Date(raidDetail.start_date).toLocaleDateString()}</span>
+                   <span>종료일: {new Date(raidDetail.end_date).toLocaleDateString()}</span>
                 </div>
-                {selectedRaidSummary?.status === 'ACTIVE' && (
+
+                {raidDetail.status === 'ACTIVE' && (
                   <Button
                     className="w-full bg-red-600 hover:bg-red-700 mt-4"
-                    onClick={() => handleTerminate(selectedRaidSummary.raid_id)}
+                    onClick={() => handleTerminate(raidDetail.raid_id)}
                   >
-                    레이드 종료
+                    레이드 강제 종료
                   </Button>
                 )}
               </>
