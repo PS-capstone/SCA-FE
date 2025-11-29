@@ -5,21 +5,21 @@ interface ClassCardProps {
   class_id: number;
   class_name: string;
   student_count: number;
-  waiting_quest_count: number;
+  pending_quests: number;
   onClick?: (id: number) => void;
   className?: string;
 }
 
-function ClassCardInner({ 
-  class_id, 
-  class_name, 
-  student_count, 
-  waiting_quest_count, 
+function ClassCardInner({
+  class_id,
+  class_name,
+  student_count,
+  pending_quests= 0,
   onClick,
   className = ""
 }: ClassCardProps) {
   return (
-    <Card 
+    <Card
       className={`card border-2 border-gray-300 rounded-lg cursor-pointer hover:shadow-lg transition-all ${className}`}
       onClick={() => onClick?.(class_id)}
     >
@@ -32,7 +32,9 @@ function ClassCardInner({
           </div>
           <div className="d-flex justify-content-between align-items-center">
             <span className="text-gray-600">승인 대기중인 퀘스트</span>
-            <span className="font-medium">{waiting_quest_count}개</span>
+            <span className={`font-medium ${pending_quests > 0 ? 'text-red-600 font-bold' : ''}`}>
+              {pending_quests}개
+            </span>
           </div>
         </div>
       </CardContent>

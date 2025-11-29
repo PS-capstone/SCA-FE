@@ -6,18 +6,18 @@ import { ClassCard } from "../common/ClassCard";
 import { useAuth, TeacherUser } from '../../contexts/AppContext';
 import { get } from '../../utils/api';
 
-interface ClassSummary {
+interface classItem {
   class_id: number | string;
   class_name: string;
   student_count: number;
-  waiting_quest_count: number;
+  pending_quests: number;
 }
 
 export function TeacherDashboardNew() {
   const navigate = useNavigate();
 
   const { user, isAuthenticated, userType, setCurrentClass } = useAuth();
-  const [classes, setClasses] = useState<ClassSummary[]>([]);
+  const [classes, setClasses] = useState<classItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,10 +47,16 @@ export function TeacherDashboardNew() {
 
 
         const data = await response.json();
+        console.log("API Response:", data);
 
-        console.log(data);
+        const mappedClasses = (data.data.classes || []).map((item: any) => ({
+          class_id: item.class_id,
+          class_name: item.class_name,
+          student_count: item.student_count,  
+          pending_quests: item.pending_quests ?? item.waiting_quest_count ?? 0
+        }));
 
-        setClasses(data.data.classes || []);
+        setClasses(mappedClasses);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -126,7 +132,7 @@ export function TeacherDashboardNew() {
                   class_id={Number(classItem.class_id)}
                   class_name={classItem.class_name}
                   student_count={classItem.student_count}
-                  waiting_quest_count={classItem.waiting_quest_count}
+                  pending_quests={classItem.pending_quests}
                   onClick={() => {
                     const classId = String(classItem.class_id);
                     // 전역 상태에 클래스 저장

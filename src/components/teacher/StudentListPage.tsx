@@ -324,7 +324,7 @@ export function StudentListPage() {
                     key={student.student_id}
                     id={student.student_id}
                     name={student.name}
-                    pendingQuests={student.pending_quests}
+                    pending_quests={student.pending_quests}
                     coral={student.coral}
                     research_data={student.research_data}
                     classId={listData.class_id}
