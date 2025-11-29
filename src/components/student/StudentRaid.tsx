@@ -389,7 +389,6 @@ export function StudentRaid() {
                   className="progress-indicator-bar"
                   style={{
                     width: `${raidInfo.boss_hp.percentage}%`,
-                    background: "linear-gradient(90deg, #d32f2f 0 16px, transparent 0 2px)",
                     backgroundColor: "transparent"
                   }}
                 />
