@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Badge } from '../ui/badge';
 import { useAuth, StudentUser } from "../../contexts/AppContext";
 import { Loader2, Send, File as FileIcon, X } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { get, apiCall } from '../../utils/api';
 
 interface MyPersonalQuest {
@@ -114,17 +113,6 @@ export function StudentQuests() {
     }
   };
 
-  const getStatusText = (status: MyPersonalQuest['status']) => {
-    switch (status) {
-      case 'ASSIGNED': return <span style={{ color: "blue", fontWeight: "bold" }}>[제출 필요]</span>;
-      case 'SUBMITTED': return <span style={{ color: "yellow", fontWeight: "bold" }}>[승인 대기]</span>;
-      case 'REJECTED': return <span style={{ color: "red", fontWeight: "bold" }}>[반려됨]</span>;
-      case 'APPROVED': return <span style={{ color: "green", fontWeight: "bold" }}>[승인 완료]</span>;
-      case 'EXPIRED': return <span style={{ color: "gray", fontWeight: "bold" }}>[만료됨]</span>;
-      default: return <span>[{status}]</span>;
-    }
-  };
-
   const getButtonText = (status: MyPersonalQuest['status']) => {
     switch (status) {
       case 'ASSIGNED':
@@ -171,10 +159,17 @@ export function StudentQuests() {
 
   const handleSubmit = async () => {
     if (!selectedQuest || !access_token) return;
-    if (!submitText.trim() && attachedFiles.length === 0) {
-      setSubmitError('제출 내용이나 첨부파일 중 하나는 필수입니다.');
+
+    if (!submitText.trim()) {
+      setSubmitError('수행 내용을 입력해주세요.');
       return;
     }
+
+    // 파일 업로드하려면 백엔드 컨트롤러 변경 필요(@RequestBody->@ModelAttribute)
+    /* if (!submitText.trim() && attachedFiles.length === 0) {
+      setSubmitError('제출 내용이나 첨부파일 중 하나는 필수입니다.');
+      return;
+    } */
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -189,13 +184,22 @@ export function StudentQuests() {
     const endpoint = `/api/v1/quests/personal/${selectedQuest.assignment_id}/submit`;
 
     try {
+      const payload = {
+        content: submitText
+        // attachment: ... (현재 백엔드 구조상 파일 객체는 JSON에 담을 수 없음)
+      };
+
       // apiCall이 FormData를 자동으로 감지하여 적절한 Content-Type을 설정
       const response = await apiCall(endpoint, {
         method: method,
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
+      
       if (!response.ok || !data.success) {
         throw new Error(data.message || '제출에 실패했습니다.');
       }

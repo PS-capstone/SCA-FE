@@ -88,7 +88,7 @@ export const FISH_ICONS: { [key: number]: {
         }
     },
 
-    13: {
+    12: {
         column: 0,
         row: 0,
         isAnimated: true,
@@ -100,7 +100,7 @@ export const FISH_ICONS: { [key: number]: {
         }
     },
 
-    12: {
+    13: {
         column: 0,
         row: 0,
         isAnimated: true,

@@ -6,7 +6,7 @@ import { Badge } from "../ui/badge";
 interface StudentListItemProps {
   id: number;
   name: string;
-  pendingQuests: number;
+  pending_quests: number;
   coral: number;
   research_data: number;
   classId: number;
@@ -16,7 +16,7 @@ interface StudentListItemProps {
 function StudentListItemInner({
   id,
   name,
-  pendingQuests,
+  pending_quests = 0,
   coral,
   research_data,
   classId,
@@ -32,9 +32,9 @@ function StudentListItemInner({
         <div className="flex items-start gap-3 mb-4">
           <div className="flex-1">
             <h4>{name}</h4>
-            {pendingQuests > 0 && (
+            {pending_quests > 0 && (
               <Badge className="mt-1 bg-black text-white rounded-lg">
-                승인 요청 {pendingQuests}건
+                승인 요청 {pending_quests}건
               </Badge>
             )}
           </div>

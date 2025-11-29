@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { QuestDetailPage } from './QuestDetailPage';
 import { useAuth, StudentUser } from '../../contexts/AppContext';
-import { get } from '../../utils/api';
+import { get, refreshAccessToken } from '../../utils/api';
 import { Loader2 } from 'lucide-react';
 
 // --- API Interfaces ---
-
 interface StudentInfo {
   student_id: number;
   username: string;
@@ -75,54 +74,110 @@ interface DashboardData {
 
 export function StudentDashboard() {
   const { user, isAuthenticated, userType, access_token } = useAuth();
-
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [selectedQuest, setSelectedQuest] = useState<{ id: number; title: string } | null>(null);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user || !access_token) return;
-
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await get('/api/v1/students/dashboard');
-
-        if (!response.ok) {
-          throw new Error('대시보드 정보를 불러오는데 실패했습니다.');
-        }
-
-        const result = await response.json();
-        if (result.success) {
-          setDashboardData(result.data);
-        } else {
-          throw new Error(result.message || '데이터를 불러오지 못했습니다.');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [isAuthenticated, user, access_token]);
-
-  //로그인 여부 확인
-  if (!isAuthenticated || !user) {
-    return <div className="p-6">로그인 정보 확인 중...</div>;
-  }
-
-  if (userType !== 'student') {
-    return <div className="p-6">접근 권한이 없습니다.</div>;
-  }
 
   const currentUser = user as StudentUser;
 
-  // 퀘스트 상세 페이지가 선택된 경우
+  // 1. [핵심] 데이터 가져오는 함수를 재사용 가능하게 분리 (useCallback)
+  const fetchDashboardData = useCallback(async (isBackground: boolean = false) => {
+    if (!isBackground) setIsLoading(true); // 배경 업데이트가 아닐 때만 로딩바 표시
+    setError(null);
+    try {
+      const response = await get('/api/v1/students/dashboard');
+      if (!response.ok) throw new Error('Failed to fetch');
+      
+      const result = await response.json();
+      if (result.success) {
+        setDashboardData(result.data);
+      }
+    } catch (err) {
+      if (!isBackground) setError('데이터를 불러올 수 없습니다.');
+      console.error(err);
+    } finally {
+      if (!isBackground) setIsLoading(false);
+    }
+  }, []);
+
+  // 2. 초기 데이터 로딩
+  useEffect(() => {
+    if (isAuthenticated && user && access_token) {
+      fetchDashboardData(false);
+    }
+  }, [isAuthenticated, user, access_token, fetchDashboardData]);
+
+  // 3. [웹소켓 연결] Plain WebSocket 방식으로 수정 및 토큰 갱신 로직 적용
+  useEffect(() => {
+    if (!user) return;
+
+    let ws: WebSocket | null = null;
+    let refreshAttempted = false;
+
+    const connect = () => {
+        const currentToken = localStorage.getItem('accessToken');
+        if (!currentToken) {
+            console.error("웹소켓 연결 실패: Access Token이 없습니다.");
+            return;
+        }
+
+        const wsUrl = `ws://localhost:8080/ws/students/${user.id}/notifications?token=${currentToken}`;
+
+        console.log(`웹소켓 연결 시도: ${wsUrl}`);
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            console.log('✅ WebSocket Connected!');
+            refreshAttempted = false; // 연결 성공 시 재시도 플래그 초기화
+        };
+
+        ws.onmessage = (event) => {
+            console.log('📩 New Message:', event.data);
+            // 필요하다면 JSON.parse()로 데이터를 파싱합니다.
+            // const message = JSON.parse(event.data);
+            fetchDashboardData(true);
+        };
+
+        ws.onclose = async (event) => {
+            console.log(`웹소켓 연결 종료. 코드: ${event.code}`);
+            // 1006 코드는 비정상적 종료로, 주로 인증 실패(토큰 만료 등) 시 발생합니다.
+            if (event.code === 1006 && !refreshAttempted) {
+                console.log("비정상적 연결 종료. 토큰 갱신 후 재연결을 시도합니다...");
+                refreshAttempted = true;
+
+                try {
+                    await refreshAccessToken();
+                    console.log("토큰 갱신 성공. 1초 후 재연결합니다.");
+                    setTimeout(connect, 1000); // 1초 후 재연결
+                } catch (error) {
+                    console.error("웹소켓 재연결을 위한 토큰 갱신 실패. 로그아웃됩니다.", error);
+                }
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error("웹소켓 오류 발생:", error);
+        };
+    };
+
+    connect();
+
+    // 컴포넌트가 언마운트될 때 웹소켓 연결을 정리합니다.
+    return () => {
+        if (ws) {
+            console.log('🔌 WebSocket Disconnecting...');
+            // 의도적인 종료임을 명시
+            ws.close(1000, "Component unmounting");
+        }
+    };
+  }, [user, fetchDashboardData]);
+
+
+  // --- 렌더링 로직 ---
+  if (!isAuthenticated || !user) return <div className="p-6">로그인 정보 확인 중...</div>;
+  if (userType !== 'student') return <div className="p-6">접근 권한이 없습니다.</div>;
+
   if (selectedQuest) {
     return (
       <QuestDetailPage
@@ -132,7 +187,7 @@ export function StudentDashboard() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !dashboardData) { // 데이터가 아예 없을 때만 로딩바
     return (
       <div className="p-6 flex justify-center items-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -153,7 +208,7 @@ export function StudentDashboard() {
   const allNotifications = [
     ...notifications.announcements.map(n => ({ ...n, category: '공지' })),
     ...notifications.events.map(e => ({ ...e, category: '이벤트' }))
-  ];
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
     <div className="p-4 space-y-6 min-h-screen pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
@@ -204,7 +259,7 @@ export function StudentDashboard() {
               <div style={{ textAlign: "center", marginBottom: "15px" }}>
                 <h4 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>BOSS: {active_raid.template}</h4>
 
-                {/* HP 정보 & 프로그레스 바 (98.css style) */}
+                {/* HP 정보 & 프로그레스 바 */}
                 <div className="field-row" style={{ justifyContent: "space-between", marginBottom: "4px" }}>
                   <span>HP Status</span>
                   <span>{active_raid.boss_hp.current.toLocaleString()} / {active_raid.boss_hp.total.toLocaleString()}</span>
@@ -217,7 +272,7 @@ export function StudentDashboard() {
                 </div>
               </div>
 
-              {/* 레이드 상세 정보 (Grid) */}
+              {/* 레이드 상세 정보 */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div className="status-bar">
                   <p className="status-bar-field">남은 시간</p>
@@ -260,7 +315,6 @@ export function StudentDashboard() {
                     <span>{quest.completed_count}/{quest.total_count}명</span>
                   </div>
 
-                  {/* 미니 프로그레스 바 */}
                   <div className="progress-indicator" style={{ height: "16px", width: "100%" }}>
                     <div
                       className="progress-indicator-bar"
@@ -288,8 +342,6 @@ export function StudentDashboard() {
           <div className="title-bar-text">&nbsp;내 정보</div>
         </div>
         <div className="window-body">
-
-          {/* 자산 현황 */}
           <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
             <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
               <p style={{ fontSize: "12px", color: "#666", margin: 0 }}>코랄</p>
@@ -305,14 +357,15 @@ export function StudentDashboard() {
             </div>
           </div>
 
-          {/* 활동 로그 (스크롤 가능한 영역) */}
           <fieldset>
             <legend>시스템 로그</legend>
             <div className="sunken-panel" style={{ height: "150px", overflowY: "scroll", padding: "6px", background: "var(--color-white)" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <tbody>
                   {recent_activities.length > 0 ? (
-                    recent_activities.map((log) => (
+                    [...recent_activities]
+                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                      .map((log) => (
                       <tr key={log.log_id} style={{ borderBottom: "1px solid #eee" }}>
                         <td style={{ padding: "4px", verticalAlign: "top", width: "30px", textAlign: "center" }}>
                           {log.icon === 'C' ? '💎' : log.icon === 'E' ? '⚡' : '📜'}
