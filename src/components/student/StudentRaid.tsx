@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from "../../contexts/AppContext";
 import { get, post } from "../../utils/api";
+import zelusBg from '../../styles/boss/zelus_bg.png';
+import krakenBg from '../../styles/boss/kraken_bg.png';
+import diceSprite from '../../styles/dice.png';
 
 interface BossHp {
   total: number;
@@ -62,6 +65,67 @@ interface AttackResponseData {
   attacked_at: string;
 }
 
+// 주사위 표시용
+const DiceDisplay = ({ isRolling, result }: { isRolling: boolean; result: number | null }) => {
+  const [animFrame, setAnimFrame] = useState(0);
+
+  // 애니메이션 루프 (로딩 중일 때만 동작)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRolling) {
+      interval = setInterval(() => {
+        setAnimFrame((prev) => (prev + 1) % 6);
+      }, 100);
+    } else {
+      setAnimFrame(0);
+    }
+    return () => clearInterval(interval);
+  }, [isRolling]);
+
+  const frameSize = 16;
+  let bgX = 0;
+  let bgY = 0;
+
+  if (isRolling) {
+    bgX = -(animFrame * frameSize);
+    bgY = -224;
+  } else if (result) {
+    bgX = -((result - 1) * frameSize);
+    bgY = 0;
+  } else {
+    bgX = 0;
+    bgY = 0;
+  }
+
+  return (
+    <div
+      className="window"
+      style={{
+        width: "80px",
+        height: "80px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#333",
+        overflow: "hidden"
+      }}
+    >
+      <div
+        style={{
+          width: `${frameSize}px`,
+          height: `${frameSize}px`,
+          backgroundImage: `url(${diceSprite})`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: `${bgX}px ${bgY}px`,
+          transform: "scale(2)",
+          transformOrigin: "center",
+          imageRendering: "pixelated"
+        }}
+      />
+    </div>
+  );
+};
+
 export function StudentRaid() {
   const { user, isAuthenticated, userType, access_token } = useAuth();
 
@@ -84,14 +148,14 @@ export function StudentRaid() {
 
   // 날짜 포맷팅 헬퍼 (로그용)
   const formatLogTime = (dateString: string) => {
-  if (!dateString) return '-';
-  // 1. ISO 문자열을 Date 객체로 변환
-  const date = new Date(dateString);
-  // 2. 유효성 검사
-  if (isNaN(date.getTime())) return 'Invalid Date';
-  // 3. 시간 포맷팅
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
+    if (!dateString) return '-';
+    // 1. ISO 문자열을 Date 객체로 변환
+    const date = new Date(dateString);
+    // 2. 유효성 검사
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    // 3. 시간 포맷팅
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   // 1. 레이드 정보 및 로그 조회
   const fetchRaidData = async () => {
@@ -136,6 +200,13 @@ export function StudentRaid() {
     }
   }, [isAuthenticated, userType, access_token]);
 
+  const handleCloseModal = () => {
+    setIsContributeOpen(false);
+    setContributeAmount(0);
+    setDiceResult(null);
+    setIsDiceRolling(false);
+  };
+
   // 2. 에너지 주입 (공격)
   const handleEnergyContribute = () => {
     if (!raidInfo) return;
@@ -149,7 +220,6 @@ export function StudentRaid() {
 
     // 주사위 애니메이션 (2초)
     setTimeout(async () => {
-      // 1. 주사위 결과 및 데미지 계산 (Client Side)
       const dice = Math.floor(Math.random() * 6) + 1;
       const bonusMultiplier = 1 + (dice / 6); // 0.16 ~ 1.0
       const calculatedDamage = Math.floor(contributeAmount * bonusMultiplier);
@@ -203,16 +273,14 @@ export function StudentRaid() {
           fetchRaidData();
           if (data.raid_completed) {
             alert("축하합니다! 레이드 보스를 처치했습니다!");
+            handleCloseModal();
           }
         }
       } catch (err) {
         alert((err as Error).message);
-      } finally {
-        setIsContributeOpen(false);
-        setContributeAmount(0);
+        handleCloseModal();
       }
-
-    }, 1500);
+    }, 2000);
   };
 
   //로그인 여부 확인
@@ -254,6 +322,16 @@ export function StudentRaid() {
     );
   }
 
+  const getBossBgImage = (template: string) => {
+    if (template === 'KRAKEN') {
+      return krakenBg;
+    }
+    if (template === 'ZELUS_INDUSTRY') {
+      return zelusBg;
+    }
+    return krakenBg; // 기본값
+  };
+
   // 템플릿 아이콘 결정(이미지로 변경 전 임시)
   const getBossIcon = (template: string) => {
     if (template === 'KRAKEN') return '🐙';
@@ -278,16 +356,26 @@ export function StudentRaid() {
 
             {/* 보스 이미지 영역 */}
             <div className="sunken-panel" style={{
-              height: "180px", display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              background: "#000", color: "#fff", marginBottom: "10px"
-            }}>
-              {/* 보스 이미지 Placeholder */}
-              <div style={{ width: "80px", height: "80px", background: "#808080", borderRadius: "50%", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px" }}>
-                {getBossIcon(raidInfo.template)}
+              height: "180px",
+              width: "100%",
+              marginBottom: "10px",
+
+              // 배경 이미지 설정
+              backgroundImage: `url(${getBossBgImage(raidInfo.template)})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+
+              backgroundColor: "#333",
+            }}></div>
+
+            <div style={{ textAlign: "center", marginBottom: "15px" }}>
+              <h3 style={{ margin: "0 0 4px 0", fontSize: "18px" }}>
+                {raidInfo.template_name}
+              </h3>
+              <div style={{ fontSize: "13px", color: "#666" }}>
+                남은 시간: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>{raidInfo.remaining_time}</span>
               </div>
-              <h3 style={{ margin: 0 }}>{raidInfo.template_name}</h3>
-              <div style={{ fontSize: "12px", color: "#ccc" }}>남은 시간: {raidInfo.remaining_time}</div>
             </div>
 
             {/* 체력바 */}
@@ -403,7 +491,7 @@ export function StudentRaid() {
             <div className="title-bar">
               <div className="title-bar-text">에너지 주입</div>
               <div className="title-bar-controls">
-                <button aria-label="Close" onClick={() => setIsContributeOpen(false)} />
+                <button aria-label="Close" onClick={handleCloseModal} />
               </div>
             </div>
             <div className="window-body">
@@ -420,42 +508,47 @@ export function StudentRaid() {
                   max={raidInfo.my_research_data}
                   min={1}
                   style={{ width: "100%", marginTop: "5px" }}
-                  placeholder="주입할 탐사데이터 양 입력"
+                  placeholder="주입할 탐사데이터 양"
+                  disabled={diceResult !== null}
                 />
               </div>
 
               <fieldset style={{ marginBottom: "15px" }}>
                 <legend>Dice Bonus Chance</legend>
-                <p style={{ margin: "5px 0", fontSize: "12px" }}>주사위를 굴려 추가 데미지를 입힙니다!</p>
+                <p style={{ margin: "5px 0", fontSize: "12px" }}>
+                  {diceResult ? "공격 완료! 결과가 적용되었습니다." : "주사위를 굴려 추가 데미지를 입힙니다!"}
+                </p>
 
                 <div style={{ display: "flex", justifyContent: "center", padding: "10px" }}>
-                  {isDiceRolling ? (
-                    <div className="window" style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Loader2 className="animate-spin" />
-                    </div>
-                  ) : diceResult ? (
-                    <div className="window" style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: "bold" }}>
-                      {diceResult}
-                    </div>
-                  ) : (
-                    <div className="window" style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>
-                      🎲
-                    </div>
-                  )}
+                  <DiceDisplay isRolling={isDiceRolling} result={diceResult} />
                 </div>
+
+                {diceResult && lastContributeResult && (
+                  <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: 'bold', color: 'blue' }}>
+                    최종 데미지: {lastContributeResult.total.toLocaleString()}
+                  </div>
+                )}
               </fieldset>
 
               <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-                <button
-                  onClick={handleEnergyContribute}
-                  disabled={contributeAmount <= 0 || contributeAmount > raidInfo.my_research_data || isDiceRolling}
-                  style={{ minWidth: "80px", fontWeight: "bold" }}
-                >
-                  {isDiceRolling ? "계산 중..." : "공격 개시"}
-                </button>
-                <button onClick={() => setIsContributeOpen(false)} style={{ minWidth: "80px" }}>
-                  취소
-                </button>
+                {!diceResult ? (
+                  <>
+                    <button
+                      onClick={handleEnergyContribute}
+                      disabled={contributeAmount <= 0 || contributeAmount > raidInfo.my_research_data || isDiceRolling}
+                      style={{ minWidth: "80px", fontWeight: "bold" }}
+                    >
+                      {isDiceRolling ? "계산 중..." : "공격 개시"}
+                    </button>
+                    <button onClick={handleCloseModal} style={{ minWidth: "80px" }} disabled={isDiceRolling}>
+                      취소
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={handleCloseModal} style={{ width: "100%", fontWeight: "bold" }}>
+                    확인
+                  </button>
+                )}
               </div>
 
             </div>
