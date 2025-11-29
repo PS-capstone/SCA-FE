@@ -166,6 +166,7 @@ export function StudentGacha() {
         totalFrames={animationData.frames}
         scale={scale}
         duration={animationData.duration}
+        frameSize={animationData.frameSize}
       />
     ) : (
       <FishIcon

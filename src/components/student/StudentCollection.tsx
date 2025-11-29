@@ -44,7 +44,7 @@ const getGradeColor = (grade: FishGrade) => {
 
 const getFishSize = (grade: FishGrade) => {
   switch (grade) {
-    case 'LEGENDARY': return 3;
+    case 'LEGENDARY': return 2;
     case 'RARE': return 2;
     default: return 2;
   }
@@ -125,10 +125,12 @@ export function StudentCollection() {
 
   const renderFishSprite = (fish: UIFish, scaleOverride?: number) => {
     const finalScale = scaleOverride ?? fish.size;
-    const finalSize = finalScale * BASE_SPRITE_SIZE;
     const spriteInfo = FISH_ICONS[fish.fish_id];
     const isAnimated = spriteInfo?.isAnimated;
     const animationData = spriteInfo?.animation;
+
+    const baseSize = isAnimated && animationData ? animationData.frameSize : BASE_SPRITE_SIZE;
+    const finalSize = finalScale * baseSize;
 
     const IconComponent = isAnimated && animationData ? (
       <FishAnimation
@@ -136,6 +138,7 @@ export function StudentCollection() {
         totalFrames={animationData.frames}
         scale={finalScale}
         duration={animationData.duration}
+        frameSize={animationData.frameSize}
       />
     ) : (
       <FishIcon
@@ -220,7 +223,7 @@ export function StudentCollection() {
       const rect = tank.getBoundingClientRect();
       const currentLeft = parseFloat(fish.style.left) || 0;
       const currentTop = parseFloat(fish.style.top) || 0;
-      const padding = 10;
+      const padding = 0;
 
       const newX = Math.random() * (rect.width - fish.offsetWidth - padding * 2) + padding;
       const newY = Math.random() * (rect.height - fish.offsetWidth - padding * 2) + padding;
@@ -230,7 +233,6 @@ export function StudentCollection() {
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
       const baseSpeed = 50; // 기준 속도 (픽셀/초). 숫자가 클수록 빠름.
-
       const randomFactor = 0.5 + Math.random();
       const currentSpeed = baseSpeed * randomFactor;
 
@@ -363,7 +365,9 @@ export function StudentCollection() {
                   />
                   {/* 수조 내부 */}
                   {aquariumInstances.map(({ id, fish }) => {
-                    const finalSize = fish.size * BASE_SPRITE_SIZE;
+                    const spriteInfo = FISH_ICONS[fish.fish_id];
+                    const baseSpriteSize = spriteInfo?.animation ? spriteInfo.animation.frameSize : BASE_SPRITE_SIZE;
+                    const finalSize = fish.size * baseSpriteSize;
                     return (
                       <div
                         key={id}
@@ -382,14 +386,14 @@ export function StudentCollection() {
                   })}
                 </div>
                 <style>{`
-        .bubble-sprite {
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            border-radius: 50%;
-            box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
-            transition: opacity 0.3s;
-        }
-      `}</style>
+                .bubble-sprite {
+                    background-color: transparent;
+                    border: 1px solid rgba(255, 255, 255, 0.7);
+                    border-radius: 50%;
+                    box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+                    transition: opacity 0.3s;
+                }
+              `}</style>
               </>
             )}
 

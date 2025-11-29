@@ -7,21 +7,22 @@ interface AnimatedFishProps {
     spriteUrl: string;
     totalFrames: number;
     scale: number;
+    frameSize: number;
     duration?: number;
 }
 
 // 애니메이션 keyframes 동적 생성 함수
-const createSwimAnimation = (totalFrames: number) => keyframes`
+const createSwimAnimation = (totalFrames: number, frameSize: number) => keyframes`
     to {
         /* background-position-x: - (프레임 수 * 프레임 크기)로 이동 */
-        background-position-x: -${totalFrames * FRAME_SIZE}px; 
+        background-position-x: -${totalFrames * frameSize}px; 
     }
 `;
 
-const AnimatedSprite = styled.div<{ $scale: number, $totalFrames: number, $duration: number, $spriteUrl: string }>`
+const AnimatedSprite = styled.div<{ $scale: number, $totalFrames: number, $duration: number, $spriteUrl: string, $frameSize: number }>`
     /* 1. 개별 프레임 크기 설정 */
-    width: ${FRAME_SIZE}px;
-    height: ${FRAME_SIZE}px;
+    width: ${(props) => props.$frameSize}px;
+    height: ${(props) => props.$frameSize}px;
     
     /* 2. 애니메이션 이미지 경로 지정 */
     background-image: url(${(props) => props.$spriteUrl});
@@ -33,7 +34,7 @@ const AnimatedSprite = styled.div<{ $scale: number, $totalFrames: number, $durat
 /* 4. 애니메이션 속성 동적 적용 (steps와 duration) */
     ${(props) => {
         // totalFrames와 duration에 따라 고유한 애니메이션 속성 정의
-        const swimAnimation = createSwimAnimation(props.$totalFrames);
+        const swimAnimation = createSwimAnimation(props.$totalFrames, props.$frameSize);
         return css`
             animation: ${swimAnimation} ${props.$duration}s steps(${props.$totalFrames}) infinite;
         `;
@@ -44,6 +45,7 @@ export const FishAnimation: React.FC<AnimatedFishProps> = ({
     spriteUrl,
     totalFrames,
     scale,
+    frameSize,
     duration = 0.5
 }) => {
 
@@ -53,6 +55,7 @@ export const FishAnimation: React.FC<AnimatedFishProps> = ({
             $totalFrames={totalFrames}
             $duration={duration}
             $spriteUrl={spriteUrl}
+            $frameSize={frameSize}
             role="img"
             aria-label={`Animated fish sprite with ${totalFrames} frames`}
         />
