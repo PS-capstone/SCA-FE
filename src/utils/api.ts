@@ -73,7 +73,7 @@ interface ApiCallOptions extends RequestInit {
 /**
  * 토큰 갱신 함수
  */
-async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   const refreshToken = localStorage.getItem('refreshToken');
 
   if (!refreshToken) {
