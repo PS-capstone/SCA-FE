@@ -293,11 +293,15 @@ export function StudentDashboard() {
           <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
             <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
               <p style={{ fontSize: "12px", color: "#666", margin: 0 }}>코랄</p>
-              <p style={{ fontSize: "18px", fontWeight: "bold", margin: "4px 0 0 0" }}>{currentUser.coral}</p>
+              <p style={{ fontSize: "18px", fontWeight: "bold", margin: "4px 0 0 0" }}>
+                {student_info.coral.toLocaleString()}
+              </p>
             </div>
             <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
               <p style={{ fontSize: "12px", color: "#666", margin: 0 }}>탐사데이터</p>
-              <p style={{ fontSize: "18px", fontWeight: "bold", margin: "4px 0 0 0" }}>{currentUser.research_data}</p>
+              <p style={{ fontSize: "18px", fontWeight: "bold", margin: "4px 0 0 0" }}>
+                {student_info.research_data.toLocaleString()}
+              </p>
             </div>
           </div>
 

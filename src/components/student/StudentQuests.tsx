@@ -238,91 +238,91 @@ export function StudentQuests() {
   }
 
   return (
-    <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto">
-
-      {/* 메인 퀘스트 목록 윈도우 */}
-      <div className="window" style={{ width: "100%" }}>
-        <div className="title-bar">
-          <div className="title-bar-text">오늘의 퀘스트</div>
-          <div className="title-bar-controls">
-            <button aria-label="Minimize" />
-            <button aria-label="Maximize" />
-            <button aria-label="Close" />
-          </div>
-        </div>
-
-        <div className="window-body">
-          <div style={{ textAlign: "center", marginBottom: "15px", fontWeight: "bold" }}>
-            수행할 퀘스트 목록
+    <>
+      <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto">
+        {/* 메인 퀘스트 목록 윈도우 */}
+        <div className="window" style={{ width: "100%" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">오늘의 퀘스트</div>
+            <div className="title-bar-controls">
+              <button aria-label="Minimize" />
+              <button aria-label="Maximize" />
+              <button aria-label="Close" />
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {activeQuests.length === 0 && (
-              <div className="sunken-panel" style={{ padding: "20px", textAlign: "center" }}>
-                진행 중인 퀘스트가 없습니다.
-              </div>
-            )}
+          <div className="window-body">
+            <div style={{ textAlign: "center", marginBottom: "15px", fontWeight: "bold" }}>
+              수행할 퀘스트 목록
+            </div>
 
-            {activeQuests.map((quest) => (
-              <fieldset key={quest.assignment_id} style={{ marginBottom: "10px", padding: "10px" }}>
-                <legend style={{ fontWeight: "bold" }}>{quest.title}</legend>
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ marginBottom: "4px" }}>
-                      {getStatusBadge(quest.status)}
-                      <span style={{ marginLeft: "8px", fontSize: "12px", color: "#666" }}>
-                        {quest.status === 'SUBMITTED' ? `제출: ${formatDateTime(quest.submission?.submitted_at)}` : `생성: ${formatDateTime(quest.created_at)}`}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: "12px" }}>
-                      보상: <span style={{ color: "blue" }}>C {quest.reward_coral_personal}</span> / <span style={{ color: "purple" }}>R {quest.reward_research_data_personal}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleQuestAction(quest)}
-                    disabled={isButtonDisabled(quest.status)}
-                    style={{ minWidth: "80px", fontWeight: "bold" }}
-                  >
-                    {getButtonText(quest.status)}
-                  </button>
+            <div className="space-y-4">
+              {activeQuests.length === 0 && (
+                <div className="sunken-panel" style={{ padding: "20px", textAlign: "center" }}>
+                  진행 중인 퀘스트가 없습니다.
                 </div>
-              </fieldset>
-            ))}
-          </div>
+              )}
 
-          {/* 하단 버튼들 */}
-          <div style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
-            <button onClick={() => setIsExpiredModalOpen(true)} style={{ minWidth: "140px" }}>
-              마감된 퀘스트 ({expiredQuests.length})
-            </button>
-            <button onClick={() => setIsCompletedModalOpen(true)} style={{ minWidth: "140px" }}>
-              완료된 퀘스트 ({approvedQuests.length})
-            </button>
+              {activeQuests.map((quest) => (
+                <fieldset key={quest.assignment_id} style={{ marginBottom: "10px", padding: "10px" }}>
+                  <legend style={{ fontWeight: "bold" }}>{quest.title}</legend>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ marginBottom: "4px" }}>
+                        {getStatusBadge(quest.status)}
+                        <span style={{ marginLeft: "8px", fontSize: "12px", color: "#666" }}>
+                          {quest.status === 'SUBMITTED' ? `제출: ${formatDateTime(quest.submission?.submitted_at)}` : `생성: ${formatDateTime(quest.created_at)}`}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "12px" }}>
+                        보상: <span style={{ color: "blue" }}>C {quest.reward_coral_personal}</span> / <span style={{ color: "purple" }}>R {quest.reward_research_data_personal}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleQuestAction(quest)}
+                      disabled={isButtonDisabled(quest.status)}
+                      style={{ minWidth: "80px", fontWeight: "bold" }}
+                    >
+                      {getButtonText(quest.status)}
+                    </button>
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+
+            {/* 하단 버튼들 */}
+            <div style={{ marginTop: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
+              <button onClick={() => setIsExpiredModalOpen(true)} style={{ minWidth: "140px" }}>
+                마감된 퀘스트 ({expiredQuests.length})
+              </button>
+              <button onClick={() => setIsCompletedModalOpen(true)} style={{ minWidth: "140px" }}>
+                완료된 퀘스트 ({approvedQuests.length})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 내 재화 현황 윈도우 */}
+        <div className="window" style={{ width: "100%" }}>
+          <div className="title-bar">
+            <div className="title-bar-text">보유 재화</div>
+          </div>
+          <div className="window-body">
+            <div style={{ display: "flex", gap: "10px" }}>
+              <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
+                <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>코랄</p>
+                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.coral}</p>
+              </div>
+              <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
+                <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>탐사데이터</p>
+                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.research_data}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* 내 재화 현황 윈도우 */}
-      <div className="window" style={{ width: "100%" }}>
-        <div className="title-bar">
-          <div className="title-bar-text">보유 재화</div>
-        </div>
-        <div className="window-body">
-          <div style={{ display: "flex", gap: "10px" }}>
-            <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>코랄</p>
-              <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.coral}</p>
-            </div>
-            <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>탐사데이터</p>
-              <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.research_data}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* [모달] 완료된 퀘스트 목록 */}
       {isCompletedModalOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -496,7 +496,6 @@ export function StudentQuests() {
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 }

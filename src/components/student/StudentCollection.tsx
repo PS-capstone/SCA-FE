@@ -330,57 +330,58 @@ export function StudentCollection() {
   if (error) return <div className="p-4" style={{ color: "red" }}>오류: {error}</div>;
 
   return (
-    <div className="p-4 space-y-4 pb-20 max-w-screen-xl mx-auto" style={{ gap: "0" }}>
-      <menu role="tablist" style={{ margin: "0 0 -2px 0" }}>
-        <li role="tab" aria-selected={currentView === 'aquarium'} style={{ backgroundColor: "var(--bg-gray)" }}>
-          <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('aquarium'); }}>수족관</a>
-        </li>
-        <li role="tab" aria-selected={currentView === 'book'} style={{ backgroundColor: "var(--bg-gray)" }}>
-          <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('book'); }}>도감</a>
-        </li>
-      </menu>
+    <>
+      <div className="p-4 space-y-4 pb-20 max-w-screen-xl mx-auto" style={{ gap: "0" }}>
+        <menu role="tablist" style={{ margin: "0 0 -2px 0" }}>
+          <li role="tab" aria-selected={currentView === 'aquarium'} style={{ backgroundColor: "var(--bg-gray)" }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('aquarium'); }}>수족관</a>
+          </li>
+          <li role="tab" aria-selected={currentView === 'book'} style={{ backgroundColor: "var(--bg-gray)" }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('book'); }}>도감</a>
+          </li>
+        </menu>
 
-      {/* 메인 윈도우 */}
-      <div className="window" role="tabpanel" style={{ width: "100%", margin: "0" }}>
-        <div className="window-body">
+        {/* 메인 윈도우 */}
+        <div className="window" role="tabpanel" style={{ width: "100%", margin: "0" }}>
+          <div className="window-body">
 
-          {/* 수족관 뷰 */}
-          {currentView === 'aquarium' && (
-            <>
-              <div style={{ textAlign: "center", marginBottom: "10px" }}>
-                내 수족관: 총 {fishList.reduce((acc, cur) => acc + cur.current_count, 0)}마리 헤엄치는 중
-              </div>
+            {/* 수족관 뷰 */}
+            {currentView === 'aquarium' && (
+              <>
+                <div style={{ textAlign: "center", marginBottom: "10px" }}>
+                  내 수족관: 총 {fishList.reduce((acc, cur) => acc + cur.current_count, 0)}마리 헤엄치는 중
+                </div>
 
-              <div
-                className="sunken-panel"
-                style={{ width: "100%", height: "400px", backgroundImage: "var(--fg-aquarium), var(--bg-aquarium)", backgroundRepeat: "repeat-x, repeat", backgroundPosition: "bottom, center", position: "relative", overflow: "hidden" }}
-                ref={fishTankRef}
-              >
                 <div
-                  ref={bubbleContainerRef}
-                  style={{ position: 'absolute', inset: 0, zIndex: 0 }}
-                />
-                {/* 수조 내부 */}
-                {aquariumInstances.map(({ id, fish }) => {
-                  const finalSize = fish.size * BASE_SPRITE_SIZE;
-                  return (
-                    <div
-                      key={id}
-                      onClick={() => handleFishClick(fish)}
-                      style={{
-                        position: "absolute",
-                        width: `${finalSize}px`,
-                        height: `${finalSize}px`,
-                        cursor: "pointer",
-                        zIndex: 1,
-                      }}
-                    >
-                      {renderFishSprite(fish)}
-                    </div>
-                  );
-                })}
-              </div>
-              <style>{`
+                  className="sunken-panel"
+                  style={{ width: "100%", height: "400px", backgroundImage: "var(--fg-aquarium), var(--bg-aquarium)", backgroundRepeat: "repeat-x, repeat", backgroundPosition: "bottom, center", position: "relative", overflow: "hidden" }}
+                  ref={fishTankRef}
+                >
+                  <div
+                    ref={bubbleContainerRef}
+                    style={{ position: 'absolute', inset: 0, zIndex: 0 }}
+                  />
+                  {/* 수조 내부 */}
+                  {aquariumInstances.map(({ id, fish }) => {
+                    const finalSize = fish.size * BASE_SPRITE_SIZE;
+                    return (
+                      <div
+                        key={id}
+                        onClick={() => handleFishClick(fish)}
+                        style={{
+                          position: "absolute",
+                          width: `${finalSize}px`,
+                          height: `${finalSize}px`,
+                          cursor: "pointer",
+                          zIndex: 1,
+                        }}
+                      >
+                        {renderFishSprite(fish)}
+                      </div>
+                    );
+                  })}
+                </div>
+                <style>{`
         .bubble-sprite {
             background-color: transparent;
             border: 1px solid rgba(255, 255, 255, 0.7);
@@ -389,54 +390,53 @@ export function StudentCollection() {
             transition: opacity 0.3s;
         }
       `}</style>
-            </>
-          )}
+              </>
+            )}
 
-          {/* 도감 뷰 */}
-          {currentView === 'book' && (
-            <>
-              <div style={{ textAlign: "center", marginBottom: "10px" }}>
-                수집 진행도: {stats.current} / {stats.total} ({((stats.current / stats.total) * 100).toFixed(1)}%)
-              </div>
+            {/* 도감 뷰 */}
+            {currentView === 'book' && (
+              <>
+                <div style={{ textAlign: "center", marginBottom: "10px" }}>
+                  수집 진행도: {stats.current} / {stats.total} ({((stats.current / stats.total) * 100).toFixed(1)}%)
+                </div>
 
-              <div className="sunken-panel" style={{ height: "400px", overflowY: "scroll", padding: "10px", background: "#fff" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "10px" }}>
-                  {fishList.map((fish) => (
-                    <div
-                      key={fish.fish_id}
-                      className="window"
-                      onClick={() => fish.is_owned && handleFishClick(fish)}
-                      style={{
-                        cursor: fish.is_owned ? "pointer" : "default",
-                        opacity: fish.is_owned ? 1 : 0.5,
-                        backgroundColor: fish.is_owned ? "#fff" : "#eee"
-                      }}
-                    >
-                      <div className="window-body" style={{ textAlign: "center", padding: "5px" }}>
-                        <div style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "5px", objectFit: "contain" }}>
-                          {fish.is_owned ? (
-                            renderFishSprite(fish, 2)
-                          ) : (
-                            <span style={{ fontSize: "30px" }}>❓</span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: "12px", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {fish.fish_name}
-                        </div>
-                        <div style={{ fontSize: "10px", marginTop: "2px", color: getGradeColor(fish.grade) }}>
-                          {fish.grade}
+                <div className="sunken-panel" style={{ height: "400px", overflowY: "scroll", padding: "10px", background: "#fff" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "10px" }}>
+                    {fishList.map((fish) => (
+                      <div
+                        key={fish.fish_id}
+                        className="window"
+                        onClick={() => fish.is_owned && handleFishClick(fish)}
+                        style={{
+                          cursor: fish.is_owned ? "pointer" : "default",
+                          opacity: fish.is_owned ? 1 : 0.5,
+                          backgroundColor: fish.is_owned ? "#fff" : "#eee"
+                        }}
+                      >
+                        <div className="window-body" style={{ textAlign: "center", padding: "5px" }}>
+                          <div style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "5px", objectFit: "contain" }}>
+                            {fish.is_owned ? (
+                              renderFishSprite(fish, 2)
+                            ) : (
+                              <span style={{ fontSize: "30px" }}>❓</span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "12px", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {fish.fish_name}
+                          </div>
+                          <div style={{ fontSize: "10px", marginTop: "2px", color: getGradeColor(fish.grade) }}>
+                            {fish.grade}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-
+              </>
+            )}
+          </div>
         </div>
       </div>
-
       {/* [모달] 물고기 상세 정보 */}
       {isDetailOpen && selectedFish && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -464,6 +464,6 @@ export function StudentCollection() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
