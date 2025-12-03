@@ -100,7 +100,7 @@ const TeacherLayout: React.FC = () => {
   return (
     <div className="window min-h-screen" style={{ margin: '20px', width: 'calc(100% - 40px)', height: 'calc(100vh - 40px)' }}>
       <div className="title-bar">
-        <div className="title-bar-text">SCA 선생님 대시보드</div>
+        <div className="title-bar-text">선생님 대시보드</div>
         <div className="title-bar-controls">
           <button aria-label="Minimize"></button>
           <button aria-label="Maximize"></button>
@@ -119,12 +119,61 @@ const TeacherLayout: React.FC = () => {
 
 // Main Routes Component
 export const AppRoutes: React.FC = () => {
+  const location = useLocation();
+
+  // 경로에 따라 페이지 제목 설정
+  useEffect(() => {
+    const pathToTitle: Record<string, string> = {
+      '/': 'SCA 학습 관리 시스템',
+      '/login/student': '학생 로그인 - SCA',
+      '/login/teacher': '선생님 로그인 - SCA',
+      '/signup': '회원가입 - SCA',
+      '/student/dashboard': '학생 대시보드 - SCA',
+      '/student/quests': '내 퀘스트 - SCA',
+      '/student/gacha': '가챠 - SCA',
+      '/student/collection': '도감 - SCA',
+      '/student/raid': '레이드 - SCA',
+      '/teacher/dashboard': '선생님 대시보드 - SCA',
+      '/teacher/quest': '퀘스트 등록 - SCA',
+      '/teacher/quest/individual': '개인 퀘스트 등록 - SCA',
+      '/teacher/quest/group': '단체 퀘스트 등록 - SCA',
+      '/teacher/quest/group/manage': '단체 퀘스트 관리 - SCA',
+      '/teacher/quest/approval': '퀘스트 승인 - SCA',
+      '/teacher/raid/create': '레이드 등록 - SCA',
+      '/teacher/raid/manage': '레이드 관리 - SCA',
+      '/teacher/class/create': '반 생성 - SCA',
+      '/teacher/students': '학생 목록 - SCA',
+      '/teacher/profile': '프로필 - SCA',
+    };
+
+    // 정확한 경로 매칭 시도
+    let title = pathToTitle[location.pathname];
+    
+    // 정확한 매칭이 없으면 패턴 매칭
+    if (!title) {
+      if (location.pathname.startsWith('/teacher/students/')) {
+        title = '학생 상세 - SCA';
+      } else if (location.pathname.startsWith('/teacher/class/')) {
+        title = '반 관리 - SCA';
+      } else if (location.pathname.startsWith('/teacher/quest/group/detail/')) {
+        title = '단체 퀘스트 상세 - SCA';
+      } else if (location.pathname.startsWith('/student')) {
+        title = '학생 - SCA';
+      } else if (location.pathname.startsWith('/teacher')) {
+        title = '선생님 대시보드 - SCA';
+      } else {
+        title = 'SCA 학습 관리 시스템';
+      }
+    }
+
+    document.title = title;
+  }, [location.pathname]);
+
   return (
     <Suspense fallback={<div className="p-6">로딩중...</div>}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<RoleSelection />} />
-        <Route path="/role-selection" element={<RoleSelection />} />
         <Route path="/login/:role" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 

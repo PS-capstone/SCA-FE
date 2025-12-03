@@ -203,7 +203,6 @@ export function StudentListPage() {
       </div>
     );
   }
-
   // 에러 발생
   if (error) {
     return (

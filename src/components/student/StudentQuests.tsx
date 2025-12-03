@@ -17,6 +17,7 @@ interface MyPersonalQuest {
     submitted_at?: string;
     comment?: string;
   };
+  comment?: string; // 백엔드에서 최상위 레벨로 전달되는 코멘트
 }
 
 const formatDateTime = (isoString: string | undefined) => {
@@ -160,36 +161,101 @@ export function StudentQuests() {
   const handleSubmit = async () => {
     if (!selectedQuest || !access_token) return;
 
-    if (!submitText.trim()) {
-      setSubmitError('수행 내용을 입력해주세요.');
+    // 수행 내용이나 첨부파일 중 하나는 필수
+    if (!submitText.trim() && attachedFiles.length === 0) {
+      setSubmitError('수행 내용이나 첨부파일 중 하나는 필수입니다.');
       return;
     }
-
-    // 파일 업로드하려면 백엔드 컨트롤러 변경 필요(@RequestBody->@ModelAttribute)
-    /* if (!submitText.trim() && attachedFiles.length === 0) {
-      setSubmitError('제출 내용이나 첨부파일 중 하나는 필수입니다.');
-      return;
-    } */
 
     setIsSubmitting(true);
     setSubmitError(null);
-
-    const formData = new FormData();
-    formData.append('content', submitText);
-    if (attachedFiles.length > 0) {
-      formData.append('attachment', attachedFiles[0]);
-    }
 
     const method = selectedQuest.status === 'REJECTED' ? 'PUT' : 'POST';
     const endpoint = `/api/v1/quests/personal/${selectedQuest.assignment_id}/submit`;
 
     try {
+      let attachmentUrl: string | null = null;
+
+      // 첨부파일이 있으면 먼저 업로드
+      if (attachedFiles.length > 0) {
+        const file = attachedFiles[0];
+        const fileType = file.type;
+
+        console.log('[퀘스트 제출] 첨부파일 업로드 시작:', {
+          fileName: file.name,
+          fileType: fileType,
+          fileSize: file.size
+        });
+
+        // 파일 타입에 따라 적절한 엔드포인트 선택
+        let uploadEndpoint: string;
+        let formDataKey: string;
+
+        if (fileType.startsWith('image/')) {
+          uploadEndpoint = '/api/v1/images/upload';
+          formDataKey = 'image';
+        } else if (fileType === 'application/pdf') {
+          uploadEndpoint = '/api/v1/documents/upload';
+          formDataKey = 'document';
+        } else {
+          uploadEndpoint = '/api/v1/files/upload';
+          formDataKey = 'file';
+        }
+
+        console.log('[퀘스트 제출] 업로드 엔드포인트:', uploadEndpoint);
+
+        // 파일 업로드
+        const uploadFormData = new FormData();
+        uploadFormData.append(formDataKey, file);
+
+        try {
+          const uploadResponse = await apiCall(uploadEndpoint, {
+            method: 'POST',
+            headers: {}, // FormData는 Content-Type을 자동으로 설정
+            body: uploadFormData as any, // FormData는 직접 전달
+          });
+
+          console.log('[퀘스트 제출] 파일 업로드 응답 상태:', uploadResponse.status);
+
+          if (!uploadResponse.ok) {
+            const uploadError = await uploadResponse.json();
+            console.error('[퀘스트 제출] 파일 업로드 실패:', uploadError);
+            throw new Error(uploadError.message || '파일 업로드에 실패했습니다.');
+          }
+
+          const uploadData = await uploadResponse.json();
+          console.log('[퀘스트 제출] 파일 업로드 응답 전체:', JSON.stringify(uploadData, null, 2));
+
+          if (uploadData.success && uploadData.data?.url) {
+            attachmentUrl = uploadData.data.url;
+            console.log('[퀘스트 제출] 파일 업로드 성공, URL:', attachmentUrl);
+            console.log('[퀘스트 제출] URL 타입:', typeof attachmentUrl);
+            console.log('[퀘스트 제출] URL 길이:', attachmentUrl?.length);
+            console.log('[퀘스트 제출] URL 유효성 검사:', /^https?:\/\/.+/.test(attachmentUrl));
+          } else {
+            console.error('[퀘스트 제출] 파일 업로드 응답 형식 오류:', uploadData);
+            throw new Error('파일 업로드 응답이 올바르지 않습니다.');
+          }
+        } catch (uploadErr) {
+          console.error('[퀘스트 제출] 파일 업로드 중 예외:', uploadErr);
+          throw uploadErr;
+        }
+      } else {
+        console.log('[퀘스트 제출] 첨부파일 없음');
+      }
+
+      // 퀘스트 제출
       const payload = {
-        content: submitText
-        // attachment: ... (현재 백엔드 구조상 파일 객체는 JSON에 담을 수 없음)
+        content: submitText.trim() || null, // 빈 문자열은 null로 변환
+        attachment_url: attachmentUrl || null
       };
 
-      // apiCall이 FormData를 자동으로 감지하여 적절한 Content-Type을 설정
+      console.log('[퀘스트 제출] 제출 요청 전체:', {
+        endpoint,
+        method,
+        payload: JSON.parse(JSON.stringify(payload)) // 순환 참조 방지
+      });
+
       const response = await apiCall(endpoint, {
         method: method,
         headers: {
@@ -198,9 +264,13 @@ export function StudentQuests() {
         body: JSON.stringify(payload)
       });
 
+      console.log('[퀘스트 제출] 제출 응답 상태:', response.status);
+
       const data = await response.json();
+      console.log('[퀘스트 제출] 제출 응답 전체:', JSON.stringify(data, null, 2));
       
       if (!response.ok || !data.success) {
+        console.error('[퀘스트 제출] 제출 실패:', data);
         throw new Error(data.message || '제출에 실패했습니다.');
       }
 
@@ -211,6 +281,12 @@ export function StudentQuests() {
       fetchAllQuests(); // 퀘스트 목록 새로고침
 
     } catch (err) {
+      console.error('[퀘스트 제출] 제출 중 예외 발생:', err);
+      console.error('[퀘스트 제출] 에러 상세:', {
+        message: (err as Error).message,
+        stack: (err as Error).stack,
+        name: (err as Error).name
+      });
       setSubmitError((err as Error).message);
     } finally {
       setIsSubmitting(false);
@@ -317,11 +393,11 @@ export function StudentQuests() {
             <div style={{ display: "flex", gap: "10px" }}>
               <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
                 <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>코랄</p>
-                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.coral}</p>
+                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{(currentUser.coral ?? 0).toLocaleString()}</p>
               </div>
               <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
                 <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>탐사데이터</p>
-                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{currentUser.research_data}</p>
+                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{(currentUser.research_data ?? 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -409,7 +485,7 @@ export function StudentQuests() {
               <fieldset style={{ padding: "10px", backgroundColor: "var(--color-white)" }}>
                 <legend>Teacher's Comment</legend>
                 <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>
-                  {selectedQuest?.submission?.comment || "작성된 코멘트가 없습니다."}
+                  {selectedQuest?.comment || selectedQuest?.submission?.comment || "작성된 코멘트가 없습니다."}
                 </p>
               </fieldset>
 
