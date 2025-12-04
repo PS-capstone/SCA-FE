@@ -7,10 +7,12 @@ import { FishIcon } from '../FishIcon';
 import { FishAnimation } from '../FishAnimation';
 import { FISH_ICONS } from '../../utils/sprite-helpers';
 
+type FishGrade = 'COMMON' | 'RARE' | 'LEGENDARY';
+
 interface Fish {
   fish_id: number;
   fish_name: string;
-  grade: 'COMMON' | 'RARE' | 'LEGENDARY';
+  grade: FishGrade;
   is_new?: boolean;
   current_count: number;
   image_url?: string;
@@ -18,6 +20,14 @@ interface Fish {
 
 const BASE_SPRITE_SIZE = 24;
 const MODAL_SCALE = 3;
+
+const getFishSize = (grade: FishGrade) => {
+  switch (grade) {
+    case 'LEGENDARY': return 1;
+    case 'RARE': return 2;
+    default: return 3;
+  }
+};
 
 export function StudentGacha() {
   const { user, isAuthenticated, userType, access_token } = useAuth();
@@ -174,8 +184,8 @@ export function StudentGacha() {
     }
   };
 
-  const renderGachaFish = (fish: Fish) => {
-    const scale = MODAL_SCALE;
+  const renderGachaFish = (fish: Fish, scaleOverride?: number) => {
+    const scale = scaleOverride ?? MODAL_SCALE;
     const finalSize = scale * BASE_SPRITE_SIZE;
 
     const spriteInfo = FISH_ICONS[fish.fish_id];
@@ -199,7 +209,7 @@ export function StudentGacha() {
 
     return (
       <div style={{
-        width: `${finalSize}px`,
+        /* width: `${finalSize}px`, */
         height: `${finalSize}px`,
         display: 'flex',
         alignItems: 'center',
@@ -303,9 +313,9 @@ export function StudentGacha() {
               <div className="sunken-panel" style={{
                 width: "120px", height: "120px", margin: "0 auto 15px auto",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                background: resultFish.grade === 'LEGENDARY' ? '#fffacd' : '#fff'
+                background: resultFish.grade === 'LEGENDARY' ? '#fffacd' : '#fff', overflow: "hidden"
               }}>
-                {renderGachaFish(resultFish)}
+                {renderGachaFish(resultFish, getFishSize(resultFish.grade as FishGrade))}
               </div>
 
               {resultFish.is_new && (
