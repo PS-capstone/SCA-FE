@@ -11,9 +11,9 @@ interface Fish {
   fish_id: number;
   fish_name: string;
   grade: 'COMMON' | 'RARE' | 'LEGENDARY';
-  is_new: boolean;
+  is_new?: boolean;
   current_count: number;
-  image_url: string;
+  image_url?: string;
 }
 
 const BASE_SPRITE_SIZE = 24;
@@ -108,10 +108,32 @@ export function StudentGacha() {
         // 가챠 뽑기 로직
         if (result.success) {
           // 가챠 성공
-          setResultFish(result.data.drawn_fish);
+          const drawnFish = result.data.drawn_fish;
+          console.log('Gacha result:', result.data);
+          console.log('Drawn fish:', drawnFish);
+          console.log('Fish name (raw):', drawnFish?.fish_name);
+          console.log('Fish name (type):', typeof drawnFish?.fish_name);
+          
+          // 데이터 검증 및 정리
+          if (drawnFish) {
+            // fish_name이 깨진 경우를 대비한 검증
+            let fishName = drawnFish.fish_name;
+            if (!fishName || typeof fishName !== 'string' || fishName.length === 0) {
+              console.warn('Invalid fish_name, using fallback');
+              fishName = '알 수 없는 물고기';
+            }
+            
+            setResultFish({
+              fish_id: drawnFish.fish_id,
+              fish_name: fishName,
+              grade: drawnFish.grade,
+              is_new: drawnFish.is_new || false,
+              current_count: drawnFish.current_count || 0,
+              image_url: drawnFish.image_url || ''
+            });
+          }
           setStudentCoral(result.data.remaining_coral); // 남은 코랄 업데이트
           setIsResultOpen(true);
-          console.log('Gacha result:', result.data);
         } else {
           // 가챠 실패 (예: 코랄 부족)
           if (result.error_code === 'INSUFFICIENT_CORAL') {
@@ -290,7 +312,9 @@ export function StudentGacha() {
                 <div style={{ color: "red", fontWeight: "bold", animation: "blink 1s infinite" }}>NEW!</div>
               )}
 
-              <h3 style={{ margin: "5px 0" }}>{resultFish.fish_name}</h3>
+              <h3 style={{ margin: "5px 0", wordBreak: "keep-all", fontFamily: "inherit" }}>
+                {resultFish.fish_name || '알 수 없는 물고기'}
+              </h3>
               <div style={{ marginBottom: "10px" }}>{getRarityText(resultFish.grade)}</div>
 
               <p style={{ fontSize: "12px", color: "#666", marginBottom: "15px" }}>

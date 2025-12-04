@@ -577,13 +577,60 @@ export function IndividualQuestCreatePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div className="space-y-2">
                   <Label htmlFor="deadline" className="text-sm font-semibold text-gray-700">마감일</Label>
-                  <Input
-                    id="deadline"
-                    type="datetime-local"
-                    value={questData.deadline}
-                    onChange={handleQuestDataChange}
-                    className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="deadline"
+                      type="datetime-local"
+                      value={questData.deadline}
+                      onChange={handleQuestDataChange}
+                      className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 flex-1"
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-11 border-gray-300 hover:bg-gray-50 whitespace-nowrap"
+                      onClick={() => {
+                        const now = new Date();
+                        const tomorrow = new Date(now);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        tomorrow.setHours(23, 59, 0, 0);
+                        const formatted = tomorrow.toISOString().slice(0, 16);
+                        setQuestData(prev => ({ ...prev, deadline: formatted }));
+                      }}
+                    >
+                      내일 23:59
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-11 border-gray-300 hover:bg-gray-50 whitespace-nowrap"
+                      onClick={() => {
+                        const now = new Date();
+                        const nextWeek = new Date(now);
+                        nextWeek.setDate(nextWeek.getDate() + 7);
+                        nextWeek.setHours(23, 59, 0, 0);
+                        const formatted = nextWeek.toISOString().slice(0, 16);
+                        setQuestData(prev => ({ ...prev, deadline: formatted }));
+                      }}
+                    >
+                      일주일 후
+                    </Button>
+                  </div>
+                  {questData.deadline && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      설정된 마감일: {new Date(questData.deadline).toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-end">

@@ -118,17 +118,25 @@ export async function refreshAccessToken(): Promise<string> {
 export async function apiCall(url: string, options: ApiCallOptions = {}): Promise<Response> {
   const { skipAuth = false, headers = {}, ...restOptions } = options;
 
+  // FormData인 경우 Content-Type을 설정하지 않음 (브라우저가 자동으로 boundary 설정)
+  const isFormData = restOptions.body instanceof FormData;
+  
   // 기본 헤더 설정
-  const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...headers,
-  };
+  const defaultHeaders: Record<string, string> = {};
+  
+  // FormData가 아닌 경우에만 Content-Type 설정
+  if (!isFormData) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
+  
+  // 사용자 정의 헤더 추가
+  Object.assign(defaultHeaders, headers);
 
   // skipAuth가 false이고 accessToken이 있으면 헤더에 추가
   if (!skipAuth) {
     const accessToken = localStorage.getItem('accessToken');
     if (accessToken) {
-      (defaultHeaders as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+      defaultHeaders['Authorization'] = `Bearer ${accessToken}`;
     }
   }
 
@@ -154,10 +162,11 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
       processQueue(null);
 
       // 새 토큰으로 원래 요청 재시도
-      (defaultHeaders as Record<string, string>).Authorization = `Bearer ${newAccessToken}`;
+      const retryHeaders = { ...defaultHeaders };
+      retryHeaders['Authorization'] = `Bearer ${newAccessToken}`;
       response = await fetch(fullUrl, {
         ...restOptions,
-        headers: defaultHeaders,
+        headers: retryHeaders,
       });
 
       return response;
@@ -183,11 +192,12 @@ export async function apiCall(url: string, options: ApiCallOptions = {}): Promis
     }).then(() => {
       // 토큰 갱신이 완료되면 원래 요청 재시도
       const accessToken = localStorage.getItem('accessToken');
-      (defaultHeaders as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+      const retryHeaders = { ...defaultHeaders };
+      retryHeaders['Authorization'] = `Bearer ${accessToken}`;
       const retryUrl = getFullUrl(url);
       return fetch(retryUrl, {
         ...restOptions,
-        headers: defaultHeaders,
+        headers: retryHeaders,
       });
     }) as Promise<Response>;
   }

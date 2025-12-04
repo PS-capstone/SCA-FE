@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { User, ArrowLeft, Loader2, Save, Lock, Trash2, AlertTriangle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { get, patch, post, apiCall } from "../../utils/api";
 import { useAuth } from "../../contexts/AppContext";
@@ -49,8 +49,14 @@ export function TeacherProfilePage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
 
+  // logout 함수를 ref로 저장하여 무한 루프 방지
+  const logoutRef = useRef(logout);
+  useEffect(() => {
+    logoutRef.current = logout;
+  }, [logout]);
+
   // 프로필 조회
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!access_token) {
       setIsLoading(false);
       setError("로그인이 필요합니다.");
@@ -64,7 +70,7 @@ export function TeacherProfilePage() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          logout();
+          logoutRef.current();
           throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
         }
         const errData = await response.json();
@@ -99,11 +105,11 @@ export function TeacherProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [access_token]);
 
   useEffect(() => {
     fetchProfile();
-  }, [access_token, logout]);
+  }, [fetchProfile]);
 
   // 회원 정보 수정 핸들러
   const handleUpdateProfile = async () => {
