@@ -38,79 +38,77 @@ export function ClassCreatePage() {
   };
 
   //백엔드 api 호출용
-   const handleSave = async () => {
-      if (!classInfo.name || !classInfo.grade) {
-        setFormErrors({
-          name: !classInfo.name ? "반 이름을 입력해주세요." : null,
-          grade: !classInfo.grade ? "학년을 입력해주세요." : null
-        });
-        return;
-      }
+  const handleSave = async () => {
+    if (!classInfo.name || !classInfo.grade) {
+      setFormErrors({
+        name: !classInfo.name ? "반 이름을 입력해주세요." : null,
+        grade: !classInfo.grade ? "학년을 입력해주세요." : null
+      });
+      return;
+    }
 
-      setIsLoading(true);
-      setFormErrors({});
+    setIsLoading(true);
+    setFormErrors({});
 
-      try {
-        // 백엔드 API 요구사항에 맞게 데이터 변환 (name -> class_name)
-        const requestData = {
-          class_name: classInfo.name,
-          grade: classInfo.grade,
-          subject: classInfo.subject,
-          description: classInfo.description
-        };
+    try {
+      // 백엔드 API 요구사항에 맞게 데이터 변환 (name -> class_name)
+      const requestData = {
+        class_name: classInfo.name,
+        grade: classInfo.grade,
+        subject: classInfo.subject,
+        description: classInfo.description
+      };
 
-        // api.ts의 post 함수 사용 - 자동으로 Authorization 헤더에 Bearer token 추가
-        const response = await post('/api/v1/classes', requestData);
+      // api.ts의 post 함수 사용 - 자동으로 Authorization 헤더에 Bearer token 추가
+      const response = await post('/api/v1/classes', requestData);
 
-        if (!response.ok) {
-          const status = response.status;
-          const responseData = await response.json();
-          if (status === 400 && responseData.error_code === 'INVALID_INPUT' && responseData.data) {
-            setFormErrors(responseData.data);
-            return;
-          }
-          throw new Error(responseData.message || '반 생성에 실패했습니다.');
-        }
-
-        // 백엔드 응답에서 생성된 반 정보 가져오기
+      if (!response.ok) {
+        const status = response.status;
         const responseData = await response.json();
-        const createdClass = responseData.data;
-
-        alert(`반이 생성되었습니다!\n반명: ${createdClass.class_name}\n초대코드: ${createdClass.invite_code}`);
-        navigate('/teacher/dashboard');
-
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error("반 생성 실패:", error.message);
-          alert(`반 생성에 실패했습니다: ${error.message}`);
-        } else {
-          console.error("반 생성 실패:", error);
-          alert("알 수 없는 에러가 발생했습니다.");
+        if (status === 400 && responseData.error_code === 'INVALID_INPUT' && responseData.data) {
+          setFormErrors(responseData.data);
+          return;
         }
+        throw new Error(responseData.message || '반 생성에 실패했습니다.');
       }
-    }; 
+
+      // 백엔드 응답에서 생성된 반 정보 가져오기
+      const responseData = await response.json();
+      const createdClass = responseData.data;
+
+      alert(`반이 생성되었습니다!\n반명: ${createdClass.class_name}\n초대코드: ${createdClass.invite_code}`);
+      navigate('/teacher/dashboard');
+
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("반 생성 실패:", error.message);
+        alert(`반 생성에 실패했습니다: ${error.message}`);
+      } else {
+        console.error("반 생성 실패:", error);
+        alert("알 수 없는 에러가 발생했습니다.");
+      }
+    }
+  };
 
   const handleCancel = () => {
     navigate('/teacher/dashboard');
   };
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b-2 border-gray-300 p-6">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-black">새 반 만들기</h1>
-            <p className="text-gray-600 mt-1">새로운 반을 생성하고 학생들을 초대하세요</p>
-          </div>
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">새 반 만들기</h1>
+          <p className="text-sm text-gray-500 mt-1">새로운 반을 생성하고 학생들을 초대하세요.</p>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="p-6 max-w-4xl">
-        <Card className="border-2 border-gray-300">
+      <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-black">
+            <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
               <Plus className="w-5 h-5" />
               반 정보 입력
             </CardTitle>
@@ -119,61 +117,61 @@ export function ClassCreatePage() {
             {/* 기본 정보 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-black font-medium">반 이름 *</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700">반 이름 <span className="text-red-500">*</span></Label>
                 <Input
                   id="name"
                   value={classInfo.name}
                   onChange={handleChange}
                   placeholder="예: 중등 1반, 고등 2반"
-                  className="border-2 border-gray-300 rounded-lg"
+                  className="bg-white"
                 />
                 {formErrors.name && (
-                  <p className="text-sm text-red-600 pt-1">{formErrors.name}</p>
+                  <p className="text-xs text-red-600 pt-1">{formErrors.name}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="grade" className="text-black font-medium">학년 *</Label>
+                <Label htmlFor="grade" className="text-sm font-medium text-gray-700">학년 <span className="text-red-500">*</span></Label>
                 <Input
                   id="grade"
                   value={classInfo.grade}
                   onChange={handleChange}
                   placeholder="예: 중1, 고2"
-                  className="border-2 border-gray-300 rounded-lg"
+                  className="bg-white"
                 />
                 {formErrors.grade && (
-                  <p className="text-sm text-red-600 pt-1">{formErrors.grade}</p>
+                  <p className="text-xs text-red-600 pt-1">{formErrors.grade}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="subject" className="text-black font-medium">과목</Label>
+                <Label htmlFor="subject" className="text-sm font-medium text-gray-700">과목</Label>
                 <Input
                   id="subject"
                   value={classInfo.subject}
                   onChange={handleChange}
-                  className="border-2 border-gray-300 rounded-lg"
+                  className="bg-white"
                 />
               </div>
             </div>
 
             {/* 반 설명 */}
             <div className="space-y-2">
-              <Label htmlFor="description" className="text-black font-medium">반 설명</Label>
+              <Label htmlFor="description" className="text-sm font-medium text-gray-700">반 설명</Label>
               <Textarea
                 id="description"
                 value={classInfo.description}
                 onChange={handleChange}
                 placeholder="반에 대한 설명을 입력해주세요"
-                className="border-2 border-gray-300 rounded-lg min-h-20"
+                className="bg-white min-h-24 resize-none"
               />
             </div>
 
             {/* 액션 버튼들 */}
-            <div className="flex gap-3 pt-6 border-t-2 border-gray-300">
+            <div className="flex gap-3 pt-6 border-t border-gray-100">
               <Button
                 onClick={handleSave}
-                className="bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                className="bg-green-600 hover:bg-green-700 text-white"
                 disabled={isLoading}
               >
                 <Save className="w-4 h-4 mr-2" />
@@ -182,7 +180,7 @@ export function ClassCreatePage() {
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+                className="border-gray-200 hover:bg-gray-50"
               >
                 취소
               </Button>
@@ -191,18 +189,16 @@ export function ClassCreatePage() {
         </Card>
 
         {/* 안내사항 */}
-        <Card className="mt-6 bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">반 생성 안내</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• 반이 생성되면 초대 코드가 발급됩니다</li>
-              <li>• 학생들은 초대 코드를 사용해 반에 참여할 수 있습니다</li>
-              <li>• 반 정보는 언제든지 수정할 수 있습니다</li>
-              <li>• 생성된 반은 반 관리 페이지에서 확인할 수 있습니다</li>
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-    </>
+        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">반 생성 안내</h3>
+          <ul className="text-xs text-blue-800 space-y-1 list-disc list-inside">
+            <li>반이 생성되면 초대 코드가 발급됩니다.</li>
+            <li>학생들은 초대 코드를 사용해 반에 참여할 수 있습니다.</li>
+            <li>반 정보는 언제든지 수정할 수 있습니다.</li>
+            <li>생성된 반은 반 관리 페이지에서 확인할 수 있습니다.</li>
+          </ul>
+        </div>
+      </main>
+    </div>
   );
 }

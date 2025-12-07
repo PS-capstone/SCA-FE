@@ -416,7 +416,7 @@ export function StudentCollection() {
                           backgroundColor: fish.is_owned ? "#fff" : "#eee"
                         }}
                       >
-                        <div className="window-body" style={{ textAlign: "center", padding: "5px" }}>
+                        <div className="window-body" style={{ textAlign: "center", padding: "5px", backgroundColor: "transparent" }}>
                           <div style={{ height: "72px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "5px", objectFit: "contain" }}>
                             {fish.is_owned ? (
                               renderFishSprite(fish, getFishSize(fish.grade as FishGrade))

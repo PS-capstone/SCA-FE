@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useNavigate, useLocation } from "react-router-dom";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { get, post } from "../../utils/api";
 import { useAuth } from "../../contexts/AppContext";
 
@@ -231,20 +231,25 @@ export function RaidCreatePageNew() {
   }
 
   return (
-    <>
-      <div className="border-b-2 border-gray-300 p-6">
-        <h1>레이드 등록</h1>
-      </div>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">레이드 등록</h1>
+        <p className="text-sm text-gray-500 mt-1">새로운 보스 레이드를 생성하세요.</p>
+      </header>
 
-      <div className="p-6 max-w-4xl">
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-6 space-y-6">
         {error && !infoLoading && (
-          <div className="mb-4 p-4 border-2 border-red-300 bg-red-50 rounded-lg">
-            <p className="text-red-700 font-semibold">오류</p>
-            <p className="text-sm text-red-600 mt-1">{error}</p>
+          <div className="p-4 border border-red-200 bg-red-50 rounded-lg flex flex-col items-start gap-2">
+            <div>
+              <p className="text-sm font-semibold text-red-800">오류가 발생했습니다</p>
+              <p className="text-xs text-red-600 mt-1">{error}</p>
+            </div>
             <Button
               variant="outline"
               size="sm"
-              className="mt-2 border-red-300 text-red-700 hover:bg-red-100"
+              className="bg-white border-red-200 text-red-700 hover:bg-red-50 h-8 text-xs"
               onClick={() => {
                 setError(null);
                 if (selectedClass) {
@@ -256,10 +261,12 @@ export function RaidCreatePageNew() {
             </Button>
           </div>
         )}
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label>대상 반</Label>
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+
+        <div className="space-y-8">
+          {/* 반 선택 섹션 */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold text-gray-900">대상 반 선택</Label>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
               <Select
                 value={selectedClass?.toString() || ""}
                 onValueChange={(value: any) => {
@@ -267,7 +274,7 @@ export function RaidCreatePageNew() {
                   setSelectedClass(classId);
                 }}
               >
-                <SelectTrigger className="w-full md:w-[300px] border-2 border-gray-300 rounded-lg">
+                <SelectTrigger className="w-full md:w-[320px] bg-white border-gray-200">
                   <SelectValue placeholder="반을 선택하세요" />
                 </SelectTrigger>
                 <SelectContent>
@@ -282,7 +289,8 @@ export function RaidCreatePageNew() {
               {selectedClass && (
                 <Button
                   variant="outline"
-                  className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+                  size="sm"
+                  className="h-10 border-gray-200 hover:bg-gray-50"
                   onClick={handleRefreshInfo}
                   disabled={infoLoading}
                 >
@@ -291,209 +299,211 @@ export function RaidCreatePageNew() {
               )}
             </div>
             {creationInfo && (
-              <p className="text-sm text-blue-600 flex items-center gap-1">
+              <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-md w-fit">
                 <CheckCircle2 className="w-4 h-4" />
-                선택된 반: <strong>{creationInfo.class_info.class_name}</strong> (학생 {creationInfo.class_info.student_count}명)
-              </p>
+                <span>선택된 반: <strong>{creationInfo.class_info.class_name}</strong> (학생 {creationInfo.class_info.student_count}명)</span>
+              </div>
             )}
           </div>
 
           {/* 정보 로딩 중일 때 표시 */}
           {infoLoading && (
-            <div className="py-8 text-center text-gray-500">
-              레이드 생성 정보를 불러오고 있습니다...
+            <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+               <Loader2 className="w-8 h-8 animate-spin mb-3 text-gray-300" />
+               <p>레이드 생성 정보를 불러오고 있습니다...</p>
             </div>
           )}
 
-          {/* 메인 폼 영역 - creationInfo가 있을 때만 표시 */}
+          {/* 메인 폼 영역 */}
           {!infoLoading && creationInfo && (
-            <>
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">레이드 이름</Label>
-                <Input
-                  value={formState.raid_name}
-                  onChange={(e) => setFormState((prev) => ({ ...prev, raid_name: e.target.value }))}
-                  placeholder="예: 중간고사 대비 크라켄 토벌"
-                  className="border-2 border-gray-300 rounded-lg"
-                />
-              </div>
+            <Card className="border border-gray-200 shadow-sm">
+              <CardContent className="p-6 space-y-8">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-gray-700">레이드 이름</Label>
+                  <Input
+                    value={formState.raid_name}
+                    onChange={(e) => setFormState((prev) => ({ ...prev, raid_name: e.target.value }))}
+                    placeholder="예: 중간고사 대비 크라켄 토벌"
+                    className="bg-white max-w-lg"
+                  />
+                </div>
 
-              {/* 템플릿 선택 */}
-              <div className="space-y-3">
-                <Label className="text-lg font-semibold">시나리오 / 보스</Label>
-                <RadioGroup
-                  value={formState.template}
-                  onValueChange={(value: any) => setFormState((prev) => ({ ...prev, template: value }))}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                  {creationInfo.templates.map((template) => (
-                    <Card
-                      key={template.code}
-                      className={`border-2 rounded-lg cursor-pointer transition-all ${formState.template === template.code
-                        ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600'
-                        : 'border-gray-200 hover:border-gray-400'
-                        }`}
-                      onClick={() => setFormState(prev => ({ ...prev, template: template.code }))}
-                    >
-                      <CardContent className="p-4 flex items-start gap-3">
-                        <RadioGroupItem value={template.code} id={template.code} className="mt-1" />
-                        <div className="flex-1">
-                          <Label htmlFor={template.code} className="cursor-pointer font-bold text-base block mb-1">
-                            {template.display_name}
-                          </Label>
-                          <p className="text-sm text-gray-600 leading-snug">
-                            {template.description}
-                          </p>
+                {/* 템플릿 선택 */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-gray-700">시나리오 / 보스</Label>
+                  <RadioGroup
+                    value={formState.template}
+                    onValueChange={(value: any) => setFormState((prev) => ({ ...prev, template: value }))}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    {creationInfo.templates.map((template) => (
+                      <div
+                        key={template.code}
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${formState.template === template.code
+                          ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        onClick={() => setFormState(prev => ({ ...prev, template: template.code }))}
+                      >
+                        <div className="flex items-start gap-3">
+                          <RadioGroupItem value={template.code} id={template.code} className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor={template.code} className="cursor-pointer font-bold text-sm text-gray-900 block mb-1">
+                              {template.display_name}
+                            </Label>
+                            <p className="text-xs text-gray-500 leading-relaxed">
+                              {template.description}
+                            </p>
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </RadioGroup>
-              </div>
-
-              {/* 기간 설정 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-lg font-semibold">시작 일시</Label>
-                  <Input
-                    type="datetime-local"
-                    value={formState.start_date}
-                    onChange={(e) => setFormState((prev) => ({ ...prev, start_date: e.target.value }))}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
-                <div className="space-y-3">
-                  <Label className="text-lg font-semibold">종료 일시</Label>
-                  <Input
-                    type="datetime-local"
-                    value={formState.end_date}
-                    onChange={(e) => setFormState((prev) => ({ ...prev, end_date: e.target.value }))}
-                    className="border-2 border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
 
-              {/* 난이도 및 보상 설정 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-lg font-semibold">난이도 설정</Label>
-                  <Select
-                    value={formState.difficulty}
-                    onValueChange={(value: any) => {
-                      const selectedDiff = creationInfo.difficulty_options.find(d => d.code === value);
-                      // 난이도에 따른 권장 코랄 보상 자동 설정 (UI 편의성)
-                      const coral = value === 'LOW' ? 100 : value === 'MEDIUM' ? 150 : 200;
-                      const hpValue = selectedDiff ? selectedDiff.hp : "";
-                      setFormState((prev) => ({ ...prev, difficulty: value, reward_coral: coral, boss_hp: String(hpValue) }));
-                    }}
-                  >
-                    <SelectTrigger className="border-2 border-gray-300 rounded-lg">
-                      <SelectValue placeholder="난이도를 선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {creationInfo.difficulty_options.map((diff) => (
-                        <SelectItem key={diff.code} value={diff.code}>
-                          {diff.display_name} (HP: {diff.hp.toLocaleString()})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* 보스 HP 수동 입력 */}
-                  <div className="mt-3 space-y-2">
-                    <Label className="text-sm font-semibold">보스 HP (수동 입력)</Label>
+                {/* 기간 설정 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">시작 일시</Label>
                     <Input
-                      type="number"
-                      value={formState.boss_hp}
-                      onChange={(e) => setFormState((prev) => ({ ...prev, boss_hp: e.target.value }))}
-                      placeholder={selectedDifficultyInfo ? `기본값: ${selectedDifficultyInfo.hp.toLocaleString()}` : "HP를 입력하세요"}
-                      min="1"
-                      className="border-2 border-gray-300 rounded-lg"
+                      type="datetime-local"
+                      value={formState.start_date}
+                      onChange={(e) => setFormState((prev) => ({ ...prev, start_date: e.target.value }))}
+                      className="bg-white"
                     />
-                    {selectedDifficultyInfo && (
-                      <p className="text-xs text-gray-500">
-                        권장값: {selectedDifficultyInfo.min_hp.toLocaleString()} ~ {selectedDifficultyInfo.max_hp.toLocaleString()} HP
-                      </p>
-                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">종료 일시</Label>
+                    <Input
+                      type="datetime-local"
+                      value={formState.end_date}
+                      onChange={(e) => setFormState((prev) => ({ ...prev, end_date: e.target.value }))}
+                      className="bg-white"
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="text-lg font-semibold">클리어 보상</Label>
-                  <div className="space-y-4 p-4 border-2 border-gray-200 rounded-lg">
-                    <div>
-                      <Label className="text-sm text-gray-600 mb-1 block">기본 보상 (코랄)</Label>
-                      <Input
-                        type="number"
-                        value={formState.reward_coral}
-                        onChange={(e) => setFormState(prev => ({ ...prev, reward_coral: Number(e.target.value) }))}
-                        className="border-gray-300"
-                      />
+                {/* 난이도 및 보상 설정 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                  <div className="space-y-4">
+                    <Label className="text-sm font-medium text-gray-700">난이도 설정</Label>
+                    <div className="space-y-3">
+                       <Select
+                        value={formState.difficulty}
+                        onValueChange={(value: any) => {
+                          const selectedDiff = creationInfo.difficulty_options.find(d => d.code === value);
+                          const coral = value === 'LOW' ? 100 : value === 'MEDIUM' ? 150 : 200;
+                          const hpValue = selectedDiff ? selectedDiff.hp : "";
+                          setFormState((prev) => ({ ...prev, difficulty: value, reward_coral: coral, boss_hp: String(hpValue) }));
+                        }}
+                      >
+                        <SelectTrigger className="bg-white border-gray-200">
+                          <SelectValue placeholder="난이도를 선택하세요" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {creationInfo.difficulty_options.map((diff) => (
+                            <SelectItem key={diff.code} value={diff.code}>
+                              {diff.display_name} (HP: {diff.hp.toLocaleString()})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <div className="bg-gray-50 p-3 rounded-md border border-gray-100 space-y-2">
+                        <Label className="text-xs font-semibold text-gray-500">보스 HP (수동 조정)</Label>
+                        <Input
+                          type="number"
+                          value={formState.boss_hp}
+                          onChange={(e) => setFormState((prev) => ({ ...prev, boss_hp: e.target.value }))}
+                          placeholder="HP 입력"
+                          min="1"
+                          className="bg-white h-9"
+                        />
+                        {selectedDifficultyInfo && (
+                          <p className="text-[10px] text-gray-400">
+                            권장범위: {selectedDifficultyInfo.min_hp.toLocaleString()} ~ {selectedDifficultyInfo.max_hp.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-sm text-gray-600 mb-1 block">특별 보상 (선택/오프라인)</Label>
-                      <Input
-                        value={formState.special_reward_description}
-                        onChange={(e) => setFormState((prev) => ({ ...prev, special_reward_description: e.target.value }))}
-                        placeholder="예: 아이스크림, 간식 등"
-                        className="border-gray-300"
-                      />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-sm font-medium text-gray-700">클리어 보상</Label>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs text-gray-500 mb-1.5 block">기본 보상 (코랄)</Label>
+                        <Input
+                          type="number"
+                          value={formState.reward_coral}
+                          onChange={(e) => setFormState(prev => ({ ...prev, reward_coral: Number(e.target.value) }))}
+                          className="bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500 mb-1.5 block">특별 보상 (선택 사항)</Label>
+                        <Input
+                          value={formState.special_reward_description}
+                          onChange={(e) => setFormState((prev) => ({ ...prev, special_reward_description: e.target.value }))}
+                          placeholder="예: 아이스크림, 간식 등"
+                          className="bg-white"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* 제출 버튼 */}
-              <div className="pt-6 border-t border-gray-200 flex flex-col gap-3">
-                {submitMessage && (
-                  <div className="p-3 bg-green-50 text-green-700 rounded-lg text-center font-medium border border-green-200">
-                    {submitMessage}
+                {/* 제출 버튼 */}
+                <div className="pt-6 border-t border-gray-100 flex flex-col gap-3">
+                  {submitMessage && (
+                    <div className="p-3 bg-green-50 text-green-700 rounded-md text-sm font-medium border border-green-200 text-center">
+                      {submitMessage}
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 justify-end">
+                    <Button
+                      variant="outline"
+                      className="w-32 border-gray-200"
+                      onClick={() => navigate('/teacher/raid/manage')}
+                    >
+                      취소
+                    </Button>
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={!canCreate || submitting}
+                      className="w-40 bg-black hover:bg-gray-800 text-white"
+                    >
+                      {submitting ? '생성 중...' : '레이드 생성하기'}
+                    </Button>
                   </div>
-                )}
 
-                <div className="flex gap-4">
-                  <Button
-                    variant="outline"
-                    className="flex-1 py-2 text-sm border-2"
-                    onClick={() => navigate('/teacher/dashboard')}
-                  >
-                    취소
-                  </Button>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!canCreate || submitting}
-                    className="flex-[2] py-2 text-sm bg-black hover:bg-gray-800 text-white disabled:bg-gray-300"
-                  >
-                    {submitting ? '생성 중...' : '레이드 생성하기'}
-                  </Button>
+                  {!canCreate && !submitting && (
+                    <p className="text-right text-xs text-red-500">
+                      * 필수 항목을 모두 입력해주세요 ({missingFields.join(', ')})
+                    </p>
+                  )}
                 </div>
-
-                {!canCreate && !submitting && (
-                  <p className="text-center text-sm text-red-500">
-                    * 필수 항목을 모두 입력해주세요 ({missingFields.join(', ')})
-                  </p>
-                )}
-              </div>
-            </>
+              </CardContent>
+            </Card>
           )}
 
           {/* 반은 선택되었는데 정보를 못 불러온 경우 */}
           {!infoLoading && selectedClass && !creationInfo && !error && (
-            <div className="py-12 text-center text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+            <div className="py-20 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
               <p>레이드 생성 정보를 불러올 수 없습니다.</p>
-              <Button variant="link" onClick={handleRefreshInfo}>다시 시도</Button>
+              <Button variant="link" onClick={handleRefreshInfo} className="text-sm mt-1">다시 시도</Button>
             </div>
           )}
 
           {/* 반 선택 전 안내 */}
           {!selectedClass && (
-            <div className="py-12 text-center text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-              상단의 메뉴에서 대상 반을 먼저 선택해주세요.
+            <div className="py-20 text-center text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+              <p className="text-sm">상단의 메뉴에서 대상 반을 먼저 선택해주세요.</p>
             </div>
           )}
-
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ export default function App() {
   return (
     <AppProvider>
       <BrowserRouter>
-        <div className="min-h-screen">
+        <div className="min-h-screen min-w-screen overflow-hidden">
           <AppRoutes />
           <Toaster />
           <NotificationCenter />

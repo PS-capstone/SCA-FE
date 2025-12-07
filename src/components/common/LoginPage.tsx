@@ -151,15 +151,15 @@ export function LoginPage() {
     <div className="retro-layout min-h-screen flex items-center justify-center p-4" style={{ backgroundImage: "var(--bg-url)" }}>
       <div className="window" style={{ width: "100%", maxWidth: "400px" }}>
         <div className="title-bar">
-          <div className="title-bar-text">&nbsp;{title}</div>
+          <div className="title-bar-text">{title}</div>
           <div className="title-bar-controls">
             <button aria-label="Minimize" />
             <button aria-label="Maximize" />
             <button aria-label="Close" />
           </div>
         </div>
-        <div className="window-body">
-          <div style={{ marginBottom: "20px", display: "flex", alignItems: "center" }}>
+        <div className="window-body system">
+          <div style={{ display: "flex", alignItems: "center" }}>
             <button
               onClick={() => navigate('/')}
               style={{
@@ -228,6 +228,7 @@ export function LoginPage() {
               style={{
                 minWidth: "auto",
                 padding: "0",
+                marginRight: "6px",
                 border: "none",
                 background: "none",
                 boxShadow: "none",

@@ -1,6 +1,8 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, lazy, Suspense, useState } from 'react';
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/teacher/Sidebar';
+import { Menu } from 'lucide-react';
+import { Button } from '../components/ui/button';
 
 // Components
 import { RoleSelection } from '../components/RoleSelection';
@@ -30,7 +32,6 @@ const StudentListPage = lazy(() => import('../components/teacher/StudentListPage
 const StudentDetailPage = lazy(() => import('../components/teacher/StudentDetailPage').then(m => ({ default: m.StudentDetailPage })));
 const TeacherProfilePage = lazy(() => import('../components/teacher/TeacherProfilePage').then(m => ({ default: m.TeacherProfilePage })));
 const ClassCreatePage = lazy(() => import('../components/teacher/ClassCreatePage').then(m => ({ default: m.ClassCreatePage })));
-const ClassActivityDashboard = lazy(() => import('../components/teacher/ClassActivityDashboard').then(m => ({ default: m.ClassActivityDashboard })));
 
 // Student Layout Component
 const StudentLayout: React.FC = () => {
@@ -70,6 +71,7 @@ const StudentLayout: React.FC = () => {
 const TeacherLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // localStorage에서 직접 확인
   const storedUser = localStorage.getItem('user');
@@ -77,9 +79,7 @@ const TeacherLayout: React.FC = () => {
   
   useEffect(() => {
     // 로그인 페이지에서는 체크하지 않음
-    if (location.pathname.startsWith('/login')) {
-      return;
-    }
+    if (location.pathname.startsWith('/login')) return;
     
     // 인증되지 않았으면 로그인 페이지로 리다이렉트
     if (!storedUser || storedUserType !== 'teacher') {
@@ -88,29 +88,45 @@ const TeacherLayout: React.FC = () => {
   }, [storedUser, storedUserType, navigate, location.pathname]);
   
   // 로그인 페이지로 가는 중이면 아무것도 렌더링하지 않음
-  if (location.pathname.startsWith('/login')) {
-    return null;
-  }
+  if (location.pathname.startsWith('/login')) return null;
   
   // 인증되지 않았으면 로딩 화면 표시
-  if (!storedUser || storedUserType !== 'teacher') {
-    return <div className="p-6">로딩중...</div>;
-  }
+  if (!storedUser || storedUserType !== 'teacher') return <div className="p-6">로딩중...</div>;
 
   return (
-    <div className="window min-h-screen" style={{ margin: '20px', width: 'calc(100% - 40px)', height: 'calc(100vh - 40px)' }}>
-      <div className="title-bar">
-        <div className="title-bar-text">선생님 대시보드</div>
+    <div className={`
+      window 
+      h-screen border-0
+      md:h-[calc(100vh-40px)] md:w-[calc(100%-40px)] md:m-5 md:border-2
+    `}>
+      <div className="title-bar shrink-0">
+        <div className="title-bar-text">
+          {/* Mobile Menu Trigger */}
+          <button 
+            className="md:hidden mr-2 p-1 hover:bg-white/20 rounded"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Menu"
+          >
+            <Menu className="w-4 h-4 text-white" />
+          </button>
+          선생님 대시보드
+        </div>
         <div className="title-bar-controls">
           <button aria-label="Minimize"></button>
           <button aria-label="Maximize"></button>
           <button aria-label="Close"></button>
         </div>
       </div>
-      <div className="window-body bg-white flex" style={{ padding: 0, height: 'calc(100% - 30px)' }}>
-        <Sidebar />
-        <main className="flex-1 border-l-2 border-gray-300 overflow-y-auto">
-          <Outlet />
+      {/* Main Body */}
+      <div className="window-body bg-white flex relative">
+        <Sidebar 
+          isMobileOpen={mobileMenuOpen} 
+          onMobileClose={() => setMobileMenuOpen(false)} 
+        />
+        {/* Content Area */}
+        <main className="flex-1 overflow-auto bg-[#f0f0f0]">
+          {/* Outlet context can be used to pass mobileMenu state if needed */}
+          <Outlet context={{ setMobileMenuOpen }} />
         </main>
       </div>
     </div>
@@ -206,7 +222,6 @@ export const AppRoutes: React.FC = () => {
 
           {/* Teacher Class Routes */}
           <Route path="class/create" element={<ClassCreatePage />} />
-          <Route path="class/:classId/dashboard" element={<ClassActivityDashboard />} />
           <Route path="class/:classId?" element={<ClassManagePage />} />
           <Route path="students/:classId?" element={<StudentListPage />} />
           <Route path="students/:classId/:id" element={<StudentDetailPage />} />

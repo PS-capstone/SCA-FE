@@ -7,14 +7,14 @@ export function RoleSelection() {
     <div className="retro-layout min-h-screen flex items-center justify-center p-4" style={{ backgroundImage: "var(--bg-url)" }}>
       <div className="window" style={{ width: "100%", maxWidth: "400px" }}>
         <div className="title-bar">
-          <div className="title-bar-text">&nbsp;학습 관리 시스템</div>
+          <div className="title-bar-text">학습 관리 시스템</div>
           <div className="title-bar-controls">
             <button aria-label="Minimize" />
             <button aria-label="Maximize" />
             <button aria-label="Close" />
           </div>
         </div>
-        <div className="window-body">
+        <div className="window-body system">
           <p style={{ textAlign: "center", fontSize: "13px", marginBottom: "15px", marginTop: "15px" }}>
             역할을 선택하여 로그인하세요.
           </p>
