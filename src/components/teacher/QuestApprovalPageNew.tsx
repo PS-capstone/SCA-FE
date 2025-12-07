@@ -240,7 +240,7 @@ export function QuestApprovalPageNew() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -257,7 +257,8 @@ export function QuestApprovalPageNew() {
       </header>
 
       {/* Main Content */}
-      <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto flex flex-col gap-4">
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
         <div className="space-y-4">
           {pendingQuests.length === 0 && !isLoading && (
             <div className="text-center py-20 border border-dashed border-gray-200 rounded-lg bg-gray-50">
@@ -329,6 +330,7 @@ export function QuestApprovalPageNew() {
               </Card>
             )
           })}
+        </div>
         </div>
       </main>
 

@@ -16,6 +16,7 @@
   :root {
     /* Fonts */
     --font-pixel: 'RoundedFixedsys';
+    --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
 
     /* Shadcn/UI Base Colors */
     --background: 0 0% 100%;
@@ -63,8 +64,35 @@
     height: 100%;
     margin: 0;
     padding: 0;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  input[type="number"], 
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  select {
+    height: auto; 
+    min-height: 0;
+    line-height: inherit;
+  }
+
+  h1, h2, .retro-font {
     font-family: var(--font-pixel), "MS Sans Serif", sans-serif;
-    -webkit-font-smoothing: none;
+  }
+
+  .grid {
+    --tblr-columns: 1;
+    gap: 0;
   }
 }
 
@@ -117,7 +145,7 @@
   padding: 3px;
   display: flex;
   flex-direction: column;
-  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .window-body {
@@ -147,8 +175,8 @@
 }
 
 .title-bar-text {
+  font-family: var(--font-pixel), sans-serif;
   color: white;
-  font-weight: bold;
   font-size: 14px;
   letter-spacing: 0;
   margin-left: 6px;
@@ -176,13 +204,6 @@
   .title-bar { min-height: 32px; }
   .title-bar-text { font-size: 13px; }
   .title-bar-controls button { min-width: 20px; min-height: 20px; }
-}
-
-.grid {
-    display: grid;
-    grid-template-rows: none;
-    grid-template-columns: none;
-    gap: 0;
 }
 
 button {

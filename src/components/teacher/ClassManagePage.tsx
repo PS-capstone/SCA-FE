@@ -257,7 +257,7 @@ export function ClassManagePage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -302,175 +302,175 @@ export function ClassManagePage() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
-
-        {/* Quick Actions Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Button
-            className="h-auto py-4 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm"
-            variant="ghost"
-            onClick={() => {
-              const classIdToUse = classDetails?.class_id ?? selectedClassId ?? (currentClassId ? Number(currentClassId) : null);
-              if (classIdToUse) navigate(`/teacher/students/${classIdToUse}`);
-              else navigate('/teacher/class');
-            }}
-          >
-            <div className="bg-blue-50 p-2 rounded-full mr-3">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="text-left">
-              <div className="font-semibold text-sm">학생 목록 조회</div>
-              <div className="text-xs text-gray-500 font-normal">반 소속 학생 관리</div>
-            </div>
-          </Button>
-
-          <Button
-            className="h-auto py-4 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm"
-            variant="ghost"
-            onClick={() => navigate('/teacher/quest')}
-          >
-            <div className="bg-green-50 p-2 rounded-full mr-3">
-              <Plus className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="text-left">
-              <div className="font-semibold text-sm">퀘스트 등록</div>
-              <div className="text-xs text-gray-500 font-normal">새로운 과제 생성</div>
-            </div>
-          </Button>
-
-          <Button
-            className="h-auto py-4 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm"
-            variant="ghost"
-            onClick={() => navigate('/teacher/raid/create')}
-          >
-            <div className="bg-purple-50 p-2 rounded-full mr-3">
-              <Sword className="w-5 h-5 text-purple-600" />
-            </div>
-            <div className="text-left">
-              <div className="font-semibold text-sm">레이드 등록</div>
-              <div className="text-xs text-gray-500 font-normal">보스전 이벤트 시작</div>
-            </div>
-          </Button>
-        </section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Active Quests Section */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-lg font-bold">진행 중인 단체 퀘스트</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-gray-500 hover:text-black h-8 px-2"
-                onClick={() => navigate('/teacher/quest/group/manage')}
-              >
-                관리 <ChevronRight className="w-3 h-3 ml-1" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {ongoing_group_quests.length > 0 ? (
-                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {ongoing_group_quests.map((quest) => {
-                    const completed = quest.progress?.completed ?? 0;
-                    const required = quest.progress?.required ?? 0;
-                    const percentage = required > 0 ? (completed / required) * 100 : 0;
-                    return (
-                      <div
-                        key={quest.quest_id}
-                        className="group border border-gray-100 rounded-lg p-4 hover:border-gray-300 hover:bg-gray-50 transition-all cursor-pointer"
-                        onClick={() => navigate(`/teacher/quest/group/detail/${quest.quest_id}`)} // 이동 로직 있다면 추가
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-medium text-sm text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {quest.title}
-                          </h4>
-                          <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                            {completed}/{required}
-                          </span>
-                        </div>
-                        <Progress value={percentage} className="h-1.5" />
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-10 border border-dashed border-gray-200 rounded-lg bg-gray-50/50">
-                  <p className="text-sm text-gray-500">진행 중인 퀘스트가 없습니다.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Active Raid Section */}
-          <Card className="border border-gray-200 shadow-sm flex flex-col">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-bold">진행 중인 레이드</CardTitle>
-                {raidActionMessage && <span className="text-xs text-blue-600 animate-fade-in">{raidActionMessage}</span>}
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Quick Actions Grid */}
+          <section className="grid !grid-cols-3 sm:grid-cols-1 gap-4">
+            <Button
+              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all"
+              variant="ghost"
+              onClick={() => {
+                const classIdToUse = classDetails?.class_id ?? selectedClassId ?? (currentClassId ? Number(currentClassId) : null);
+                if (classIdToUse) navigate(`/teacher/students/${classIdToUse}`);
+                else navigate('/teacher/class');
+              }}
+            >
+              <div className="bg-blue-50 p-3 rounded-xl mr-4">
+                <Users className="w-6 h-6 text-blue-600" />
               </div>
-              {activeRaid && (
-                <Badge variant={daysLeft > 0 ? "default" : "secondary"} className={`rounded-sm px-2 font-normal text-white ${daysLeft > 0 ? 'bg-red-600 hover:bg-red-700' : ''}`}>
-                  {daysLeft > 0 ? `D-${daysLeft}` : '종료됨'}
-                </Badge>
-              )}
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-center">
-              {activeRaid && isActiveRaid ? (
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-1">{activeRaid.title}</h4>
-                    <p className="text-xs text-gray-500">종료일: {endDateLabel}</p>
-                  </div>
+              <div className="text-left">
+                <div className="font-bold text-base text-gray-900 mb-0.5">학생 목록 조회</div>
+                <div className="text-sm text-gray-500 font-normal">반 소속 학생 관리</div>
+              </div>
+            </Button>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-500">보스 HP</span>
-                      <span className="font-mono font-medium text-gray-700">{raidHpLabel}</span>
-                    </div>
-                    <Progress value={raidHpPercentage} className="h-3" indicatorClassName="bg-red-600" />
-                  </div>
+            <Button
+              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all"
+              variant="ghost"
+              onClick={() => navigate('/teacher/quest')}
+            >
+              <div className="bg-green-50 p-3 rounded-xl mr-4">
+                <Plus className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-base text-gray-900 mb-0.5">퀘스트 등록</div>
+                <div className="text-sm text-gray-500 font-normal">새로운 과제 생성</div>
+              </div>
+            </Button>
 
-                  <div className="flex items-center justify-between py-3 border-t border-gray-100 mt-2">
-                    <span className="text-sm text-gray-500">현재 참여자</span>
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-semibold text-gray-900">{activeRaid.participants ?? 0}명</span>
-                    </div>
-                  </div>
+            <Button
+              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all"
+              variant="ghost"
+              onClick={() => navigate('/teacher/raid/create')}
+            >
+              <div className="bg-purple-50 p-3 rounded-xl mr-4">
+                <Sword className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-base text-gray-900 mb-0.5">레이드 등록</div>
+                <div className="text-sm text-gray-500 font-normal">보스전 이벤트 시작</div>
+              </div>
+            </Button>
+          </section>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" onClick={() => setIsRaidModalOpen(true)}>
-                      상세 보기
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleTerminateRaid}
-                      disabled={isTerminating}
-                      className="bg-black text-white hover:bg-gray-800"
-                    >
-                      {isTerminating ? '처리 중...' : '레이드 종료'}
-                    </Button>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Active Quests Section */}
+            <Card className="border border-gray-200 shadow-sm">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-lg font-bold">진행 중인 단체 퀘스트</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm" className="h-8 px-2 text-gray-500"
+                  onClick={() => navigate('/teacher/quest/group/manage')}
+                >
+                  관리 <ChevronRight className="w-3 h-3 ml-1" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {ongoing_group_quests.length > 0 ? (
+                  <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {ongoing_group_quests.map((quest) => {
+                      const completed = quest.progress?.completed ?? 0;
+                      const required = quest.progress?.required ?? 0;
+                      const percentage = required > 0 ? (completed / required) * 100 : 0;
+                      return (
+                        <div
+                          key={quest.quest_id}
+                          className="group border border-gray-100 rounded-lg p-4 hover:border-gray-300 hover:bg-gray-50 transition-all cursor-pointer"
+                          onClick={() => navigate(`/teacher/quest/group/detail/${quest.quest_id}`)} // 이동 로직 있다면 추가
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-medium text-sm text-gray-900 group-hover:text-blue-600 transition-colors">
+                              {quest.title}
+                            </h4>
+                            <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                              {completed}/{required}
+                            </span>
+                          </div>
+                          <Progress value={percentage} className="h-1.5" />
+                        </div>
+                      );
+                    })}
                   </div>
+                ) : (
+                  <div className="text-center py-10 border border-dashed border-gray-200 rounded-lg bg-gray-50/50">
+                    <p className="text-sm text-gray-500">진행 중인 퀘스트가 없습니다.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Active Raid Section */}
+            <Card className="border border-gray-200 shadow-sm flex flex-col">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg font-bold">진행 중인 레이드</CardTitle>
+                  {raidActionMessage && <span className="text-xs text-blue-600 animate-fade-in">{raidActionMessage}</span>}
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="bg-gray-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Sword className="w-6 h-6 text-gray-400" />
+                {activeRaid && (
+                  <Badge variant={daysLeft > 0 ? "default" : "secondary"} className={`rounded-sm px-2 font-normal text-white ${daysLeft > 0 ? 'bg-red-600 hover:bg-red-700' : ''}`}>
+                    {daysLeft > 0 ? `D-${daysLeft}` : '종료됨'}
+                  </Badge>
+                )}
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-center">
+                {activeRaid && isActiveRaid ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-xl font-bold text-gray-900 mb-1">{activeRaid.title}</h4>
+                      <p className="text-xs text-gray-500">종료일: {endDateLabel}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-500">보스 HP</span>
+                        <span className="font-mono font-medium text-gray-700">{raidHpLabel}</span>
+                      </div>
+                      <Progress value={raidHpPercentage} className="h-3" indicatorClassName="bg-red-600" />
+                    </div>
+
+                    <div className="flex items-center justify-between py-3 border-t border-gray-100 mt-2">
+                      <span className="text-sm text-gray-500">현재 참여자</span>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-semibold text-gray-900">{activeRaid.participants ?? 0}명</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      <Button variant="outline" onClick={() => setIsRaidModalOpen(true)}>
+                        상세 보기
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handleTerminateRaid}
+                        disabled={isTerminating}
+                        className="bg-black text-white hover:bg-gray-800"
+                      >
+                        {isTerminating ? '처리 중...' : '레이드 종료'}
+                      </Button>
+                    </div>
                   </div>
-                  <h3 className="text-sm font-medium text-gray-900">진행 중인 레이드가 없습니다</h3>
-                  <p className="text-xs text-gray-500 mt-1 mb-4">레이드를 시작하세요.</p>
-                  <div className="flex justify-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigate('/teacher/raid/create')}>
-                      새 레이드 생성
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => navigate('/teacher/raid/manage', { state: { initialFilter: 'ENDED' } })}>
-                      지난 기록 보기
-                    </Button>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="bg-gray-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Sword className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <h3 className="text-sm font-medium text-gray-900">진행 중인 레이드가 없습니다</h3>
+                    <p className="text-xs text-gray-500 mt-1 mb-4">레이드를 시작하세요.</p>
+                    <div className="flex justify-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => navigate('/teacher/raid/create')}>
+                        새 레이드 생성
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => navigate('/teacher/raid/manage', { state: { initialFilter: 'ENDED' } })}>
+                        지난 기록 보기
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
 
@@ -485,50 +485,50 @@ export function ClassManagePage() {
           </DialogHeader>
 
           {activeRaid && (
-             <div className="p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-center">
-                      <div className="text-xs text-gray-500 mb-1">남은 HP</div>
-                      <div className="text-2xl font-bold text-gray-900">{raidHpPercentage}%</div>
-                   </div>
-                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-center">
-                      <div className="text-xs text-gray-500 mb-1">남은 시간</div>
-                      <div className="text-2xl font-bold text-gray-900">{daysLeft > 0 ? `${daysLeft}일` : '종료'}</div>
-                   </div>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-center">
+                  <div className="text-xs text-gray-500 mb-1">남은 HP</div>
+                  <div className="text-2xl font-bold text-gray-900">{raidHpPercentage}%</div>
                 </div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-center">
+                  <div className="text-xs text-gray-500 mb-1">남은 시간</div>
+                  <div className="text-2xl font-bold text-gray-900">{daysLeft > 0 ? `${daysLeft}일` : '종료'}</div>
+                </div>
+              </div>
 
-                <div className="space-y-2">
-                   <div className="flex justify-between text-sm text-gray-600">
-                      <span>체력 현황</span>
-                      <span className="font-mono">{raidHpLabel}</span>
-                   </div>
-                   <div className="h-4 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                      <div 
-                        className="h-full bg-red-600 transition-all duration-500" 
-                        style={{ width: `${raidHpPercentage}%` }} 
-                      />
-                   </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>체력 현황</span>
+                  <span className="font-mono">{raidHpLabel}</span>
                 </div>
+                <div className="h-4 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
+                  <div
+                    className="h-full bg-red-600 transition-all duration-500"
+                    style={{ width: `${raidHpPercentage}%` }}
+                  />
+                </div>
+              </div>
 
-                <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm flex items-center justify-center gap-2">
-                   <Users className="w-4 h-4" />
-                   현재 <strong>{activeRaid.participants}명</strong>의 학생이 참여 중입니다.
-                </div>
+              <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm flex items-center justify-center gap-2">
+                <Users className="w-4 h-4" />
+                현재 <strong>{activeRaid.participants}명</strong>의 학생이 참여 중입니다.
+              </div>
 
-                <div className="flex gap-3 pt-2">
-                   <Button variant="outline" className="flex-1" onClick={() => setIsRaidModalOpen(false)}>닫기</Button>
-                   <Button 
-                      className="flex-1 bg-black text-white hover:bg-gray-800"
-                      onClick={() => {
-                        setIsRaidModalOpen(false);
-                        handleTerminateRaid();
-                      }}
-                      disabled={isTerminating}
-                   >
-                     레이드 강제 종료
-                   </Button>
-                </div>
-             </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" className="flex-1" onClick={() => setIsRaidModalOpen(false)}>닫기</Button>
+                <Button
+                  className="flex-1 bg-black text-white hover:bg-gray-800"
+                  onClick={() => {
+                    setIsRaidModalOpen(false);
+                    handleTerminateRaid();
+                  }}
+                  disabled={isTerminating}
+                >
+                  레이드 강제 종료
+                </Button>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>

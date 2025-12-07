@@ -183,17 +183,17 @@ export function RaidManagePage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0">
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">레이드 관리</h1>
           <p className="text-sm text-gray-500 mt-1">레이드 상태를 확인하고 관리하세요.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-           <Button
+          <Button
             variant={statusFilter === 'ACTIVE' ? 'default' : 'outline'}
-            className={statusFilter === 'ACTIVE' ? 'bg-black text-white hover:bg-gray-800' : 'border-gray-200 text-gray-600'}
+            className={`h-9 ${statusFilter === 'ACTIVE' ? 'bg-black text-white hover:bg-gray-800' : 'border-gray-200 text-gray-600'}`}
             onClick={() => {
               setStatusFilter('ACTIVE');
               setSelectedRaidId(null);
@@ -203,7 +203,7 @@ export function RaidManagePage() {
           </Button>
           <Button
             variant={statusFilter === 'ENDED' ? 'default' : 'outline'}
-            className={statusFilter === 'ENDED' ? 'bg-black text-white hover:bg-gray-800' : 'border-gray-200 text-gray-600'}
+            className={`h-9 ${statusFilter === 'ENDED' ? 'bg-black text-white hover:bg-gray-800' : 'border-gray-200 text-gray-600'}`}
             onClick={() => {
               setStatusFilter('ENDED');
               setSelectedRaidId(null);
@@ -218,22 +218,21 @@ export function RaidManagePage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
-        {actionMessage && (
-          <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-md text-sm border border-blue-100 mb-4">
-            {actionMessage}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {actionMessage && (
+            <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-md text-sm border border-blue-100 mb-4">
+              {actionMessage}
+            </div>
+          )}
           {/* List Column */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="border-b border-gray-100 py-4 bg-gray-50/50">
+          <Card className="md:col-span-5 lg:col-span-4 border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-100 py-4 bg-gray-50/50 shrink-0">
               <CardTitle className="text-base font-semibold text-gray-900">레이드 목록</CardTitle>
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-y-auto">
               {filteredRaids.length === 0 ? (
-                 <div className="py-12 text-center text-gray-500">
+                <div className="py-12 text-center text-gray-500">
                   {statusFilter === 'ACTIVE' ? '진행 중인 레이드가 없습니다.' : '마감된 레이드가 없습니다.'}
                 </div>
               ) : (
@@ -241,9 +240,8 @@ export function RaidManagePage() {
                   {filteredRaids.map((raid) => (
                     <div
                       key={raid.raid_id}
-                      className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
-                        raid.raid_id === selectedRaidId ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
-                      }`}
+                      className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${raid.raid_id === selectedRaidId ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
+                        }`}
                       onClick={() => setSelectedRaidId(raid.raid_id)}
                     >
                       <div className="flex justify-between items-start mb-2">
@@ -257,12 +255,12 @@ export function RaidManagePage() {
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-xs text-gray-500">
-                           <span>HP {(raid.current_boss_hp ?? 0).toLocaleString()} / {(raid.total_boss_hp ?? 0).toLocaleString()}</span>
-                           <span>{raid.participant_count}명 참여</span>
+                          <span>HP {(raid.current_boss_hp ?? 0).toLocaleString()} / {(raid.total_boss_hp ?? 0).toLocaleString()}</span>
+                          <span>{raid.participant_count}명 참여</span>
                         </div>
-                        <Progress 
-                          value={raid.total_boss_hp > 0 ? (raid.current_boss_hp / raid.total_boss_hp) * 100 : 0} 
-                          className="h-1.5" 
+                        <Progress
+                          value={raid.total_boss_hp > 0 ? (raid.current_boss_hp / raid.total_boss_hp) * 100 : 0}
+                          className="h-1.5"
                           indicatorClassName={raid.status === 'ACTIVE' ? 'bg-red-500' : 'bg-gray-400'}
                         />
                       </div>
@@ -274,8 +272,8 @@ export function RaidManagePage() {
           </Card>
 
           {/* Detail Column */}
-          <Card className="border border-gray-200 shadow-sm flex flex-col">
-            <CardHeader className="border-b border-gray-100 py-4 bg-gray-50/50">
+          <Card className="md:col-span-7 lg:col-span-8 border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden bg-white">
+            <CardHeader className="border-b border-gray-100 py-4 bg-gray-50/50 shrink-0">
               <CardTitle className="text-base font-semibold text-gray-900">상세 정보</CardTitle>
             </CardHeader>
             <CardContent className="p-6 flex-1 overflow-y-auto">
@@ -304,7 +302,7 @@ export function RaidManagePage() {
                     <p className="text-right text-xs text-red-600 font-medium">{raidDetail.progress_percent}% 남음</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1 p-3 border border-gray-100 rounded-md">
                       <p className="text-xs text-gray-500">기본 보상</p>
                       <p className="font-semibold text-gray-900">{raidDetail.reward_coral} Coral</p>
@@ -324,15 +322,15 @@ export function RaidManagePage() {
                   </div>
 
                   {raidDetail.special_reward_description && (
-                     <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-md">
+                    <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-md">
                       <p className="text-xs text-yellow-800 font-semibold mb-1">🎁 특별 보상</p>
                       <p className="text-sm text-yellow-900">{raidDetail.special_reward_description}</p>
                     </div>
                   )}
 
                   <div className="pt-4 border-t border-gray-100 text-xs text-gray-500 flex justify-between">
-                     <span>시작: {new Date(raidDetail.start_date).toLocaleDateString()}</span>
-                     <span>종료: {new Date(raidDetail.end_date).toLocaleDateString()}</span>
+                    <span>시작: {new Date(raidDetail.start_date).toLocaleDateString()}</span>
+                    <span>종료: {new Date(raidDetail.end_date).toLocaleDateString()}</span>
                   </div>
 
                   {raidDetail.status === 'ACTIVE' && (
@@ -348,12 +346,13 @@ export function RaidManagePage() {
                   )}
                 </div>
               ) : (
-                 <div className="h-full flex items-center justify-center text-gray-400">
+                <div className="h-full flex items-center justify-center text-gray-400">
                   <p>왼쪽 목록에서 레이드를 선택하세요.</p>
                 </div>
               )}
             </CardContent>
           </Card>
+
         </div>
       </main>
     </div>
