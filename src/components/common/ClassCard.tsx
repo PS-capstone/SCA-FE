@@ -2,37 +2,45 @@ import React from "react";
 import { Card, CardContent } from "../ui/card";
 
 interface ClassCardProps {
-  id: number;
-  name: string;
-  studentCount: number;
-  activeQuests: number;
+  class_id: number;
+  class_name: string;
+  student_count: number;
+  pending_quests: number;
   onClick?: (id: number) => void;
   className?: string;
 }
 
-function ClassCardInner({ 
-  id, 
-  name, 
-  studentCount, 
-  activeQuests, 
+function ClassCardInner({
+  class_id,
+  class_name,
+  student_count,
+  pending_quests= 0,
   onClick,
   className = ""
 }: ClassCardProps) {
   return (
-    <Card 
-      className={`border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${className}`}
-      onClick={() => onClick?.(id)}
+    <Card
+      className={`
+        border-2 border-gray-300 rounded-lg cursor-pointer hover:shadow-lg transition-all 
+        bg-white w-full h-full flex flex-col
+        ${className}
+      `}
+      onClick={() => onClick?.(class_id)}
     >
-      <CardContent className="p-6">
-        <h3 className="mb-4">{name}</h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center justify-between border-b border-gray-300 pb-2">
+      <CardContent className="p-6 flex flex-col h-full justify-between">
+        <h3 className="text-lg font-bold mb-4" title={class_name}>
+          {class_name}
+        </h3>
+        <div className="space-y-3 text-sm mt-auto">
+          <div className="flex justify-between items-center border-b border-gray-200 pb-2">
             <span className="text-gray-600">학생 수</span>
-            <span className="font-medium">{studentCount}명</span>
+            <span className="text-base">{student_count}명</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">진행 중인 퀘스트</span>
-            <span className="font-medium">{activeQuests}개</span>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">승인 대기중인 퀘스트</span>
+            <span className={`text-base ${pending_quests > 0 ? 'text-red-600 font-bold' : ''}`}>
+              {pending_quests}개
+            </span>
           </div>
         </div>
       </CardContent>

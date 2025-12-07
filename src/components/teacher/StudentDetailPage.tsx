@@ -1,240 +1,308 @@
-import { Card, CardContent } from "../ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback } from "../ui/avatar";
-import { Plus, CheckCircle } from "lucide-react";
-import { TeacherSidebar } from "./TeacherSidebar";
+import { Plus } from "lucide-react";
 import { Progress } from "../ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AppContext";
+import { get } from "../../utils/api";
 
 export function StudentDetailPage() {
+  const { classId, id: studentId } = useParams<{ classId: string; id: string }>();
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  
-  const handleNavigate = (page: string) => {
-    const routeMap: Record<string, string> = {
-      'teacher-dashboard': '/teacher/dashboard',
-      'quest-create-new': '/teacher/quest',
-      'class-manage': '/teacher/class',
-      'class-create': '/teacher/class/create',
-      'student-list': '/teacher/students',
-      'raid-create-new': '/teacher/raid/create',
-      'raid-manage': '/teacher/raid/manage',
-      'quest-approval': '/teacher/quest/approval',
-    };
-    const route = routeMap[page] || '/teacher/dashboard';
-    navigate(route);
-  };
+  const { access_token, isAuthenticated } = useAuth();
+  const [student, setStudent] = useState<{
+    name: string;
+    avatar: string;
+    coral: number;
+    explorationData: number;
+    questCompletion: number;
+    completedQuests: number;
+    incompleteQuests: number;
+    className?: string;
+  }>({
+    name: "로딩중...",
+    avatar: "",
+    coral: 0,
+    explorationData: 0,
+    questCompletion: 0,
+    completedQuests: 0,
+    incompleteQuests: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [ongoingQuests, setOngoingQuests] = useState<Array<{
+    id: number;
+    title: string;
+    progress: number;
+    deadline: string;
+  }>>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<Array<{
+    id: number;
+    title: string;
+    submittedAt: string;
+    coral: number;
+    explorationData: number;
+  }>>([]);
 
-  const handleLogout = () => {
-    navigate('/teacher/login');
-  };
-  const [showApprovalModal, setShowApprovalModal] = useState(false);
-  const [timeLeft, setTimeLeft] = useState<{[key: number]: string}>({});
+  const fetchStudentData = async () => {
+    if (!classId || !studentId) {
+      return;
+    }
 
-  const student = {
-    name: "김학생",
-    avatar: "김",
-    coral: 45,
-    explorationData: 320,
-    questCompletion: 82,
-  };
+    if (!isAuthenticated || !access_token) {
+      navigate("/login/teacher");
+      return;
+    }
 
-  const ongoingQuests = [
-    { id: 1, title: "rpm 100문제 풀기", deadline: "2025-10-05T23:59:59" },
-    { id: 2, title: "영어 단어 20개 암기", deadline: "2025-10-04T23:59:59" },
-    { id: 3, title: "수학 모의고사 80점", deadline: "2025-10-10T23:59:59" },
-  ];
+    try {
+      // 학생 목록에서 해당 학생 찾기
+      const response = await get(`/api/v1/classes/${classId}/students`);
 
-  // 실시간 마감 시간 계산
-  useEffect(() => {
-    const updateTimeLeft = () => {
-      const now = new Date();
-      const newTimeLeft: {[key: number]: string} = {};
-      
-      ongoingQuests.forEach(quest => {
-        const deadline = new Date(quest.deadline);
-        const diff = deadline.getTime() - now.getTime();
-        
-        if (diff <= 0) {
-          newTimeLeft[quest.id] = "마감됨";
+        if (response.status === 401) {
+          navigate("/login/teacher");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("학생 정보를 가져올 수 없습니다.");
+        }
+
+        const data = await response.json();
+        const studentData = data.data?.students?.find(
+          (s: any) => s.student_id === parseInt(studentId)
+        );
+
+        if (studentData) {
+          setStudent({
+            name: studentData.real_name || studentData.username || studentData.name || "이름 없음",
+            avatar: (studentData.real_name || studentData.username || studentData.name || "?")[0],
+            coral: studentData.coral || 0,
+            explorationData: studentData.exploration_data || studentData.research_data || 0,
+            questCompletion: studentData.quest_completion_rate || 0,
+            completedQuests: studentData.completed_quests_count || 0,
+            incompleteQuests: studentData.incomplete_quests_count || 0,
+            className: data.data?.class_name || "",
+          });
         } else {
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          
-          if (days > 0) {
-            newTimeLeft[quest.id] = `${days}일 ${hours}시간 남음`;
-          } else if (hours > 0) {
-            newTimeLeft[quest.id] = `${hours}시간 ${minutes}분 남음`;
-          } else {
-            newTimeLeft[quest.id] = `${minutes}분 남음`;
+          setError("학생을 찾을 수 없습니다.");
+        }
+
+        // 진행 중인 퀘스트 조회
+        const ongoingResponse = await get(`/api/v1/quests/personal/student/${studentId}`);
+        if (ongoingResponse.ok) {
+          const ongoingData = await ongoingResponse.json();
+          if (ongoingData.success && ongoingData.data?.active_quests) {
+            const quests = ongoingData.data.active_quests.map((q: any) => ({
+              id: q.assignment_id || q.quest_id,
+              title: q.title || "제목 없음",
+              progress: 0, // 진행률은 별도 계산 필요
+              deadline: q.created_at ? new Date(q.created_at).toLocaleDateString('ko-KR') : "마감일 없음",
+            }));
+            setOngoingQuests(quests);
           }
         }
-      });
-      
-      setTimeLeft(newTimeLeft);
+
+        // 승인 대기 중인 퀘스트 조회
+        const pendingResponse = await get(`/api/v1/quests/personal/pending?class_id=${classId}`);
+        if (pendingResponse.ok) {
+          const pendingData = await pendingResponse.json();
+          if (pendingData.success && pendingData.data?.assignments) {
+            // 해당 학생의 승인 대기 퀘스트만 필터링
+            const studentPendingQuests = pendingData.data.assignments
+              .filter((a: any) => a.student_id === parseInt(studentId))
+              .map((a: any) => ({
+                id: a.assignment_id || a.quest_id,
+                title: a.title || "제목 없음",
+                submittedAt: a.submitted_at 
+                  ? new Date(a.submitted_at).toLocaleString('ko-KR') 
+                  : "제출 시간 없음",
+                coral: a.reward_coral_personal || 0,
+                explorationData: a.reward_research_data_personal || 0,
+              }));
+            setPendingApprovals(studentPendingQuests);
+          }
+        }
+      } catch (error) {
+        console.error("학생 정보 로딩 실패:", error);
+        setError("학생 정보를 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    updateTimeLeft();
-    const interval = setInterval(updateTimeLeft, 60000); // 1분마다 업데이트
+  useEffect(() => {
+    fetchStudentData();
+  }, [classId, studentId, access_token, isAuthenticated, navigate]);
 
-    return () => clearInterval(interval);
-  }, []);
+  // 페이지 포커스 시 데이터 다시 불러오기 (퀘스트 승인 후 돌아올 때 갱신)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (classId && studentId && isAuthenticated && access_token) {
+        fetchStudentData();
+      }
+    };
 
-  const pendingApprovals = [
-    { 
-      id: 1, 
-      title: "독서록 작성하기", 
-      submittedAt: "2025.10.04 14:30",
-      coral: 4,
-      explorationData: 80
-    },
-    { 
-      id: 2, 
-      title: "5일 연속 출석", 
-      submittedAt: "2025.10.04 10:00",
-      coral: 3,
-      explorationData: 50
-    },
-  ];
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [classId, studentId, isAuthenticated, access_token]);
 
-  return (
-    <div className="min-h-screen bg-white flex">
-      <TeacherSidebar currentPage="class-list" onNavigate={handleNavigate} onLogout={handleLogout} />
-      
-      <div className="flex-1 border-l-2 border-gray-300">
-        {/* Header */}
-        <div className="border-b-2 border-gray-300 p-6">
-          <div className="flex items-start gap-4">
-            <Avatar className="w-16 h-16 border-2 border-gray-300">
-              <AvatarFallback className="bg-gray-200 text-black text-xl">
-                {student.avatar}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h1>{student.name}</h1>
-              <p className="text-gray-600 mt-1">중등 1반</p>
-            </div>
-            <Button 
-              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              variant="outline"
-              onClick={() => handleNavigate('quest-create-new')}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              퀘스트 등록
-            </Button>
-          </div>
-        </div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p>로딩중...</p>
+      </div>
+    );
+  }
 
-        {/* Main Content */}
-        <div className="p-6 space-y-6 max-w-4xl">
-          {/* Stats */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <h3 className="mb-4">학생 스테이터스</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">코랄</p>
-                  <h3>{student.coral}</h3>
-                </div>
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">탐사데이터</p>
-                  <h3>{student.explorationData}</h3>
-                </div>
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">퀘스트 달성률</p>
-                  <h3>{student.questCompletion}%</h3>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pending Approvals */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3>승인 대기 중인 퀘스트</h3>
-                <Badge className="bg-black text-white rounded-lg">
-                  {pendingApprovals.length}건
-                </Badge>
-              </div>
-              <div className="space-y-3">
-                {pendingApprovals.map((quest) => (
-                  <Card key={quest.id} className="border-2 border-gray-300 rounded-lg">
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4>{quest.title}</h4>
-                          <p className="text-sm text-gray-600">제출: {quest.submittedAt}</p>
-                        </div>
-                        <Button 
-                          size="sm"
-                          className="bg-black text-white hover:bg-gray-800 rounded-lg"
-                          onClick={() => setShowApprovalModal(true)}
-                        >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          승인
-                        </Button>
-                      </div>
-                      <div className="flex gap-2 text-sm border-t-2 border-gray-300 pt-2">
-                        <span className="text-gray-600">보상:</span>
-                        <span>코랄 {quest.coral}</span>
-                        <span>탐사데이터 {quest.explorationData}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Ongoing Quests */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <h3 className="mb-4">현재 진행 중인 퀘스트</h3>
-              <div className="space-y-3">
-                {ongoingQuests.map((quest) => (
-                  <Card key={quest.id} className="border-2 border-gray-300 rounded-lg">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <h4>{quest.title}</h4>
-                        <span className={`text-sm ${timeLeft[quest.id] === "마감됨" ? "text-red-600" : "text-gray-600"}`}>
-                          {timeLeft[quest.id] || "로딩 중..."}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => navigate(-1)}>돌아가기</Button>
         </div>
       </div>
+    );
+  }
 
-      {/* 승인 모달 */}
-      <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
-        <DialogContent className="border-2 border-gray-300">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl font-bold text-black">
-              승인되었습니다
-            </DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-4">
-            <p className="text-gray-600">퀘스트가 성공적으로 승인되었습니다.</p>
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">{student.name}</h1>
+          <p className="text-sm text-gray-500 mt-1">{student.className || "반 정보 없음"}</p>
+        </div>
+        <Button 
+          className="bg-black hover:bg-gray-800 text-white shadow-sm"
+          onClick={() => navigate('/teacher/quest')}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          퀘스트 등록
+        </Button>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="max-w-5xl space-y-6">
+          {/* Stats */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 border-b border-gray-100">
+              <CardTitle className="text-base font-bold text-gray-900">학생 스테이터스</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">코랄</p>
+                  <h3 className="text-2xl font-bold text-gray-900">{student.coral}</h3>
+                </div>
+                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">탐사데이터</p>
+                  <h3 className="text-2xl font-bold text-gray-900">{student.explorationData}</h3>
+                </div>
+                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">퀘스트 달성률</p>
+                  <h3 className="text-2xl font-bold text-blue-600">{student.questCompletion}%</h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col items-center justify-center p-3 border border-dashed border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">달성한 퀘스트</p>
+                  <h3 className="text-lg font-semibold text-green-600">{student.completedQuests}개</h3>
+                </div>
+                <div className="flex flex-col items-center justify-center p-3 border border-dashed border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">미달성 퀘스트</p>
+                  <h3 className="text-lg font-semibold text-gray-600">{student.incompleteQuests}개</h3>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pending Approvals */}
+            <Card className="border border-gray-200 shadow-sm flex flex-col h-full">
+              <CardHeader className="pb-3 border-b border-gray-100 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base font-bold text-gray-900">승인 대기 중</CardTitle>
+                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200">
+                  {pendingApprovals.length}건
+                </Badge>
+              </CardHeader>
+              <CardContent className="pt-4 flex-1 overflow-y-auto max-h-[400px]">
+                <div className="space-y-3">
+                  {pendingApprovals.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500">
+                      <p className="text-sm">승인 대기 중인 퀘스트가 없습니다.</p>
+                    </div>
+                  ) : (
+                    pendingApprovals.map((quest) => (
+                      <div key={quest.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold text-sm text-gray-900 line-clamp-1">{quest.title}</h4>
+                            <p className="text-xs text-gray-500 mt-1">제출: {quest.submittedAt}</p>
+                          </div>
+                          <Button 
+                            size="sm"
+                            className="h-8 bg-black text-white hover:bg-gray-800 text-xs"
+                            onClick={() => navigate('/teacher/quest/approval')}
+                          >
+                            승인하기
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs bg-gray-50 p-2 rounded border border-gray-100">
+                          <span className="font-medium text-gray-500">보상:</span>
+                          <span className="text-blue-600 font-medium">C {quest.coral}</span>
+                          <span className="text-gray-300">|</span>
+                          <span className="text-purple-600 font-medium">R {quest.explorationData}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ongoing Quests */}
+            <Card className="border border-gray-200 shadow-sm flex flex-col h-full">
+              <CardHeader className="pb-3 border-b border-gray-100 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base font-bold text-gray-900">진행 중인 퀘스트</CardTitle>
+                <Badge variant="outline" className="text-gray-600 border-gray-300">
+                  {ongoingQuests.length}건
+                </Badge>
+              </CardHeader>
+              <CardContent className="pt-4 flex-1 overflow-y-auto max-h-[400px]">
+                <div className="space-y-3">
+                  {ongoingQuests.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500">
+                      <p className="text-sm">진행 중인 퀘스트가 없습니다.</p>
+                    </div>
+                  ) : (
+                    ongoingQuests.map((quest) => (
+                      <div key={quest.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-sm text-gray-900 line-clamp-1">{quest.title}</h4>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 h-5 font-normal">
+                             마감: {quest.deadline}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>진행률</span>
+                            <span>{quest.progress}%</span>
+                          </div>
+                          <Progress value={quest.progress} className="h-1.5" />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="flex justify-center">
-            <Button 
-              className="bg-black text-white hover:bg-gray-800 rounded-lg"
-              onClick={() => setShowApprovalModal(false)}
-            >
-              확인
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </main>
     </div>
   );
 }

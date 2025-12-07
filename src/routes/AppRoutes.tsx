@@ -1,21 +1,23 @@
-import React, { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, lazy, Suspense, useState } from 'react';
 import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Sidebar } from '../components/teacher/Sidebar';
+import { Menu } from 'lucide-react';
+import { Button } from '../components/ui/button';
 
 // Components
 import { RoleSelection } from '../components/RoleSelection';
+const LoginPage = lazy(() => import('../components/common/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import('../components/common/SignupPage').then(m => ({ default: m.SignupPage })));
 
 // Student components
-const StudentAuth = lazy(() => import('../components/student/StudentAuth').then(m => ({ default: m.StudentAuth })));
 const StudentDashboard = lazy(() => import('../components/student/StudentDashboard').then(m => ({ default: m.StudentDashboard })));
 const StudentQuests = lazy(() => import('../components/student/StudentQuests').then(m => ({ default: m.StudentQuests })));
 const StudentGacha = lazy(() => import('../components/student/StudentGacha').then(m => ({ default: m.StudentGacha })));
 const StudentCollection = lazy(() => import('../components/student/StudentCollection').then(m => ({ default: m.StudentCollection })));
-const StudentBattle = lazy(() => import('../components/student/StudentBattle').then(m => ({ default: m.StudentBattle })));
+const StudentRaid = lazy(() => import('../components/student/StudentRaid').then(m => ({ default: m.StudentRaid })));
 import { StudentBottomNav } from '../components/student/StudentBottomNav';
 
 // Teacher components
-const TeacherLoginPageNew = lazy(() => import('../components/teacher/TeacherLoginPageNew').then(m => ({ default: m.TeacherLoginPageNew })));
-const TeacherSignupPageNew = lazy(() => import('../components/teacher/TeacherSignupPageNew').then(m => ({ default: m.TeacherSignupPageNew })));
 const TeacherDashboardNew = lazy(() => import('../components/teacher/TeacherDashboardNew').then(m => ({ default: m.TeacherDashboardNew })));
 const QuestTypeSelection = lazy(() => import('../components/teacher/QuestTypeSelection').then(m => ({ default: m.QuestTypeSelection })));
 const IndividualQuestCreatePage = lazy(() => import('../components/teacher/IndividualQuestCreatePage').then(m => ({ default: m.IndividualQuestCreatePage })));
@@ -46,7 +48,7 @@ const StudentLayout: React.FC = () => {
       quests: '/student/quests',
       gacha: '/student/gacha',
       collection: '/student/collection',
-      battle: '/student/battle',
+      raid: '/student/raid',
     };
 
     const target = tabToPath[tab];
@@ -56,64 +58,181 @@ const StudentLayout: React.FC = () => {
   }, [location.search, location.pathname, navigate]);
 
   return (
-    <div className="min-h-screen bg-white">
-      <Outlet />
+    <div className="retro-layout h-screen flex flex-col bg-gray overflow-hidden">
+      <div className="flex-1 overflow-y-auto no-scrollbar mb-20" style={{backgroundImage: "var(--bg-url)"}}>
+        <Outlet />
+      </div>
       <StudentBottomNav />
+    </div>
+  );
+};
+
+// Teacher Layout Component
+const TeacherLayout: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // localStorage에서 직접 확인
+  const storedUser = localStorage.getItem('user');
+  const storedUserType = localStorage.getItem('userType');
+  
+  useEffect(() => {
+    // 로그인 페이지에서는 체크하지 않음
+    if (location.pathname.startsWith('/login')) return;
+    
+    // 인증되지 않았으면 로그인 페이지로 리다이렉트
+    if (!storedUser || storedUserType !== 'teacher') {
+      navigate('/login/teacher', { replace: true });
+    }
+  }, [storedUser, storedUserType, navigate, location.pathname]);
+  
+  // 로그인 페이지로 가는 중이면 아무것도 렌더링하지 않음
+  if (location.pathname.startsWith('/login')) return null;
+  
+  // 인증되지 않았으면 로딩 화면 표시
+  if (!storedUser || storedUserType !== 'teacher') return <div className="p-6">로딩중...</div>;
+
+  return (
+    <div className={`
+      window 
+      h-screen border-0
+      md:h-[calc(100vh-40px)] md:w-[calc(100%-40px)] md:m-5 md:border-2
+    `}>
+      <div className="title-bar shrink-0">
+        <div className="title-bar-text">
+          {/* Mobile Menu Trigger */}
+          <button 
+            className="md:hidden mr-2 p-1 hover:bg-white/20 rounded"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Menu"
+          >
+            <Menu className="w-4 h-4 text-white" />
+          </button>
+          선생님 대시보드
+        </div>
+        <div className="title-bar-controls">
+          <button aria-label="Minimize"></button>
+          <button aria-label="Maximize"></button>
+          <button aria-label="Close"></button>
+        </div>
+      </div>
+      {/* Main Body */}
+      <div className="window-body bg-white flex relative">
+        <Sidebar 
+          isMobileOpen={mobileMenuOpen} 
+          onMobileClose={() => setMobileMenuOpen(false)} 
+        />
+        {/* Content Area */}
+        <main className="flex-1 overflow-auto bg-[#f0f0f0]">
+          {/* Outlet context can be used to pass mobileMenu state if needed */}
+          <Outlet context={{ setMobileMenuOpen }} />
+        </main>
+      </div>
     </div>
   );
 };
 
 // Main Routes Component
 export const AppRoutes: React.FC = () => {
+  const location = useLocation();
+
+  // 경로에 따라 페이지 제목 설정
+  useEffect(() => {
+    const pathToTitle: Record<string, string> = {
+      '/': 'SCA 학습 관리 시스템',
+      '/login/student': '학생 로그인 - SCA',
+      '/login/teacher': '선생님 로그인 - SCA',
+      '/signup': '회원가입 - SCA',
+      '/student/dashboard': '학생 대시보드 - SCA',
+      '/student/quests': '내 퀘스트 - SCA',
+      '/student/gacha': '가챠 - SCA',
+      '/student/collection': '도감 - SCA',
+      '/student/raid': '레이드 - SCA',
+      '/teacher/dashboard': '선생님 대시보드 - SCA',
+      '/teacher/quest': '퀘스트 등록 - SCA',
+      '/teacher/quest/individual': '개인 퀘스트 등록 - SCA',
+      '/teacher/quest/group': '단체 퀘스트 등록 - SCA',
+      '/teacher/quest/group/manage': '단체 퀘스트 관리 - SCA',
+      '/teacher/quest/approval': '퀘스트 승인 - SCA',
+      '/teacher/raid/create': '레이드 등록 - SCA',
+      '/teacher/raid/manage': '레이드 관리 - SCA',
+      '/teacher/class/create': '반 생성 - SCA',
+      '/teacher/students': '학생 목록 - SCA',
+      '/teacher/profile': '프로필 - SCA',
+    };
+
+    // 정확한 경로 매칭 시도
+    let title = pathToTitle[location.pathname];
+    
+    // 정확한 매칭이 없으면 패턴 매칭
+    if (!title) {
+      if (location.pathname.startsWith('/teacher/students/')) {
+        title = '학생 상세 - SCA';
+      } else if (location.pathname.startsWith('/teacher/class/')) {
+        title = '반 관리 - SCA';
+      } else if (location.pathname.startsWith('/teacher/quest/group/detail/')) {
+        title = '단체 퀘스트 상세 - SCA';
+      } else if (location.pathname.startsWith('/student')) {
+        title = '학생 - SCA';
+      } else if (location.pathname.startsWith('/teacher')) {
+        title = '선생님 대시보드 - SCA';
+      } else {
+        title = 'SCA 학습 관리 시스템';
+      }
+    }
+
+    document.title = title;
+  }, [location.pathname]);
+
   return (
     <Suspense fallback={<div className="p-6">로딩중...</div>}>
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<RoleSelection />} />
-      <Route path="/role-selection" element={<RoleSelection />} />
-      
-      {/* Student Routes */}
-      <Route path="/student/auth" element={<StudentAuth />} />
-      
-      {/* Student Protected Routes */}
-      <Route path="/student" element={<StudentLayout />}>
-        <Route index element={<Navigate to="/student/dashboard" replace />} />
-        <Route path="dashboard" element={<StudentDashboard />} />
-        <Route path="quests" element={<StudentQuests />} />
-        <Route path="gacha" element={<StudentGacha />} />
-        <Route path="collection" element={<StudentCollection />} />
-        <Route path="battle" element={<StudentBattle />} />
-      </Route>
-      
-      {/* Teacher Routes */}
-      <Route path="/teacher/login" element={<TeacherLoginPageNew />} />
-      <Route path="/teacher/signup" element={<TeacherSignupPageNew />} />
-      <Route path="/teacher/dashboard" element={<TeacherDashboardNew />} />
-      
-      {/* Teacher Quest Routes */}
-      <Route path="/teacher/quest" element={<QuestTypeSelection />} />
-      <Route path="/teacher/quest/individual" element={<IndividualQuestCreatePage />} />
-      <Route path="/teacher/quest/group" element={<GroupQuestCreatePage />} />
-      <Route path="/teacher/quest/group/manage" element={<GroupQuestManagePage />} />
-      <Route path="/teacher/quest/group/detail/:id" element={<GroupQuestDetailPage />} />
-      <Route path="/teacher/quest/approval" element={<QuestApprovalPageNew />} />
-      
-      {/* Teacher Raid Routes */}
-      <Route path="/teacher/raid/create" element={<RaidCreatePageNew />} />
-      <Route path="/teacher/raid/manage" element={<RaidManagePage />} />
-      
-      {/* Teacher Class Routes */}
-      <Route path="/teacher/class" element={<ClassManagePage />} />
-      <Route path="/teacher/class/create" element={<ClassCreatePage />} />
-      <Route path="/teacher/students" element={<StudentListPage />} />
-      <Route path="/teacher/students/:id" element={<StudentDetailPage />} />
-      
-      {/* Teacher Profile */}
-      <Route path="/teacher/profile" element={<TeacherProfilePage />} />
-      
-      {/* Fallback Route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<RoleSelection />} />
+        <Route path="/login/:role" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+
+        {/* Student Routes */}
+        <Route path="/student" element={<StudentLayout />}>
+          <Route index element={<Navigate to="/student/dashboard" replace />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="quests" element={<StudentQuests />} />
+          <Route path="gacha" element={<StudentGacha />} />
+          <Route path="collection" element={<StudentCollection />} />
+          <Route path="raid" element={<StudentRaid />} />
+        </Route>
+
+        {/* Teacher Routes */}
+        <Route path="/teacher" element={<TeacherLayout />}>
+          <Route index element={<Navigate to="/teacher/dashboard" replace />} />
+          <Route path="dashboard" element={<TeacherDashboardNew />} />
+
+          {/* Teacher Quest Routes */}
+          <Route path="quest" element={<QuestTypeSelection />} />
+          <Route path="quest/individual" element={<IndividualQuestCreatePage />} />
+          <Route path="quest/group" element={<GroupQuestCreatePage />} />
+          <Route path="quest/group/manage" element={<GroupQuestManagePage />} />
+          <Route path="quest/group/detail/:id" element={<GroupQuestDetailPage />} />
+          <Route path="quest/approval" element={<QuestApprovalPageNew />} />
+
+          {/* Teacher Raid Routes */}
+          <Route path="raid/create" element={<RaidCreatePageNew />} />
+          <Route path="raid/manage" element={<RaidManagePage />} />
+
+          {/* Teacher Class Routes */}
+          <Route path="class/create" element={<ClassCreatePage />} />
+          <Route path="class/:classId?" element={<ClassManagePage />} />
+          <Route path="students/:classId?" element={<StudentListPage />} />
+          <Route path="students/:classId/:id" element={<StudentDetailPage />} />
+
+          {/* Teacher Profile */}
+          <Route path="profile" element={<TeacherProfilePage />} />
+        </Route>
+
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Suspense>
   );
 };

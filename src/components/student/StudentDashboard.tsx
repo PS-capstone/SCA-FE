@@ -1,228 +1,418 @@
-import { Card, CardContent } from '../ui/card';
-import { Progress } from '../ui/progress';
-import { Badge } from '../ui/badge';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { QuestDetailPage } from './QuestDetailPage';
 import { useAuth, StudentUser } from '../../contexts/AppContext';
+import { get, refreshAccessToken } from '../../utils/api';
+import { Loader2 } from 'lucide-react';
+import krakenBg from '../../styles/boss/kraken_bg.png';
+import zelusBg from '../../styles/boss/zelus_bg.png';
 
-interface StudentDashboardProps {
-  user?: StudentUser; // Make user prop optional for backward compatibility
+// --- API Interfaces ---
+interface StudentInfo {
+  student_id: number;
+  username: string;
+  real_name: string;
+  nickname: string;
+  class_name: string;
+  coral: number;
+  research_data: number;
 }
 
-export function StudentDashboard({ user }: StudentDashboardProps) {
-  const { user: contextUser, userType } = useAuth();
-  
-  // 기본 사용자 데이터 (실제로는 로그인 후 받아온 데이터를 사용)
-  const defaultUser: StudentUser = {
-    id: '1',
-    realName: '학생',
-    username: 'student',
-    classCode: 'CLASS001',
-    totalCoral: 50,
-    currentCoral: 50,
-    totalExplorationData: 100,
-    mainFish: '기본 물고기'
+interface NotificationItem {
+  id: number;
+  type: string;
+  title: string;
+  content: string;
+  created_at: string;
+  time_ago: string;
+}
+
+interface Notifications {
+  announcements: NotificationItem[];
+  events: NotificationItem[];
+}
+
+interface ActiveRaid {
+  raid_id: number;
+  raid_name: string;
+  template: string;
+  boss_hp: {
+    current: number;
+    total: number;
+    percentage: number;
   };
+  remaining_time: string;
+  participants: number;
+}
 
-  // Use context user if available, otherwise fall back to prop or default
-  const currentUser = (contextUser as StudentUser) || user || defaultUser;
-  const [selectedQuest, setSelectedQuest] = useState<typeof groupQuests[0] | null>(null);
-  const currentRaid = {
-    name: '중간고사 대비 레이드',
-    bossName: '수학 마왕',
-    currentHp: 6500,
-    maxHp: 10000,
-    timeLeft: '2일 14시간',
-    participants: 45
-  };
+interface GroupQuest {
+  quest_id: number;
+  title: string;
+  description: string;
+  completed_count: number;
+  total_count: number;
+  completion_rate: number;
+  my_status: string;
+  incomplete_students: string[];
+}
 
-  const announcements = [
-    { id: '1', type: '공지', title: '새로운 퀘스트가 추가되었습니다', time: '2시간 전' },
-    { id: '2', type: '이벤트', title: '레이드 이벤트 참여하세요!', time: '1일 전' }
-  ];
+interface RecentActivity {
+  log_id: number;
+  type: string;
+  icon: string;
+  title: string;
+  description: string;
+  reward: string;
+  created_at: string;
+  time_ago: string;
+}
 
-  // 단체 퀘스트 달성률 데이터
-  const groupQuests = [
-    {
-      id: 1,
-      title: "출석 체크",
-      description: "폰 전부내면 보상",
-      completed: 12,
-      total: 15,
-      incompleteStudents: ["김학생", "이학생", "박학생"]
-    },
-    {
-      id: 2,
-      title: "수업 참여도",
-      description: "적극적인 수업 참여",
-      completed: 14,
-      total: 15,
-      incompleteStudents: ["최학생"]
+interface DashboardData {
+  student_info: StudentInfo;
+  notifications: Notifications;
+  active_raid: ActiveRaid | null;
+  group_quests: GroupQuest[];
+  recent_activities: RecentActivity[];
+}
+
+export function StudentDashboard() {
+  const { user, isAuthenticated, userType, access_token } = useAuth();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedQuest, setSelectedQuest] = useState<{ id: number; title: string } | null>(null);
+
+  const currentUser = user as StudentUser;
+
+  // 1. [핵심] 데이터 가져오는 함수를 재사용 가능하게 분리 (useCallback)
+  const fetchDashboardData = useCallback(async (isBackground: boolean = false) => {
+    if (!isBackground) setIsLoading(true); // 배경 업데이트가 아닐 때만 로딩바 표시
+    setError(null);
+    try {
+      const response = await get('/api/v1/students/dashboard');
+      if (!response.ok) throw new Error('Failed to fetch');
+      
+      const result = await response.json();
+      if (result.success) {
+        setDashboardData(result.data);
+      }
+    } catch (err) {
+      if (!isBackground) setError('데이터를 불러올 수 없습니다.');
+      console.error(err);
+    } finally {
+      if (!isBackground) setIsLoading(false);
     }
-  ];
+  }, []);
+
+  // 2. 초기 데이터 로딩
+  useEffect(() => {
+    if (isAuthenticated && user && access_token) {
+      fetchDashboardData(false);
+    }
+  }, [isAuthenticated, user, access_token, fetchDashboardData]);
+
+  // 3. [웹소켓 연결] Plain WebSocket 방식으로 수정 및 토큰 갱신 로직 적용
+  useEffect(() => {
+    if (!user) return;
+
+    let ws: WebSocket | null = null;
+    let refreshAttempted = false;
+
+    const connect = () => {
+        const currentToken = localStorage.getItem('accessToken');
+        if (!currentToken) {
+            console.error("웹소켓 연결 실패: Access Token이 없습니다.");
+            return;
+        }
+
+        // 현재 호스트에 맞춰서 WebSocket URL 동적 생성
+        const host = window.location.hostname;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        // 프론트엔드는 80포트, 백엔드는 8080포트이므로 항상 8080 사용
+        const wsUrl = `${wsProtocol}//${host}:8080/ws/students/${user.id}/notifications?token=${currentToken}`;
+
+        console.log(`웹소켓 연결 시도: ${wsUrl}`);
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            console.log('✅ WebSocket Connected!');
+            refreshAttempted = false; // 연결 성공 시 재시도 플래그 초기화
+        };
+
+        ws.onmessage = (event) => {
+            console.log('📩 New Message:', event.data);
+            // 필요하다면 JSON.parse()로 데이터를 파싱합니다.
+            // const message = JSON.parse(event.data);
+            fetchDashboardData(true);
+        };
+
+        ws.onclose = async (event) => {
+            console.log(`웹소켓 연결 종료. 코드: ${event.code}`);
+            // 1006 코드는 비정상적 종료로, 주로 인증 실패(토큰 만료 등) 시 발생합니다.
+            if (event.code === 1006 && !refreshAttempted) {
+                console.log("비정상적 연결 종료. 토큰 갱신 후 재연결을 시도합니다...");
+                refreshAttempted = true;
+
+                try {
+                    await refreshAccessToken();
+                    console.log("토큰 갱신 성공. 1초 후 재연결합니다.");
+                    setTimeout(connect, 1000); // 1초 후 재연결
+                } catch (error) {
+                    console.error("웹소켓 재연결을 위한 토큰 갱신 실패. 로그아웃됩니다.", error);
+                }
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error("웹소켓 오류 발생:", error);
+        };
+    };
+
+    connect();
+
+    // 컴포넌트가 언마운트될 때 웹소켓 연결을 정리합니다.
+    return () => {
+        if (ws) {
+            console.log('🔌 WebSocket Disconnecting...');
+            // 의도적인 종료임을 명시
+            ws.close(1000, "Component unmounting");
+        }
+    };
+  }, [user, fetchDashboardData]);
 
 
-  // 코랄/탐사데이터 로그 데이터
-  const activityLogs = [
-    { id: 1, type: 'coral', amount: 15, action: '퀘스트 완료', time: '2시간 전', description: '수학 문제집 풀기 완료' },
-    { id: 2, type: 'exploration', amount: 8, action: '레이드 참여', time: '5시간 전', description: '중간고사 대비 레이드 참여' },
-    { id: 3, type: 'coral', amount: 10, action: '퀘스트 완료', time: '1일 전', description: '영어 단어 암기 완료' },
-    { id: 4, type: 'exploration', amount: 12, action: '배틀 승리', time: '1일 전', description: '친구와의 배틀에서 승리' },
-    { id: 5, type: 'coral', amount: 20, action: '퀘스트 완료', time: '2일 전', description: '과학 실험 보고서 작성' }
-  ];
+  // --- 렌더링 로직 ---
+  if (!isAuthenticated || !user) return <div className="p-6">로그인 정보 확인 중...</div>;
+  if (userType !== 'student') return <div className="p-6">접근 권한이 없습니다.</div>;
 
-  // 퀘스트 상세 페이지가 선택된 경우
   if (selectedQuest) {
     return (
-      <QuestDetailPage 
+      <QuestDetailPage
         quest={selectedQuest}
-        user={currentUser}
         onBack={() => setSelectedQuest(null)}
       />
     );
   }
 
+  if (isLoading && !dashboardData) { // 데이터가 아예 없을 때만 로딩바
+    return (
+      <div className="p-6 flex justify-center items-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <div className="p-6 text-center text-red-600">
+        <p>오류: {error || '데이터를 불러올 수 없습니다.'}</p>
+      </div>
+    );
+  }
+
+  const { student_info, notifications, active_raid, group_quests, recent_activities } = dashboardData;
+
+  const allNotifications = [
+    ...notifications.announcements.map(n => ({ ...n, category: '공지' })),
+    ...notifications.events.map(e => ({ ...e, category: '이벤트' }))
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
   return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen pb-20 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* 상단 고정 배너 */}
-      <Card className="border-2 border-gray-300">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-black mb-4">이벤트 & 공지</h3>
-          <div className="space-y-3">
-            {announcements.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-3 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <Badge className={item.type === '공지' ? 'bg-gray-100 text-black border-gray-300' : 'bg-black text-white border-black'}>
-                    {item.type}
-                  </Badge>
-                  <span className="text-sm text-black font-medium">{item.title}</span>
-                </div>
-                <span className="text-xs text-gray-600">{item.time}</span>
-              </div>
-            ))}
+    <div className="p-4 space-y-6 min-h-screen pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
+      {/* 1. 이벤트 & 공지 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">이벤트 & 공지</div>
+          <div className="title-bar-controls">
+            <button aria-label="Minimize" />
+            <button aria-label="Maximize" />
+            <button aria-label="Close" />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* 현재 레이드 보스 HP 요약 */}
-      <Card className="border-2 border-gray-300">
-        <CardContent className="p-6">
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-black mb-2">{currentRaid.name}</h3>
-            <p className="text-lg text-gray-600">{currentRaid.bossName}</p>
+        </div>
+        <div className="window-body">
+          <div className="sunken-panel" style={{ padding: "10px", background: "var(--color-white)", maxHeight: "150px", overflowY: "auto" }}>
+            {allNotifications.length > 0 ? (
+              <ul className="tree-view" style={{ border: "none", boxShadow: "none", margin: 0, padding: 0 }}>
+                {allNotifications.map((item) => (
+                  <li key={`${item.category}-${item.id}`} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px dotted #888" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                      <span style={{ fontWeight: "bold", color: item.category === '공지' ? "blue" : "red", whiteSpace: "nowrap" }}>
+                        [{item.category}]
+                      </span>
+                      <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.title}</span>
+                    </span>
+                    <span style={{ fontSize: "12px", color: "#666", whiteSpace: "nowrap", marginLeft: "8px" }}>{item.time_ago}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p style={{ textAlign: "center", color: "#666" }}>새로운 소식이 없습니다.</p>
+            )}
           </div>
+        </div>
+      </div>
 
-          {/* HP 바 */}
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-700 font-medium">HP</span>
-              <span className="text-black font-semibold">{currentRaid.currentHp.toLocaleString()} / {currentRaid.maxHp.toLocaleString()}</span>
-            </div>
-            <Progress 
-              value={(currentRaid.currentHp / currentRaid.maxHp) * 100} 
-              className="h-6 bg-gray-200"
-              style={{
-                '--progress-background': '#000000',
-                '--progress-foreground': '#333333'
-              } as React.CSSProperties}
-            />
+      {/* 2. 레이드 현황 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">현재 레이드: {active_raid ? active_raid.raid_name : '진행 중 아님'}</div>
+          <div className="title-bar-controls">
+            <button aria-label="Help" />
           </div>
-
-          {/* 레이드 정보 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-gray-100 rounded-lg border-2 border-gray-300">
-              <span className="text-sm text-gray-600 font-medium">남은 시간</span>
-              <p className="text-lg text-black font-bold mt-1">{currentRaid.timeLeft}</p>
-            </div>
-            <div className="text-center p-4 bg-black rounded-lg border-2 border-black">
-              <span className="text-sm text-white font-medium">참여자</span>
-              <p className="text-lg text-white font-bold mt-1">{currentRaid.participants}명</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 단체 퀘스트 달성률 */}
-      <Card className="border-2 border-gray-300">
-        <CardContent className="p-4">
-          <h3 className="font-medium text-black mb-4">현재 단체 퀘스트 달성률</h3>
-          <div className="space-y-4">
-            {groupQuests.map((quest) => (
-              <div 
-                key={quest.id} 
-                className="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => setSelectedQuest(quest)}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-medium text-black">{quest.title}</h4>
-                  <span className="text-sm text-gray-600">{quest.completed}/{quest.total}명</span>
-                </div>
-                <p className="text-sm text-gray-600 mb-3">{quest.description}</p>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                  <div 
-                    className="bg-black h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(quest.completed / quest.total) * 100}%` }}
+        </div>
+        <div className="window-body">
+          {active_raid ? (
+            <>
+              <div style={{ textAlign: "center", marginBottom: "15px" }}>
+                {/* 보스 이미지 */}
+                <div style={{ marginBottom: "10px", width: "100%" }}>
+                  <img 
+                    src={active_raid.template === 'KRAKEN' ? krakenBg : active_raid.template === 'ZELUS_INDUSTRY' ? zelusBg : krakenBg}
+                    alt={active_raid.template}
+                    style={{ 
+                      width: "100%", 
+                      height: "auto",
+                      maxHeight: "400px",
+                      objectFit: "cover",
+                      display: "block"
+                    }}
                   />
                 </div>
-                {quest.incompleteStudents.length > 0 && (
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">미완료 학생:</span> {quest.incompleteStudents.join(", ")}
-                  </div>
-                )}
-                <div className="text-xs text-gray-500 mt-2 text-right">
-                  클릭하여 상세보기
+                <h4 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>BOSS: {active_raid.template}</h4>
+
+                {/* HP 정보 & 프로그레스 바 */}
+                <div className="field-row" style={{ justifyContent: "space-between", marginBottom: "4px" }}>
+                  <span>HP Status</span>
+                  <span>{active_raid.boss_hp.current.toLocaleString()} / {active_raid.boss_hp.total.toLocaleString()}</span>
+                </div>
+                <div className="progress-indicator segmented" style={{ width: "100%", height: "24px" }}>
+                  <div
+                    className="progress-indicator-bar"
+                    style={{ width: `${active_raid.boss_hp.percentage}%` }}
+                  />
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* 내 현재 상태 및 활동 로그 */}
-      <Card className="border-2 border-gray-300">
-        <CardContent className="p-4">
-          <h3 className="font-medium text-black mb-4">내 현재 상태</h3>
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="text-center p-3 border-2 border-gray-300 rounded">
-              <p className="text-sm text-gray-600">코랄</p>
-              <p className="text-xl font-medium text-black">{currentUser.currentCoral}</p>
-            </div>
-            <div className="text-center p-3 border-2 border-gray-300 rounded">
-              <p className="text-sm text-gray-600">탐사데이터</p>
-              <p className="text-xl font-medium text-black">{currentUser.totalExplorationData}</p>
-            </div>
-          </div>
-
-          {/* 활동 로그 */}
-          <div className="border-t-2 border-gray-300 pt-4">
-            <h4 className="font-medium text-black mb-3">최근 활동 로그</h4>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {activityLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-300 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200">
-                      <span className="text-xs font-bold">
-                        {log.type === 'coral' ? 'C' : 'E'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-black">{log.action}</p>
-                      <p className="text-xs text-gray-600">{log.description}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-black">
-                      +{log.amount} {log.type === 'coral' ? '코랄' : '탐사데이터'}
-                    </p>
-                    <p className="text-xs text-gray-500">{log.time}</p>
-                  </div>
+              {/* 레이드 상세 정보 */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div className="status-bar">
+                  <p className="status-bar-field">남은 시간</p>
+                  <p className="status-bar-field" style={{ textAlign: "right" }}>{active_raid.remaining_time}</p>
                 </div>
-              ))}
+                <div className="status-bar">
+                  <p className="status-bar-field">참여자</p>
+                  <p className="status-bar-field" style={{ textAlign: "right" }}>{active_raid.participants}명</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: "center", padding: "20px", color: "#666" }}>
+              현재 진행 중인 레이드가 없습니다.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. 단체 퀘스트 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">단체 퀘스트 현황</div>
+        </div>
+        <div className="window-body">
+          <p style={{ marginBottom: "10px" }}>우리 반 달성률</p>
+          <div className="space-y-4">
+            {group_quests.length > 0 ? (
+              group_quests.map((quest) => (
+                <fieldset key={quest.quest_id} style={{ padding: "10px", marginBottom: "10px" }}>
+                  <legend
+                    style={{ fontWeight: "bold", cursor: "pointer" }}
+                    onClick={() => setSelectedQuest({ id: quest.quest_id, title: quest.title })}
+                  >
+                    {quest.title} (상세보기 ↗)
+                  </legend>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
+                    <span>{quest.description}</span>
+                    <span>{quest.completed_count}/{quest.total_count}명</span>
+                  </div>
+
+                  <div className="progress-indicator" style={{ height: "16px", width: "100%" }}>
+                    <div
+                      className="progress-indicator-bar"
+                      style={{ width: `${quest.completion_rate}%`, backgroundColor: "#000080" }}
+                    />
+                  </div>
+
+                  {quest.incomplete_students.length > 0 && (
+                    <div style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}>
+                      <span style={{ color: "red" }}>미완료:</span> {quest.incomplete_students.join(", ")}
+                    </div>
+                  )}
+                </fieldset>
+              ))
+            ) : (
+              <p style={{ textAlign: "center", color: "#666" }}>진행 중인 단체 퀘스트가 없습니다.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. 내 정보 및 로그 윈도우 */}
+      <div className="window" style={{ width: "100%" }}>
+        <div className="title-bar">
+          <div className="title-bar-text">내 정보</div>
+        </div>
+        <div className="window-body">
+          <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+            <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
+              <p style={{ fontSize: "12px", color: "#666", margin: 0 }}>코랄</p>
+              <p style={{ fontSize: "18px", fontWeight: "bold", margin: "4px 0 0 0" }}>
+                {student_info.coral.toLocaleString()}
+              </p>
+            </div>
+            <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
+              <p style={{ fontSize: "12px", color: "#666", margin: 0 }}>탐사데이터</p>
+              <p style={{ fontSize: "18px", fontWeight: "bold", margin: "4px 0 0 0" }}>
+                {student_info.research_data.toLocaleString()}
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
+          <fieldset>
+            <legend>시스템 로그</legend>
+            <div className="sunken-panel" style={{ height: "150px", overflowY: "scroll", padding: "6px", background: "var(--color-white)" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <tbody>
+                  {recent_activities.length > 0 ? (
+                    [...recent_activities]
+                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                      .map((log) => (
+                      <tr key={log.log_id} style={{ borderBottom: "1px solid #eee" }}>
+                        <td style={{ padding: "4px", verticalAlign: "top", width: "30px", textAlign: "center" }}>
+                          {log.icon === 'C' ? '💎' : log.icon === 'E' ? '⚡' : '📜'}
+                        </td>
+                        <td style={{ padding: "4px" }}>
+                          <div style={{ fontWeight: "bold", fontSize: "12px" }}>{log.title}</div>
+                          <div style={{ fontSize: "11px", color: "#666" }}>{log.description}</div>
+                        </td>
+                        <td style={{ padding: "4px", textAlign: "right", whiteSpace: "nowrap" }}>
+                          {log.reward && <div style={{ color: "blue", fontSize: "12px" }}>{log.reward}</div>}
+                          <div style={{ fontSize: "10px", color: "#888" }}>{log.time_ago}</div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} style={{ padding: "10px", textAlign: "center", color: "#666" }}>
+                        최근 활동 내역이 없습니다.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </fieldset>
+        </div>
+      </div>
     </div>
   );
 }

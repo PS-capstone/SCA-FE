@@ -1,0 +1,251 @@
+/**
+ * API 유틸리티
+ * - 자동 토큰 관리 (accessToken 헤더 추가)
+ * - 401 에러 시 자동 토큰 갱신 및 재시도
+ * - refresh token 실패 시 자동 로그아웃
+ */
+
+// 환경변수에서 API URL 가져오기
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+// 개발 환경에서 환경변수 로드 확인 (디버깅용)
+if (import.meta.env.DEV) {
+  console.log('🔧 개발 환경변수:', {
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    API_BASE_URL: API_BASE_URL,
+    MODE: import.meta.env.MODE
+  });
+}
+
+// URL을 완전한 경로로 변환하는 헬퍼 함수
+export function getFullUrl(url: string): string {
+  // 이미 전체 URL인 경우 그대로 반환
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // 환경변수가 설정되어 있으면 환경변수 사용
+  if (API_BASE_URL) {
+    // URL이 이미 base URL로 시작하면 중복 추가하지 않음
+    if (url.startsWith(API_BASE_URL)) {
+      if (import.meta.env.DEV) {
+        console.log(`🌐 API 요청: ${url} (이미 base URL 포함)`);
+      }
+      return url;
+    }
+    
+    // 환경변수 사용: baseURL + 상대 경로
+    const fullUrl = `${API_BASE_URL}${url}`;
+    if (import.meta.env.DEV) {
+      console.log(`🌐 API 요청: ${url} → ${fullUrl}`);
+    }
+    return fullUrl;
+  } else {
+    // 환경변수가 없으면 상대 경로 그대로 사용 (Vite 프록시 또는 현재 도메인 기준)
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ 환경변수 VITE_API_URL이 설정되지 않았습니다. 상대 경로 사용:', url);
+    }
+    return url;
+  }
+}
+
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: Error | null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
+interface ApiCallOptions extends RequestInit {
+  skipAuth?: boolean; // 인증 헤더를 건너뛸지 여부 (로그인/회원가입 등)
+}
+
+/**
+ * 토큰 갱신 함수
+ */
+export async function refreshAccessToken(): Promise<string> {
+  const refreshToken = localStorage.getItem('refreshToken');
+
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  const refreshUrl = getFullUrl('/api/v1/auth/refresh');
+  const response = await fetch(refreshUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Token refresh failed');
+  }
+
+  const responseData = await response.json();
+  const { data } = responseData;
+  const newAccessToken = data.access_token;
+  const newRefreshToken = data.refresh_token;
+
+  // 새 accessToken을 localStorage에 저장
+  localStorage.setItem('accessToken', newAccessToken);
+
+  // refreshToken도 새로 발급된 경우 저장
+  if (newRefreshToken) {
+    localStorage.setItem('refreshToken', newRefreshToken);
+  }
+
+  return newAccessToken;
+}
+
+/**
+ * API 호출 함수
+ * - 자동으로 accessToken을 헤더에 추가
+ * - 401 에러 발생 시 토큰 갱신 후 재시도
+ * - refresh 실패 시 로그아웃 처리
+ */
+export async function apiCall(url: string, options: ApiCallOptions = {}): Promise<Response> {
+  const { skipAuth = false, headers = {}, ...restOptions } = options;
+
+  // FormData인 경우 Content-Type을 설정하지 않음 (브라우저가 자동으로 boundary 설정)
+  const isFormData = restOptions.body instanceof FormData;
+  
+  // 기본 헤더 설정
+  const defaultHeaders: Record<string, string> = {};
+  
+  // FormData가 아닌 경우에만 Content-Type 설정
+  if (!isFormData) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
+  
+  // 사용자 정의 헤더 추가
+  Object.assign(defaultHeaders, headers);
+
+  // skipAuth가 false이고 accessToken이 있으면 헤더에 추가
+  if (!skipAuth) {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      defaultHeaders['Authorization'] = `Bearer ${accessToken}`;
+    }
+  }
+
+  // 첫 번째 시도
+  const fullUrl = getFullUrl(url);
+  let response = await fetch(fullUrl, {
+    ...restOptions,
+    headers: defaultHeaders,
+  });
+
+  // 401 에러가 아니면 바로 반환
+  if (response.status !== 401 || skipAuth) {
+    return response;
+  }
+
+  // 401 에러 발생: 토큰 갱신 시도
+  if (!isRefreshing) {
+    isRefreshing = true;
+
+    try {
+      const newAccessToken = await refreshAccessToken();
+      isRefreshing = false;
+      processQueue(null);
+
+      // 새 토큰으로 원래 요청 재시도
+      const retryHeaders = { ...defaultHeaders };
+      retryHeaders['Authorization'] = `Bearer ${newAccessToken}`;
+      response = await fetch(fullUrl, {
+        ...restOptions,
+        headers: retryHeaders,
+      });
+
+      return response;
+    } catch (error) {
+      isRefreshing = false;
+      processQueue(error as Error);
+
+      // refresh 실패: 로그아웃 처리
+      localStorage.removeItem('user');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+
+      // 로그인 페이지로 리다이렉트
+      window.location.href = '/';
+
+      throw error;
+    }
+  } else {
+    // 이미 토큰 갱신 중이면 큐에 추가하고 대기
+    return new Promise((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    }).then(() => {
+      // 토큰 갱신이 완료되면 원래 요청 재시도
+      const accessToken = localStorage.getItem('accessToken');
+      const retryHeaders = { ...defaultHeaders };
+      retryHeaders['Authorization'] = `Bearer ${accessToken}`;
+      const retryUrl = getFullUrl(url);
+      return fetch(retryUrl, {
+        ...restOptions,
+        headers: retryHeaders,
+      });
+    }) as Promise<Response>;
+  }
+}
+
+/**
+ * GET 요청 헬퍼
+ */
+export async function get(url: string, options?: ApiCallOptions): Promise<Response> {
+  return apiCall(url, { ...options, method: 'GET' });
+}
+
+/**
+ * POST 요청 헬퍼
+ */
+export async function post(url: string, data?: unknown, options?: ApiCallOptions): Promise<Response> {
+  return apiCall(url, {
+    ...options,
+    method: 'POST',
+    body: data ? JSON.stringify(data) : undefined,
+  });
+}
+
+/**
+ * PUT 요청 헬퍼
+ */
+export async function put(url: string, data?: unknown, options?: ApiCallOptions): Promise<Response> {
+  return apiCall(url, {
+    ...options,
+    method: 'PUT',
+    body: data ? JSON.stringify(data) : undefined,
+  });
+}
+
+/**
+ * DELETE 요청 헬퍼
+ */
+export async function del(url: string, options?: ApiCallOptions): Promise<Response> {
+  return apiCall(url, { ...options, method: 'DELETE' });
+}
+
+/**
+ * PATCH 요청 헬퍼
+ */
+export async function patch(url: string, data?: unknown, options?: ApiCallOptions): Promise<Response> {
+  return apiCall(url, {
+    ...options,
+    method: 'PATCH',
+    body: data ? JSON.stringify(data) : undefined,
+  });
+}
