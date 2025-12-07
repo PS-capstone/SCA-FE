@@ -130,6 +130,7 @@ export function StudentRaid() {
   const { user, isAuthenticated, userType, access_token } = useAuth();
 
   const [raidInfo, setRaidInfo] = useState<RaidInfo | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string>('');
   const [logs, setLogs] = useState<RaidLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -193,6 +194,41 @@ export function StudentRaid() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!raidInfo?.end_date) return;
+
+    const calculateTimeLeft = () => {
+      const endDate = new Date(raidInfo.end_date).getTime();
+      const now = new Date().getTime();
+      const diff = endDate - now;
+
+      if (diff <= 0) {
+        return "종료됨";
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      // 일(Day)이 있으면 표시, 없으면 시:분:초만 표시
+      if (days > 0) {
+        return `${days}일 ${hours}시간 ${minutes}분 ${seconds}초`;
+      }
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    // 초기값 즉시 실행
+    setTimeLeft(calculateTimeLeft());
+
+    // 1초마다 갱신
+    const timerId = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [raidInfo?.end_date]);
 
   useEffect(() => {
     if (isAuthenticated && userType === 'student') {
@@ -367,7 +403,9 @@ export function StudentRaid() {
                 {raidInfo.template_name}
               </h3>
               <div style={{ fontSize: "13px", color: "#666" }}>
-                남은 시간: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>{raidInfo.remaining_time}</span>
+                남은 시간: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>
+                  {timeLeft || raidInfo.remaining_time}
+                </span>
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -24,6 +24,8 @@ interface AiRecommendation {
   recommended_coral: number;
   recommended_research_data: number;
   reason: string;
+  global_factor?: number;
+  difficulty_factor?: number;
 }
 
 type FormErrors = {
@@ -391,6 +393,12 @@ export function IndividualQuestCreatePage() {
     }
   };
 
+  const getCommonAiReason = () => {
+    if (aiRecommendations.size === 0) return null;
+    const firstRec = aiRecommendations.values().next().value;
+    return firstRec?.reason || null;
+  };
+
   // 수정 모달용 데이터
   const currentEditStudent = currentEditingStudentId ? allStudents.find(s => s.id === currentEditingStudentId) : null;
   const currentEditAiRec = currentEditingStudentId ? aiRecommendations.get(currentEditingStudentId) : null;
@@ -535,7 +543,7 @@ export function IndividualQuestCreatePage() {
                               checked={isSelected}
                               onCheckedChange={() => toggleStudent(student.id)}
                               onClick={(e: any) => e.stopPropagation()}
-                              className="shrink-0"
+                              className="shrink-0 p-0"
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
@@ -548,13 +556,39 @@ export function IndividualQuestCreatePage() {
                               </div>
 
                               {isSelected && aiModeEnabled && personalRec && (
-                                <div className="mt-2 p-2 bg-white border border-blue-100 rounded text-xs">
-                                  <p className="font-semibold text-blue-700">
-                                    보상: C {personalRec.coral} / R {personalRec.research}
-                                  </p>
-                                  {aiRec?.reason && (
-                                    <p className="text-gray-500 mt-1 truncate" title={aiRec.reason}>
-                                      AI 사유: {aiRec.reason}
+                                <div className="mt-2 p-2 bg-white border border-blue-100 rounded text-xs space-y-1">
+                                  {/* 값이 수정되었는지 확인 */}
+                                  {aiRec && (aiRec.recommended_coral !== personalRec.coral || aiRec.recommended_research_data !== personalRec.research) ? (
+                                    <>
+                                      {/* 수정된 경우: AI 원본 표시 (취소선) */}
+                                      <div className="flex justify-between items-center text-gray-400">
+                                        <span className="text-[10px] bg-gray-100 px-1.5 rounded">AI 원본</span>
+                                        <span className="line-through decoration-gray-300">
+                                          C {aiRec.recommended_coral} / R {aiRec.recommended_research_data}
+                                        </span>
+                                      </div>
+                                      {/* 수정된 경우: 실제 적용값 표시 */}
+                                      <div className="flex justify-between items-center font-semibold text-blue-700">
+                                        <span className="text-[10px] bg-blue-100 px-1.5 rounded">수정됨</span>
+                                        <span>
+                                          C {personalRec.coral} / R {personalRec.research}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    /* 수정되지 않은 경우: 현재 값만 표시 (AI 추천값과 동일) */
+                                    <div className="flex justify-between items-center font-semibold text-blue-700">
+                                      <span className="text-[10px] bg-blue-100 px-1.5 rounded">보상</span>
+                                      <span>
+                                        C {personalRec.coral} / R {personalRec.research}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {/* 메모 */}
+                                  {personalRec.memo && (
+                                    <p className="text-amber-600 mt-1 truncate" title={personalRec.memo}>
+                                      📝 {personalRec.memo}
                                     </p>
                                   )}
                                 </div>
@@ -737,7 +771,7 @@ export function IndividualQuestCreatePage() {
         </DialogContent>
       </Dialog>
 
-      {/* AI 보상 추천 모달 */}
+      {/* AI 보상 추천 안내 모달 */}
       <Dialog open={showAIReward} onOpenChange={setShowAIReward}>
         <DialogContent className="max-w-2xl border border-gray-200 shadow-lg">
           <DialogHeader>
@@ -764,12 +798,22 @@ export function IndividualQuestCreatePage() {
         </DialogContent>
       </Dialog>
 
-      {/* AI 학생별 보상 추천 모달 및 수정 모달은 기존 구조 유지하되 디자인 톤만 일치시킴 (코드 생략 가능하나 요청에 따라 포함) */}
+      {/* AI 학생별 보상 추천 목록 모달 */}
       <Dialog open={showAiStudentModal} onOpenChange={setShowAiStudentModal}>
         <DialogContent className="max-w-2xl border border-gray-200 shadow-lg">
           <DialogHeader>
             <DialogTitle>학생별 추천 보상</DialogTitle>
           </DialogHeader>
+
+          {/* AI Reason */}
+          {getCommonAiReason() && (
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
+              <p className="text-sm font-semibold text-blue-800 mb-1">AI 분석</p>
+              <p className="text-sm text-blue-700 leading-relaxed">
+                {getCommonAiReason()}
+              </p>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto max-h-[500px] p-1">
             <div className="space-y-3">
@@ -782,10 +826,31 @@ export function IndividualQuestCreatePage() {
 
                 return (
                   <div key={studentId} className="p-4 border border-gray-200 rounded-lg flex justify-between items-start bg-white shadow-sm">
-                    <div>
-                      <p className="font-bold text-gray-900">{student.real_name}</p>
-                      <p className="text-xs text-gray-500 mt-1">{aiRec.reason}</p>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-gray-900">{student.real_name}</p>
+                        {(aiRec.global_factor !== undefined || aiRec.difficulty_factor !== undefined) && (
+                          <div className="flex gap-1">
+                            {aiRec.global_factor !== undefined && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded border border-gray-200" title="Global Factor">
+                                Global Factor: {aiRec.global_factor.toFixed(2)}
+                              </span>
+                            )}
+                            {aiRec.difficulty_factor !== undefined && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded border border-gray-200" title="Difficulty Factor">
+                                Difficulty Factor: {aiRec.difficulty_factor.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {personalRec.memo && (
+                        <p className="text-xs text-amber-600 font-medium mt-1">
+                          📝 {personalRec.memo}
+                        </p>
+                      )}
                     </div>
+
                     <div className="text-right">
                       <div className="text-sm font-semibold text-blue-600">
                         C {personalRec.coral} / R {personalRec.research}
@@ -822,32 +887,45 @@ export function IndividualQuestCreatePage() {
           <div className="space-y-4">
             {currentEditAiRec ? (
               <>
-                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <p className="text-sm font-medium text-blue-700">
-                    AI 추천: {currentEditAiRec.recommended_research_data} 탐사데이터, {currentEditAiRec.recommended_coral} 코랄
-                  </p>
+                <div className="grid grid-cols-2 gap-4 text-center text-sm">
+                  <div className="bg-gray-100 p-3 rounded-lg">
+                    <p className="text-gray-500 mb-1">AI 초기 추천값</p>
+                    <div className="font-semibold text-gray-700">
+                      <div>탐사데이터: {currentEditAiRec.recommended_research_data}</div>
+                      <div>코랄: {currentEditAiRec.recommended_coral}</div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <p className="text-blue-500 mb-1 font-semibold">현재 설정값</p>
+                    <div className="font-bold text-blue-700">
+                      <div>탐사데이터: {editForm.research || 0}</div>
+                      <div>코랄: {editForm.coral || 0}</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="editResearch" className="text-sm font-medium">수정값: 탐사데이터</Label>
-                  <Input
-                    id="editResearch"
-                    type="number"
-                    value={editForm.research}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, research: e.target.value }))}
-                    className="bg-white"
-                  />
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="editResearch" className="text-sm font-medium">수정값: 탐사데이터</Label>
+                    <Input
+                      id="editResearch"
+                      type="number"
+                      value={editForm.research}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, research: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="editCoral" className="text-sm font-medium">수정값: 코랄</Label>
-                  <Input
-                    id="editCoral"
-                    type="number"
-                    value={editForm.coral}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, coral: e.target.value }))}
-                    className="bg-white"
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="editCoral" className="text-sm font-medium">수정값: 코랄</Label>
+                    <Input
+                      id="editCoral"
+                      type="number"
+                      value={editForm.coral}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, coral: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
