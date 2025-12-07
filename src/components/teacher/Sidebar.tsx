@@ -40,7 +40,6 @@ export function Sidebar() {
       {/* Tabler 스타일 적용: 사이드바 헤더 */}
       <div className="p-4 border-b-2 border-gray-300 navbar-brand">
         <div className="flex items-center justify-between">
-          {!collapsed && <h2 className="navbar-brand-title text-base font-normal">SCA 수학학원</h2>}
           <Button
             variant="ghost"
             size="icon"

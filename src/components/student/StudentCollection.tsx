@@ -44,8 +44,7 @@ const getGradeColor = (grade: FishGrade) => {
 
 const getFishSize = (grade: FishGrade) => {
   switch (grade) {
-    case 'LEGENDARY': return 2;
-    case 'RARE': return 2;
+    case 'LEGENDARY': return 1;
     default: return 2;
   }
 };
@@ -91,7 +90,7 @@ export function StudentCollection() {
           grade: item.grade as FishGrade,
           current_count: item.fish_count,
           is_owned: true,
-          size: getFishSize(item.grade as FishGrade)
+          size: 2
         }));
 
         setFishList(converted);
@@ -110,7 +109,7 @@ export function StudentCollection() {
           grade: item.grade as FishGrade,
           current_count: item.fish_count,
           is_owned: item.is_collected,
-          size: getFishSize(item.grade as FishGrade)
+          size: 2
         }));
 
         setFishList(converted);
@@ -418,9 +417,9 @@ export function StudentCollection() {
                         }}
                       >
                         <div className="window-body" style={{ textAlign: "center", padding: "5px" }}>
-                          <div style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "5px", objectFit: "contain" }}>
+                          <div style={{ height: "72px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "5px", objectFit: "contain" }}>
                             {fish.is_owned ? (
-                              renderFishSprite(fish, 2)
+                              renderFishSprite(fish, getFishSize(fish.grade as FishGrade))
                             ) : (
                               <span style={{ fontSize: "30px" }}>❓</span>
                             )}
@@ -452,8 +451,8 @@ export function StudentCollection() {
               </div>
             </div>
             <div className="window-body text-center">
-              <div className="sunken-panel" style={{ width: "100px", height: "100px", margin: "0 auto 10px auto", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
-                {renderFishSprite(selectedFish, 2)}
+              <div className="sunken-panel" style={{ width: "100px", height: "100px", margin: "0 auto 10px auto", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", overflow: "hidden" }}>
+                {renderFishSprite(selectedFish, getFishSize(selectedFish.grade as FishGrade))}
               </div>
               <h4 style={{ margin: "5px 0" }}>{selectedFish.fish_name}</h4>
               <div style={{ marginBottom: "10px" }}>{getRarityBadge(selectedFish.grade)}</div>

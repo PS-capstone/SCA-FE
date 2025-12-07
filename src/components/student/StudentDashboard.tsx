@@ -3,6 +3,8 @@ import { QuestDetailPage } from './QuestDetailPage';
 import { useAuth, StudentUser } from '../../contexts/AppContext';
 import { get, refreshAccessToken } from '../../utils/api';
 import { Loader2 } from 'lucide-react';
+import krakenBg from '../../styles/boss/kraken_bg.png';
+import zelusBg from '../../styles/boss/zelus_bg.png';
 
 // --- API Interfaces ---
 interface StudentInfo {
@@ -122,7 +124,11 @@ export function StudentDashboard() {
             return;
         }
 
-        const wsUrl = `ws://localhost:8080/ws/students/${user.id}/notifications?token=${currentToken}`;
+        // 현재 호스트에 맞춰서 WebSocket URL 동적 생성
+        const host = window.location.hostname;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        // 프론트엔드는 80포트, 백엔드는 8080포트이므로 항상 8080 사용
+        const wsUrl = `${wsProtocol}//${host}:8080/ws/students/${user.id}/notifications?token=${currentToken}`;
 
         console.log(`웹소켓 연결 시도: ${wsUrl}`);
         ws = new WebSocket(wsUrl);
@@ -257,6 +263,20 @@ export function StudentDashboard() {
           {active_raid ? (
             <>
               <div style={{ textAlign: "center", marginBottom: "15px" }}>
+                {/* 보스 이미지 */}
+                <div style={{ marginBottom: "10px", width: "100%" }}>
+                  <img 
+                    src={active_raid.template === 'KRAKEN' ? krakenBg : active_raid.template === 'ZELUS_INDUSTRY' ? zelusBg : krakenBg}
+                    alt={active_raid.template}
+                    style={{ 
+                      width: "100%", 
+                      height: "auto",
+                      maxHeight: "400px",
+                      objectFit: "cover",
+                      display: "block"
+                    }}
+                  />
+                </div>
                 <h4 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>BOSS: {active_raid.template}</h4>
 
                 {/* HP 정보 & 프로그레스 바 */}

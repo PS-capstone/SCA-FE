@@ -3,7 +3,7 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Textarea } from "../ui/textarea";
-import { CheckCircle, X, ChevronDown, Loader2 } from "lucide-react";
+import { CheckCircle, X, ChevronDown, Loader2, FileText, Download, Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAuth } from "../../contexts/AppContext";
@@ -44,6 +44,40 @@ interface DetailedAssignment {
     submitted_at: string;
     comment: string | null;
   };
+}
+
+// 파일 타입 감지 및 UI 렌더링 헬퍼 함수
+function getFileType(url: string): 'image' | 'pdf' | 'other' {
+  if (!url) return 'other';
+  const lowerUrl = url.toLowerCase();
+  // 이미지 확장자 체크 (쿼리 파라미터나 해시 제거 후 체크)
+  const urlWithoutQuery = lowerUrl.split('?')[0].split('#')[0];
+  
+  // 확장자로 파일 타입 판단
+  if (urlWithoutQuery.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return 'image';
+  if (urlWithoutQuery.match(/\.pdf$/i)) return 'pdf';
+  
+  // S3 경로로 파일 타입 추론 (이미지 업로드 서비스는 'images/' 폴더에 저장)
+  if (lowerUrl.includes('/images/')) return 'image';
+  if (lowerUrl.includes('/documents/') || lowerUrl.includes('/uploads/')) {
+    // documents 폴더는 PDF일 가능성이 높지만, 확장자로 확인하는 것이 더 정확
+    return 'other';
+  }
+  
+  return 'other';
+}
+
+function getFileName(url: string): string {
+  if (!url) return '파일';
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const fileName = pathname.split('/').pop() || '파일';
+    return decodeURIComponent(fileName);
+  } catch {
+    const parts = url.split('/');
+    return parts[parts.length - 1] || '파일';
+  }
 }
 
 function formatDateTime(isoString: string) {
@@ -125,7 +159,9 @@ export function QuestApprovalPageNew() {
     setSelectedQuestDetail(null);
 
     try {
+      console.log('[퀘스트 상세] 조회 시작, assignmentId:', assignmentId);
       const response = await get(`/api/v1/quests/personal/${assignmentId}/detail`);
+      console.log('[퀘스트 상세] 응답 상태:', response.status);
 
       if (!response.ok) {
         const errData = await response.json();
@@ -133,6 +169,9 @@ export function QuestApprovalPageNew() {
       }
 
       const data = await response.json();
+      console.log('[퀘스트 상세] 전체 응답 데이터:', data);
+      console.log('[퀘스트 상세] submission 데이터:', data.data?.submission);
+      console.log('[퀘스트 상세] attachment_url:', data.data?.submission?.attachment_url);
       setSelectedQuestDetail(data.data);
 
     } catch (err) {
@@ -345,33 +384,154 @@ export function QuestApprovalPageNew() {
                 </div>
 
                 {/* Attachment */}
-                {selectedQuestDetail.submission.attachment_url && (
-                  <div className="mt-3">
-                    <p className="text-sm text-gray-600 mb-2 font-medium">첨부 파일</p>
-                    <a
-                      href={selectedQuestDetail.submission.attachment_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block border-2 border-gray-300 rounded-lg overflow-hidden hover:border-blue-400 transition-colors group"
-                    >
-                      {/* 이미지인 경우 미리보기 표시, 아니면 다운로드 링크 스타일 */}
-                      <div className="bg-gray-100 p-4 flex flex-col items-center justify-center text-center min-h-[150px]">
-                        <img
-                          src={selectedQuestDetail.submission.attachment_url}
-                          alt="첨부파일 미리보기"
-                          className="max-w-full max-h-[300px] object-contain shadow-sm"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            // 이미지 로드 실패 시 대체 텍스트나 아이콘 표시 로직 추가 가능
-                          }}
-                        />
-                        <p className="mt-2 text-sm text-blue-600 font-medium group-hover:underline">
-                          새 창에서 파일 열기
-                        </p>
-                      </div>
-                    </a>
-                  </div>
-                )}
+                <div className="mt-3">
+                  <p className="text-sm text-gray-600 mb-2 font-medium">첨부 파일</p>
+                  {selectedQuestDetail.submission?.attachment_url ? (() => {
+                    const fileUrl = selectedQuestDetail.submission.attachment_url!;
+                    console.log('[퀘스트 승인] 첨부파일 URL:', fileUrl);
+                    const fileType = getFileType(fileUrl);
+                    console.log('[퀘스트 승인] 감지된 파일 타입:', fileType);
+                    const fileName = getFileName(fileUrl);
+
+                    if (fileType === 'image') {
+                      return (
+                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-gradient-to-br from-white to-gray-50/50 hover:border-blue-300 hover:shadow-sm transition-all">
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                          >
+                            <div className="bg-gray-50 p-6 flex flex-col items-center justify-center text-center min-h-[200px]">
+                              <img
+                                src={fileUrl}
+                                alt="첨부파일 미리보기"
+                                className="max-w-full max-h-[400px] object-contain shadow-md rounded-lg"
+                                crossOrigin="anonymous"
+                                onLoad={() => {
+                                  console.log('[퀘스트 승인] 이미지 로드 성공:', fileUrl);
+                                }}
+                                onError={(e) => {
+                                  console.error('[퀘스트 승인] 이미지 로드 실패:', fileUrl, e);
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = `
+                                      <div class="flex flex-col items-center gap-3 text-gray-500 py-8">
+                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                                          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                          </svg>
+                                        </div>
+                                        <p class="text-sm font-medium">이미지를 불러올 수 없습니다</p>
+                                        <p class="text-xs text-gray-400 mt-1">URL: ${fileUrl.substring(0, 50)}...</p>
+                                        <a href="${fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-700 hover:underline text-sm font-medium">
+                                          직접 열기 →
+                                        </a>
+                                      </div>
+                                    `;
+                                  }
+                                }}
+                              />
+                              <p className="mt-4 text-sm text-blue-600 font-medium flex items-center gap-2 hover:text-blue-700 transition-colors">
+                                <ImageIcon className="w-4 h-4" />
+                                새 창에서 이미지 열기
+                              </p>
+                            </div>
+                          </a>
+                        </div>
+                      );
+                    } else if (fileType === 'pdf') {
+                      return (
+                        <div className="border border-gray-200 rounded-lg bg-gradient-to-br from-white to-gray-50/50 hover:border-blue-300 hover:shadow-sm transition-all">
+                          <div className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0">
+                                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-sm">
+                                  <FileText className="w-6 h-6 text-white" />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 truncate text-base">{fileName}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">PDF 문서</p>
+                                <div className="flex gap-2 mt-3">
+                                  <Button
+                                    asChild
+                                    variant="default"
+                                    size="sm"
+                                    className="flex-1 sm:flex-initial"
+                                  >
+                                    <a
+                                      href={fileUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <FileText className="w-4 h-4" />
+                                      새 창에서 열기
+                                    </a>
+                                  </Button>
+                                  <Button
+                                    asChild
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 sm:flex-initial border-gray-300"
+                                  >
+                                    <a
+                                      href={fileUrl}
+                                      download={fileName}
+                                    >
+                                      <Download className="w-4 h-4" />
+                                      다운로드
+                                    </a>
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="border border-gray-200 rounded-lg bg-gradient-to-br from-white to-gray-50/50 hover:border-blue-300 hover:shadow-sm transition-all">
+                          <div className="p-4">
+                            <div className="flex items-start gap-4">
+                              <div className="flex-shrink-0">
+                                <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center shadow-sm">
+                                  <FileText className="w-6 h-6 text-white" />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 truncate text-base">{fileName}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">첨부 파일</p>
+                                <div className="mt-3">
+                                  <Button
+                                    asChild
+                                    variant="default"
+                                    size="sm"
+                                    className="w-full sm:w-auto"
+                                  >
+                                    <a
+                                      href={fileUrl}
+                                      download={fileName}
+                                    >
+                                      <Download className="w-4 h-4" />
+                                      다운로드
+                                    </a>
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })() : (
+                    <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50 text-center min-h-[100px] flex items-center justify-center">
+                      <p className="text-gray-500 text-sm">첨부파일이 없습니다.</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Teacher Feedback Section */}

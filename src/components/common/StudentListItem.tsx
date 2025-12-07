@@ -24,9 +24,14 @@ function StudentListItemInner({
 }: StudentListItemProps) {
   const navigate = useNavigate();
 
+  const handleClick = () => {
+    navigate(`/teacher/students/${classId}/${id}`);
+  };
+
   return (
     <Card
-      className={`border-2 border-gray-300 rounded-lg cursor-default`}
+      className={`border-2 border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 hover:shadow-md transition-all`}
+      onClick={handleClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3 mb-4">

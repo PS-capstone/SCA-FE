@@ -150,9 +150,9 @@ export function GroupQuestCreatePage() {
           {/* 템플릿 선택 */}
           <Card className="border-2 border-gray-300">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-black">
-                <Target className="w-5 h-5" />
-                퀘스트 템플릿 선택
+              <CardTitle className="flex items-center gap-2 text-black whitespace-nowrap">
+                <Target className="w-5 h-5 flex-shrink-0" />
+                <span>퀘스트 템플릿 선택</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -177,9 +177,9 @@ export function GroupQuestCreatePage() {
           {/* 퀘스트 기본 정보 */}
           <Card className="border-2 border-gray-300">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-black">
-                <Users className="w-5 h-5" />
-                상세 정보 입력
+              <CardTitle className="flex items-center gap-2 text-black whitespace-nowrap">
+                <Users className="w-5 h-5 flex-shrink-0" />
+                <span>상세 정보 입력</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -258,9 +258,9 @@ export function GroupQuestCreatePage() {
           {/* 완료 조건 설정 */}
           <Card className="border-2 border-gray-300">
             <CardHeader>
-              <CardTitle className="text-black flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                완료 조건 설정
+              <CardTitle className="text-black flex items-center gap-2 whitespace-nowrap">
+                <Target className="w-5 h-5 flex-shrink-0" />
+                <span>완료 조건 설정</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
