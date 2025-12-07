@@ -268,7 +268,7 @@ export function StudentQuests() {
 
       const data = await response.json();
       console.log('[퀘스트 제출] 제출 응답 전체:', JSON.stringify(data, null, 2));
-      
+
       if (!response.ok || !data.success) {
         console.error('[퀘스트 제출] 제출 실패:', data);
         throw new Error(data.message || '제출에 실패했습니다.');
@@ -383,25 +383,6 @@ export function StudentQuests() {
             </div>
           </div>
         </div>
-
-        {/* 내 재화 현황 윈도우 */}
-        <div className="window" style={{ width: "100%" }}>
-          <div className="title-bar">
-            <div className="title-bar-text">보유 재화</div>
-          </div>
-          <div className="window-body">
-            <div style={{ display: "flex", gap: "10px" }}>
-              <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
-                <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>코랄</p>
-                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{(currentUser.coral ?? 0).toLocaleString()}</p>
-              </div>
-              <div className="sunken-panel" style={{ flex: 1, padding: "10px", textAlign: "center", background: "var(--color-white)" }}>
-                <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>탐사데이터</p>
-                <p style={{ margin: "5px 0 0 0", fontSize: "18px", fontWeight: "bold" }}>{(currentUser.research_data ?? 0).toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
       {/* [모달] 완료된 퀘스트 목록 */}
       {isCompletedModalOpen && (
@@ -441,26 +422,26 @@ export function StudentQuests() {
       {/* [모달] 마감된 퀘스트 목록 */}
       {isExpiredModalOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="window" style={{ width: '90%', maxWidth: '600px' }}>
+          <div className="window" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
             <div className="title-bar">
               <div className="title-bar-text">마감된 퀘스트</div>
               <div className="title-bar-controls">
                 <button aria-label="Close" onClick={() => setIsExpiredModalOpen(false)} />
               </div>
             </div>
-            <div className="window-body">
-              <div className="sunken-panel" style={{ height: '200px', overflowY: 'auto', background: 'var(--color-white)', padding: '8px' }}>
+            <div className="window-body" style={{ overflowY: 'auto', flex: 1 }}>
+              <div className="space-y-3">
                 {expiredQuests.length === 0 && <p style={{ textAlign: 'center', color: '#666' }}>마감된 퀘스트가 없습니다.</p>}
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {expiredQuests.map((quest) => (
-                    <li key={quest.assignment_id} style={{ borderBottom: '1px dotted #ccc', padding: '4px 0' }}>
+                {expiredQuests.map((quest) => (
+                  <fieldset key={quest.assignment_id} style={{ padding: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ color: '#666' }}>[만료]</span> {quest.title}
                       <span style={{ float: 'right', fontSize: '11px' }}>{formatDateTime(quest.created_at)}</span>
-                    </li>
-                  ))}
-                </ul>
+                    </div>
+                  </fieldset>
+                ))}
               </div>
-              <div style={{ textAlign: "center", marginTop: "10px" }}>
+              <div style={{ textAlign: "center", marginTop: "15px" }}>
                 <button onClick={() => setIsExpiredModalOpen(false)}>확인</button>
               </div>
             </div>

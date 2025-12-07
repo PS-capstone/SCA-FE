@@ -332,20 +332,13 @@ export function StudentRaid() {
     return krakenBg; // 기본값
   };
 
-  // 템플릿 아이콘 결정(이미지로 변경 전 임시)
-  const getBossIcon = (template: string) => {
-    if (template === 'KRAKEN') return '🐙';
-    if (template === 'ZELUS_INDUSTRY') return '🏭';
-    return '👾';
-  };
-
   return (
     <>
       <div className="p-4 space-y-6 pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
         {/* 1. 보스 & 레이드 정보 윈도우 */}
         <div className="window" style={{ width: "100%" }}>
           <div className="title-bar">
-            <div className="title-bar-text">&nbsp;{raidInfo.raid_name} ({raidInfo.difficulty})</div>
+            <div className="title-bar-text">{raidInfo.raid_name} ({raidInfo.difficulty})</div>
             <div className="title-bar-controls">
               <button aria-label="Minimize" />
               <button aria-label="Maximize" />
@@ -356,7 +349,7 @@ export function StudentRaid() {
 
             {/* 보스 이미지 영역 */}
             <div className="sunken-panel" style={{
-              height: "180px",
+              height: "240px",
               width: "100%",
               marginBottom: "10px",
 
@@ -413,7 +406,7 @@ export function StudentRaid() {
         {/* 2. 내 행동 (기여) 윈도우 */}
         <div className="window" style={{ width: "100%" }}>
           <div className="title-bar">
-            <div className="title-bar-text">&nbsp;개인 기여</div>
+            <div className="title-bar-text">개인 기여</div>
           </div>
           <div className="window-body">
 

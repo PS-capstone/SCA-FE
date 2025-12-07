@@ -183,157 +183,179 @@ export function RaidManagePage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b-2 border-gray-300 pb-4">
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0">
         <div>
-          <h1>레이드 관리</h1>
-          <p className="text-sm text-gray-600 mt-1">레이드 상태를 확인하고 관리하세요.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">레이드 관리</h1>
+          <p className="text-sm text-gray-500 mt-1">레이드 상태를 확인하고 관리하세요.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
+        <div className="flex flex-wrap items-center gap-2">
+           <Button
             variant={statusFilter === 'ACTIVE' ? 'default' : 'outline'}
-            className={statusFilter === 'ACTIVE' ? 'bg-black text-white hover:bg-gray-800' : 'border-2 border-gray-300'}
+            className={statusFilter === 'ACTIVE' ? 'bg-black text-white hover:bg-gray-800' : 'border-gray-200 text-gray-600'}
             onClick={() => {
               setStatusFilter('ACTIVE');
               setSelectedRaidId(null);
             }}
           >
-            진행 중 레이드
+            진행 중
           </Button>
           <Button
             variant={statusFilter === 'ENDED' ? 'default' : 'outline'}
-            className={statusFilter === 'ENDED' ? 'bg-black text-white hover:bg-gray-800' : 'border-2 border-gray-300'}
+            className={statusFilter === 'ENDED' ? 'bg-black text-white hover:bg-gray-800' : 'border-gray-200 text-gray-600'}
             onClick={() => {
               setStatusFilter('ENDED');
               setSelectedRaidId(null);
             }}
           >
-            마감된 레이드
+            종료됨
           </Button>
-          <Button className="bg-black text-white hover:bg-gray-800" onClick={fetchRaids}>
+          <Button variant="ghost" size="sm" onClick={fetchRaids} className="text-gray-500 hover:text-gray-900">
             새로고침
           </Button>
         </div>
-      </div>
+      </header>
 
-      {actionMessage && <p className="text-sm text-center">{actionMessage}</p>}
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        {actionMessage && (
+          <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-md text-sm border border-blue-100 mb-4">
+            {actionMessage}
+          </div>
+        )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-2 border-gray-300 rounded-lg">
-          <CardHeader>
-            <CardTitle>레이드 목록</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {filteredRaids.length === 0 && (
-              <p className="text-sm text-gray-500">
-                {statusFilter === 'ACTIVE' ? '진행 중인 레이드가 없습니다.' : '마감된 레이드가 없습니다.'}
-              </p>
-            )}
-            {filteredRaids.map((raid) => (
-              <Card
-                key={raid.raid_id}
-                className={`border-2 ${raid.raid_id === selectedRaidId ? 'border-black' : 'border-gray-200'} cursor-pointer`}
-                onClick={() => setSelectedRaidId(raid.raid_id)}
-              >
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4>{raid.raid_name}</h4>
-                      <p className="text-sm text-gray-500">{raid.class_name}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+          {/* List Column */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="border-b border-gray-100 py-4 bg-gray-50/50">
+              <CardTitle className="text-base font-semibold text-gray-900">레이드 목록</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 overflow-y-auto">
+              {filteredRaids.length === 0 ? (
+                 <div className="py-12 text-center text-gray-500">
+                  {statusFilter === 'ACTIVE' ? '진행 중인 레이드가 없습니다.' : '마감된 레이드가 없습니다.'}
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {filteredRaids.map((raid) => (
+                    <div
+                      key={raid.raid_id}
+                      className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
+                        raid.raid_id === selectedRaidId ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'
+                      }`}
+                      onClick={() => setSelectedRaidId(raid.raid_id)}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 text-sm">{raid.raid_name}</h4>
+                          <span className="text-xs text-gray-500">{raid.class_name}</span>
+                        </div>
+                        <Badge variant={raid.status === 'ACTIVE' ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                          {raid.status}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-xs text-gray-500">
+                           <span>HP {(raid.current_boss_hp ?? 0).toLocaleString()} / {(raid.total_boss_hp ?? 0).toLocaleString()}</span>
+                           <span>{raid.participant_count}명 참여</span>
+                        </div>
+                        <Progress 
+                          value={raid.total_boss_hp > 0 ? (raid.current_boss_hp / raid.total_boss_hp) * 100 : 0} 
+                          className="h-1.5" 
+                          indicatorClassName={raid.status === 'ACTIVE' ? 'bg-red-500' : 'bg-gray-400'}
+                        />
+                      </div>
                     </div>
-                    <Badge variant={raid.status === 'ACTIVE' ? 'destructive' : 'secondary'}>
-                      {raid.status}
-                    </Badge>
-                  </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Detail Column */}
+          <Card className="border border-gray-200 shadow-sm flex flex-col">
+            <CardHeader className="border-b border-gray-100 py-4 bg-gray-50/50">
+              <CardTitle className="text-base font-semibold text-gray-900">상세 정보</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 flex-1 overflow-y-auto">
+              {detailLoading ? (
+                <div className="h-full flex items-center justify-center text-gray-400">
+                  <p>불러오는 중...</p>
+                </div>
+              ) : raidDetail ? (
+                <div className="space-y-6">
                   <div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">보스 HP</span>
-                      <span>{(raid.current_boss_hp ?? 0).toLocaleString()} / {(raid.total_boss_hp ?? 0).toLocaleString()}</span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className="text-xs font-normal border-gray-300">{raidDetail.difficulty}</Badge>
+                      <span className="text-xs text-gray-500">{raidDetail.class_name}</span>
                     </div>
-                    <Progress value={raid.total_boss_hp > 0 ? (raid.current_boss_hp / raid.total_boss_hp) * 100 : 0} className="h-2" />
+                    <h3 className="text-xl font-bold text-gray-900">{raidDetail.raid_name}</h3>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>참여자</span>
-                    <span>{raid.participant_count}명</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </CardContent>
-        </Card>
 
-        <Card className="border-2 border-gray-300 rounded-lg">
-          <CardHeader>
-            <CardTitle>레이드 상세</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {detailLoading && <p>상세 정보를 불러오는 중...</p>}
-            {!detailLoading && raidDetail ? (
-              <>
-                <div>
-                  <h3 className="text-lg font-semibold">{raidDetail.raid_name}</h3>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>{raidDetail.class_name}</span>
-                    <Badge variant="outline">{raidDetail.difficulty}</Badge>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-3">
+                    <div className="flex justify-between items-end">
+                      <span className="text-sm font-semibold text-gray-700">보스 HP</span>
+                      <span className="text-xs text-gray-500 font-mono">
+                        {raidDetail.current_boss_hp.toLocaleString()} / {raidDetail.total_boss_hp.toLocaleString()}
+                      </span>
+                    </div>
+                    <Progress value={raidDetail.progress_percent} className="h-3" indicatorClassName="bg-red-600" />
+                    <p className="text-right text-xs text-red-600 font-medium">{raidDetail.progress_percent}% 남음</p>
                   </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">보스 HP 상태</span>
-                    <span>{raidDetail.progress_percent}% 남음</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>현재: {raidDetail.current_boss_hp.toLocaleString()}</span>
-                    <span>전체: {raidDetail.total_boss_hp.toLocaleString()}</span>
-                  </div>
-                  <Progress value={raidDetail.progress_percent} className="h-4" />
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="space-y-1">
-                    <p className="text-gray-600">코랄 보상</p>
-                    <p className="font-semibold">{raidDetail.reward_coral}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-gray-600">남은 시간</p>
-                    <p className="font-semibold">{formatRemainingTime(raidDetail.remaining_seconds)}</p>
-                  </div>
-                  <div className="space-y-1">
-                     <p className="text-xs text-gray-500">참여자 수</p>
-                     <p className="font-bold">{raidDetail.participant_count}명</p>
-                  </div>
-                  <div className="space-y-1">
-                     <p className="text-xs text-gray-500">상태</p>
-                     <p className="font-bold">{raidDetail.status}</p>
-                  </div>
-                </div>
 
-                {raidDetail.special_reward_description && (
-                  <div>
-                    <p className="text-sm text-gray-600">특별 보상</p>
-                    <p className="text-sm">{raidDetail.special_reward_description}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1 p-3 border border-gray-100 rounded-md">
+                      <p className="text-xs text-gray-500">기본 보상</p>
+                      <p className="font-semibold text-gray-900">{raidDetail.reward_coral} Coral</p>
+                    </div>
+                    <div className="space-y-1 p-3 border border-gray-100 rounded-md">
+                      <p className="text-xs text-gray-500">참여자</p>
+                      <p className="font-semibold text-gray-900">{raidDetail.participant_count}명</p>
+                    </div>
+                    <div className="space-y-1 p-3 border border-gray-100 rounded-md">
+                      <p className="text-xs text-gray-500">상태</p>
+                      <p className="font-semibold text-gray-900">{raidDetail.status}</p>
+                    </div>
+                    <div className="space-y-1 p-3 border border-gray-100 rounded-md">
+                      <p className="text-xs text-gray-500">남은 시간</p>
+                      <p className="font-semibold text-gray-900">{formatRemainingTime(raidDetail.remaining_seconds)}</p>
+                    </div>
                   </div>
-                )}
 
-                <div className="flex justify-between text-sm text-gray-500 pt-2">
-                   <span>시작일: {new Date(raidDetail.start_date).toLocaleDateString()}</span>
-                   <span>종료일: {new Date(raidDetail.end_date).toLocaleDateString()}</span>
+                  {raidDetail.special_reward_description && (
+                     <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-md">
+                      <p className="text-xs text-yellow-800 font-semibold mb-1">🎁 특별 보상</p>
+                      <p className="text-sm text-yellow-900">{raidDetail.special_reward_description}</p>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-gray-100 text-xs text-gray-500 flex justify-between">
+                     <span>시작: {new Date(raidDetail.start_date).toLocaleDateString()}</span>
+                     <span>종료: {new Date(raidDetail.end_date).toLocaleDateString()}</span>
+                  </div>
+
+                  {raidDetail.status === 'ACTIVE' && (
+                    <div className="pt-2">
+                      <Button
+                        variant="destructive"
+                        className="w-full bg-black hover:bg-gray-800 text-white"
+                        onClick={() => handleTerminate(raidDetail.raid_id)}
+                      >
+                        레이드 강제 종료
+                      </Button>
+                    </div>
+                  )}
                 </div>
-
-                {raidDetail.status === 'ACTIVE' && (
-                  <Button
-                    className="w-full bg-red-600 hover:bg-red-700 mt-4"
-                    onClick={() => handleTerminate(raidDetail.raid_id)}
-                  >
-                    레이드 강제 종료
-                  </Button>
-                )}
-              </>
-            ) : (
-              !detailLoading && <p className="text-sm text-gray-500">레이드를 선택하세요.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              ) : (
+                 <div className="h-full flex items-center justify-center text-gray-400">
+                  <p>왼쪽 목록에서 레이드를 선택하세요.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 }

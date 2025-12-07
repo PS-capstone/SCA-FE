@@ -396,342 +396,339 @@ export function IndividualQuestCreatePage() {
   const currentEditAiRec = currentEditingStudentId ? aiRecommendations.get(currentEditingStudentId) : null;
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto px-6 py-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">개인 퀘스트 등록</h1>
-            <p className="text-gray-500 mt-1.5 text-sm">특정 학생에게 할당할 개별 퀘스트를 등록합니다</p>
-          </div>
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">개인 퀘스트 등록</h1>
+          <p className="text-sm text-gray-500 mt-1">특정 학생에게 할당할 개별 퀘스트를 등록합니다.</p>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <div className="space-y-8">
-          {/* 퀘스트 기본 정보 */}
-          <Card className="border border-gray-200 shadow-sm">
-            <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center justify-center">
-              <div className="flex items-center gap-2 text-xl font-semibold text-gray-900">
-                <User className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                <span className="whitespace-nowrap">퀘스트 기본 정보</span>
+      <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* 퀘스트 기본 정보 */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 border-b border-gray-100">
+            <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
+              <User className="w-5 h-5 text-gray-500" />
+              퀘스트 기본 정보
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+                퀘스트 제목 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="title"
+                value={questData.title}
+                onChange={handleQuestDataChange}
+                placeholder="퀘스트 제목을 입력하세요"
+                className="bg-white"
+              />
+              {formErrors.title && (
+                <p className="text-xs text-red-600 mt-1">{formErrors.title}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="teacher_content" className="text-sm font-medium text-gray-700">
+                퀘스트 설명 <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="teacher_content"
+                value={questData.teacher_content}
+                onChange={handleQuestDataChange}
+                placeholder="퀘스트에 대한 자세한 설명을 입력하세요"
+                className="bg-white min-h-32 resize-none"
+              />
+              {formErrors.teacher_content && <p className="text-xs text-red-600 mt-1">{formErrors.teacher_content}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="difficulty" className="text-sm font-medium text-gray-700">
+                난이도 <span className="text-red-500">*</span>
+              </Label>
+              <div className="flex items-center gap-3">
+                <Select
+                  value={questData.difficulty.toString()}
+                  onValueChange={handleDifficultyChange}
+                >
+                  <SelectTrigger className="w-[300px] bg-white">
+                    <SelectValue placeholder="난이도 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1점 (EASY/개념 확인)</SelectItem>
+                    <SelectItem value="2">2점 (BASIC/유형 적용)</SelectItem>
+                    <SelectItem value="3">3점 (MEDIUM/복합 응용)</SelectItem>
+                    <SelectItem value="4">4점 (HARD/심화 분석)</SelectItem>
+                    <SelectItem value="5">5점 (VERY_HARD/창의적 해결)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-200 hover:bg-gray-50"
+                  onClick={() => setShowDifficultyGuide(true)}
+                >
+                  <Info className="w-4 h-4 mr-2" />
+                  가이드
+                </Button>
               </div>
             </div>
-            <CardContent className="pt-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-sm font-semibold text-gray-700">
-                  퀘스트 제목 <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="title"
-                  value={questData.title}
-                  onChange={handleQuestDataChange}
-                  placeholder="퀘스트 제목을 입력하세요"
-                  className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-                {formErrors.title && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.title}</p>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="teacher_content" className="text-sm font-semibold text-gray-700">
-                  퀘스트 설명 <span className="text-red-500">*</span>
-                </Label>
-                <Textarea
-                  id="teacher_content"
-                  value={questData.teacher_content}
-                  onChange={handleQuestDataChange}
-                  placeholder="퀘스트에 대한 자세한 설명을 입력하세요"
-                  className="min-h-32 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none"
-                />
-                {formErrors.teacher_content && <p className="text-sm text-red-600 mt-1">{formErrors.teacher_content}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="difficulty" className="text-sm font-semibold text-gray-700">
-                  난이도 <span className="text-red-500">*</span>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="students" className="text-sm font-medium text-gray-700">
+                  대상 학생 선택 <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex items-center gap-3">
-                  <Select
-                    value={questData.difficulty.toString()}
-                    onValueChange={handleDifficultyChange}
-                  >
-                    <SelectTrigger className="w-[300px] h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="난이도 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1점 (EASY/개념 확인)</SelectItem>
-                      <SelectItem value="2">2점 (BASIC/유형 적용)</SelectItem>
-                      <SelectItem value="3">3점 (MEDIUM/복합 응용)</SelectItem>
-                      <SelectItem value="4">4점 (HARD/심화 분석)</SelectItem>
-                      <SelectItem value="5">5점 (VERY_HARD/창의적 해결)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-gray-300 hover:bg-gray-50 h-11"
-                    onClick={() => setShowDifficultyGuide(true)}
-                  >
-                    <Info className="w-4 h-4 mr-2" />
-                    난이도 가이드
-                  </Button>
+                  {!isLoadingStudents && !fetchError && allStudents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={toggleSelectAll}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      {selectedStudents.length === allStudents.length ? '전체 해제' : '전체 선택'}
+                    </button>
+                  )}
+                  <span className="text-xs text-gray-500">
+                    {selectedStudents.length > 0 ? `${selectedStudents.length}명 선택됨` : '선택 안됨'}
+                  </span>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="students" className="text-sm font-semibold text-gray-700">
-                    대상 학생 선택 <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    {!isLoadingStudents && !fetchError && allStudents.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={toggleSelectAll}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        {selectedStudents.length === allStudents.length ? '전체 해제' : '전체 선택'}
-                      </button>
-                    )}
-                    <span className="text-sm text-gray-500">
-                      {selectedStudents.length > 0 ? `${selectedStudents.length}명 선택됨` : '선택 안됨'}
-                    </span>
-                  </div>
+              {isLoadingStudents ? (
+                <div className="flex items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-100">
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-400 mr-2" />
+                  <p className="text-sm text-gray-500">학생 목록을 불러오는 중...</p>
                 </div>
+              ) : fetchError ? (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-lg text-center">
+                  <p className="text-red-600 text-sm font-medium">{fetchError}</p>
+                </div>
+              ) : allStudents.length === 0 ? (
+                <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg bg-gray-50">
+                  <p className="text-sm text-gray-500">등록된 학생이 없습니다.</p>
+                </div>
+              ) : (
+                <div className="border border-gray-200 rounded-lg bg-gray-50/50 overflow-hidden">
+                  <div className="max-h-[300px] overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar">
+                    {allStudents.map((student) => {
+                      const personalRec = personalRewards.get(student.id);
+                      const aiRec = aiRecommendations.get(student.id);
+                      const isSelected = selectedStudents.includes(student.id);
 
-                {isLoadingStudents ? (
-                  <div className="flex items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-500 mr-3" />
-                    <p className="text-gray-600">학생 목록을 불러오는 중...</p>
-                  </div>
-                ) : fetchError ? (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
-                    <p className="text-red-600 text-sm font-medium">{fetchError}</p>
-                  </div>
-                ) : allStudents.length === 0 ? (
-                  <div className="p-8 text-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                    <p className="text-gray-500">등록된 학생이 없습니다.</p>
-                  </div>
-                ) : (
-                  <div className="border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
-                    <div className="max-h-[400px] overflow-y-auto px-4 py-3 space-y-2">
-                      {allStudents.map((student) => {
-                        const personalRec = personalRewards.get(student.id);
-                        const aiRec = aiRecommendations.get(student.id);
-                        const isSelected = selectedStudents.includes(student.id);
-
-                        return (
-                          <div
-                            key={student.id}
-                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${isSelected
-                              ? 'border-blue-500 bg-blue-50 shadow-sm'
-                              : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 bg-white'
-                              }`}
-                            onClick={() => toggleStudent(student.id)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={() => toggleStudent(student.id)}
-                                onClick={(e: any) => e.stopPropagation()}
-                                className="shrink-0"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <p className="font-semibold text-gray-900">{student.real_name}</p>
-                                  {isSelected && (
-                                    <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
-                                      선택됨
-                                    </span>
-                                  )}
-                                </div>
-
-                                {isSelected && aiModeEnabled && personalRec && (
-                                  <div className="mt-2 p-2 bg-white border border-blue-200 rounded text-xs">
-                                    <p className="font-bold text-blue-800">
-                                      보상: C {personalRec.coral} / R {personalRec.research}
-                                    </p>
-                                    {aiRec?.reason && (
-                                      <p className="text-gray-600 mt-1 truncate" title={aiRec.reason}>
-                                        AI 사유: {aiRec.reason}
-                                      </p>
-                                    )}
-                                  </div>
+                      return (
+                        <div
+                          key={student.id}
+                          className={`p-3 border rounded-md cursor-pointer transition-all ${isSelected
+                            ? 'border-blue-500 bg-blue-50/50 shadow-sm'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                            }`}
+                          onClick={() => toggleStudent(student.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => toggleStudent(student.id)}
+                              onClick={(e: any) => e.stopPropagation()}
+                              className="shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-900">{student.real_name}</p>
+                                {isSelected && (
+                                  <span className="text-[10px] font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                    선택됨
+                                  </span>
                                 )}
                               </div>
+
+                              {isSelected && aiModeEnabled && personalRec && (
+                                <div className="mt-2 p-2 bg-white border border-blue-100 rounded text-xs">
+                                  <p className="font-semibold text-blue-700">
+                                    보상: C {personalRec.coral} / R {personalRec.research}
+                                  </p>
+                                  {aiRec?.reason && (
+                                    <p className="text-gray-500 mt-1 truncate" title={aiRec.reason}>
+                                      AI 사유: {aiRec.reason}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-                {formErrors.selectedStudents && (
-                  <p className="text-sm text-red-600 mt-1">{formErrors.selectedStudents}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="deadline" className="text-sm font-semibold text-gray-700">마감일</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="deadline"
-                      type="datetime-local"
-                      value={questData.deadline}
-                      onChange={handleQuestDataChange}
-                      className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 flex-1"
-                      min={new Date().toISOString().slice(0, 16)}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-11 border-gray-300 hover:bg-gray-50 whitespace-nowrap"
-                      onClick={() => {
-                        const now = new Date();
-                        const tomorrow = new Date(now);
-                        tomorrow.setDate(tomorrow.getDate() + 1);
-                        tomorrow.setHours(23, 59, 0, 0);
-                        const formatted = tomorrow.toISOString().slice(0, 16);
-                        setQuestData(prev => ({ ...prev, deadline: formatted }));
-                      }}
-                    >
-                      내일 23:59
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-11 border-gray-300 hover:bg-gray-50 whitespace-nowrap"
-                      onClick={() => {
-                        const now = new Date();
-                        const nextWeek = new Date(now);
-                        nextWeek.setDate(nextWeek.getDate() + 7);
-                        nextWeek.setHours(23, 59, 0, 0);
-                        const formatted = nextWeek.toISOString().slice(0, 16);
-                        setQuestData(prev => ({ ...prev, deadline: formatted }));
-                      }}
-                    >
-                      일주일 후
-                    </Button>
-                  </div>
-                  {questData.deadline && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      설정된 마감일: {new Date(questData.deadline).toLocaleString('ko-KR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                      })}
-                    </p>
-                  )}
                 </div>
+              )}
+              {formErrors.selectedStudents && (
+                <p className="text-xs text-red-600 mt-1">{formErrors.selectedStudents}</p>
+              )}
+            </div>
 
-                <div className="flex items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="deadline" className="text-sm font-medium text-gray-700">마감일</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="deadline"
+                    type="datetime-local"
+                    value={questData.deadline}
+                    onChange={handleQuestDataChange}
+                    className="bg-white flex-1"
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full border-gray-300 hover:bg-gray-50 h-11"
-                    onClick={() => setShowAIReward(true)}
-                    disabled={selectedStudents.length === 0}
+                    size="sm"
+                    className="border-gray-200 hover:bg-gray-50 whitespace-nowrap"
+                    onClick={() => {
+                      const now = new Date();
+                      const tomorrow = new Date(now);
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      tomorrow.setHours(23, 59, 0, 0);
+                      const formatted = tomorrow.toISOString().slice(0, 16);
+                      setQuestData(prev => ({ ...prev, deadline: formatted }));
+                    }}
                   >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    AI 보상 추천받기
+                    내일 23:59
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-200 hover:bg-gray-50 whitespace-nowrap"
+                    onClick={() => {
+                      const now = new Date();
+                      const nextWeek = new Date(now);
+                      nextWeek.setDate(nextWeek.getDate() + 7);
+                      nextWeek.setHours(23, 59, 0, 0);
+                      const formatted = nextWeek.toISOString().slice(0, 16);
+                      setQuestData(prev => ({ ...prev, deadline: formatted }));
+                    }}
+                  >
+                    일주일 후
                   </Button>
                 </div>
+                {questData.deadline && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    설정된 마감일: {new Date(questData.deadline).toLocaleString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </p>
+                )}
               </div>
 
-              {!aiModeEnabled && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
-                  <div className="space-y-2">
-                    <Label htmlFor="reward_coral_default" className="text-sm font-semibold text-gray-700">기본 코랄 보상</Label>
-                    <Input
-                      id="reward_coral_default"
-                      type="number"
-                      value={questData.reward_coral_default}
-                      onChange={handleQuestDataChange}
-                      placeholder="예: 50"
-                      className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reward_research_data_default" className="text-sm font-semibold text-gray-700">기본 탐사 데이터 보상</Label>
-                    <Input
-                      id="reward_research_data_default"
-                      type="number"
-                      value={questData.reward_research_data_default}
-                      onChange={handleQuestDataChange}
-                      placeholder="예: 30"
-                      className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {formErrors.formGeneral && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{formErrors.formGeneral}</p>
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-gray-200 hover:bg-gray-50"
+                  onClick={() => setShowAIReward(true)}
+                  disabled={selectedStudents.length === 0}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI 보상 추천받기
+                </Button>
+              </div>
             </div>
-          )}
 
-          {/* 액션 버튼들 */}
-          <div className="flex gap-3 pt-6 border-t border-gray-200 sticky bottom-0 bg-white pb-4">
-            <Button
-              onClick={handleSubmit}
-              className="bg-gray-900 hover:bg-gray-800 text-white h-11 px-8 flex-1"
-              disabled={isSubmitting || isLoadingStudents}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  등록 중...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4 mr-2" />
-                  개인 퀘스트 등록
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/teacher/quest')}
-              className="border-gray-300 hover:bg-gray-50 h-11 px-8"
-            >
-              취소
-            </Button>
+            {!aiModeEnabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                <div className="space-y-2">
+                  <Label htmlFor="reward_coral_default" className="text-sm font-medium text-gray-700">기본 코랄 보상</Label>
+                  <Input
+                    id="reward_coral_default"
+                    type="number"
+                    value={questData.reward_coral_default}
+                    onChange={handleQuestDataChange}
+                    placeholder="예: 50"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reward_research_data_default" className="text-sm font-medium text-gray-700">기본 탐사 데이터 보상</Label>
+                  <Input
+                    id="reward_research_data_default"
+                    type="number"
+                    value={questData.reward_research_data_default}
+                    onChange={handleQuestDataChange}
+                    placeholder="예: 30"
+                    className="bg-white"
+                  />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {formErrors.formGeneral && (
+          <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
+            <p className="text-sm text-red-600">{formErrors.formGeneral}</p>
           </div>
+        )}
+
+        {/* 액션 버튼들 */}
+        <div className="flex gap-3 pt-6 border-t border-gray-200 bottom-0 pb-4">
+          <Button
+            onClick={handleSubmit}
+            className="bg-gray-900 hover:bg-gray-800 text-white flex-1"
+            disabled={isSubmitting || isLoadingStudents}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                등록 중...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                개인 퀘스트 등록
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/teacher/quest')}
+            className="border-gray-200 hover:bg-gray-50 px-8"
+          >
+            취소
+          </Button>
         </div>
-      </div>
+      </main>
 
       {/* 난이도 기준 모달 */}
       <Dialog open={showDifficultyGuide} onOpenChange={setShowDifficultyGuide}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl border border-gray-200 shadow-lg">
           <DialogHeader>
             <DialogTitle>난이도 가이드</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="bg-gray-100 p-4 rounded-lg">
-              <ul className="space-y-1 text-sm text-gray-700">
-                <li>• 1점 (EASY/개념 확인): 수업이나 교재에서 배운 핵심 개념이나 공식을 그대로 기억해서 풀 수 있는 문제(예: 일반적인 문제집의 '개념 체크', '보기' 문제)</li>
-                <li>• 2점 (BASIC/유형 적용): 배운 개념을 직접적으로 적용하는 가장 대표적인 유형의 문제(예: 쎈 B스텝 - 하)</li>
-                <li>• 3점 (MEDIUM/복합 응용): 두 가지 이상의 개념이 함께 사용되거나, 문제의 조건을 한 번 더 생각해야 하는 응용 문제(예: 쎈 B스텝 - 중/상)</li>
-                <li>• 4점 (HARD/심화 분석): 문제의 구조를 분석하고 숨겨진 조건을 찾아야 하는 본격적인 심화 문제(예: 쎈 C스텝)</li>
-                <li>• 5점 (VERY_HARD/창의적 해결): 기존 풀이법을 넘어서는 창의적인 아이디어가 필요하거나, 여러 단계를 거쳐 논리적으로 증명/추론해야 하는 최고난도 문제(예: 모의고사 킬러문항)</li>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li><span className="font-bold text-gray-900">1점 (EASY):</span> 개념 확인 - 수업 핵심 개념/공식 적용 (예: 개념 체크)</li>
+                <li><span className="font-bold text-gray-900">2점 (BASIC):</span> 유형 적용 - 대표 유형 문제 (예: 쎈 B - 하)</li>
+                <li><span className="font-bold text-gray-900">3점 (MEDIUM):</span> 복합 응용 - 두 가지 이상 개념, 조건 응용 (예: 쎈 B - 중/상)</li>
+                <li><span className="font-bold text-gray-900">4점 (HARD):</span> 심화 분석 - 문제 구조 분석, 숨겨진 조건 (예: 쎈 C)</li>
+                <li><span className="font-bold text-gray-900">5점 (VERY_HARD):</span> 창의적 해결 - 킬러 문항, 논리적 증명/추론</li>
               </ul>
             </div>
             <div className="flex justify-end">
               <Button
                 onClick={() => setShowDifficultyGuide(false)}
-                className="bg-black hover:bg-gray-800 text-white rounded-lg"
+                className="bg-black hover:bg-gray-800 text-white"
               >
                 확인
               </Button>
@@ -742,16 +739,15 @@ export function IndividualQuestCreatePage() {
 
       {/* AI 보상 추천 모달 */}
       <Dialog open={showAIReward} onOpenChange={setShowAIReward}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl border border-gray-200 shadow-lg">
           <DialogHeader>
-            <DialogTitle className="text-black">AI 보상 추천받기</DialogTitle>
+            <DialogTitle>AI 보상 추천받기</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="bg-gray-100 p-4 rounded-lg">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <p className="text-sm text-blue-800">
                 선택한 <strong>{selectedStudents.length}명</strong>의 학생에 대해 AI가 개별 보상을 추천합니다.<br />
-                학생의 평소 성취도와 퀘스트 난이도를 분석하여 산출됩니다.<br />
-                (* 최초 추천 시 학생 목록에서 학생 개별 성적을 입력하면 초기값을 맞춤으로 추천받을 수 있습니다.)
+                학생의 평소 성취도와 퀘스트 난이도를 분석하여 산출됩니다.
               </p>
             </div>
             <div className="flex justify-end gap-2">
@@ -768,14 +764,14 @@ export function IndividualQuestCreatePage() {
         </DialogContent>
       </Dialog>
 
-      {/* AI 학생별 보상 추천 모달 */}
+      {/* AI 학생별 보상 추천 모달 및 수정 모달은 기존 구조 유지하되 디자인 톤만 일치시킴 (코드 생략 가능하나 요청에 따라 포함) */}
       <Dialog open={showAiStudentModal} onOpenChange={setShowAiStudentModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl border border-gray-200 shadow-lg">
           <DialogHeader>
-            <DialogTitle className="text-black">학생별 추천 보상</DialogTitle>
+            <DialogTitle>학생별 추천 보상</DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto p-1">
+          <div className="flex-1 overflow-y-auto max-h-[500px] p-1">
             <div className="space-y-3">
               {selectedStudents.map(studentId => {
                 const student = allStudents.find(s => s.id === studentId);
@@ -785,10 +781,10 @@ export function IndividualQuestCreatePage() {
                 if (!student || !aiRec || !personalRec) return null;
 
                 return (
-                  <div key={studentId} className="p-4 border rounded-lg flex justify-between items-start bg-white">
+                  <div key={studentId} className="p-4 border border-gray-200 rounded-lg flex justify-between items-start bg-white shadow-sm">
                     <div>
                       <p className="font-bold text-gray-900">{student.real_name}</p>
-                      <p className="text-sm text-gray-500 mt-1">{aiRec.reason}</p>
+                      <p className="text-xs text-gray-500 mt-1">{aiRec.reason}</p>
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-semibold text-blue-600">
@@ -808,7 +804,7 @@ export function IndividualQuestCreatePage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 border-t pt-4">
             <Button variant="outline" onClick={handleCancelAllAiRecs}>취소</Button>
             <Button onClick={handleConfirmAllAiRecs}>전체 확정</Button>
           </div>
@@ -817,89 +813,69 @@ export function IndividualQuestCreatePage() {
 
       {/* AI 개별 학생 보상 수정 모달 */}
       <Dialog open={showAiStudentEditModal} onOpenChange={setShowAiStudentEditModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg border border-gray-200 shadow-lg">
           <DialogHeader>
-            <DialogTitle className="text-black">
+            <DialogTitle>
               {currentEditStudent?.real_name} 학생 보상 수정
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {currentEditAiRec ? (
               <>
-                <div className="bg-gray-100 p-3 rounded-lg">
+                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                   <p className="text-sm font-medium text-blue-700">
                     AI 추천: {currentEditAiRec.recommended_research_data} 탐사데이터, {currentEditAiRec.recommended_coral} 코랄
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="editResearch" className="text-black font-medium">수정값: 탐사데이터</Label>
+                  <Label htmlFor="editResearch" className="text-sm font-medium">수정값: 탐사데이터</Label>
                   <Input
                     id="editResearch"
                     type="number"
                     value={editForm.research}
                     onChange={(e) => setEditForm(prev => ({ ...prev, research: e.target.value }))}
-                    className="border-2 border-gray-300 rounded-lg"
+                    className="bg-white"
                   />
-                  {(() => {
-                    const aiResearch = currentEditAiRec.recommended_research_data;
-                    const editedResearch = Number(editForm.research) || 0;
-                    const researchChange = aiResearch > 0 ? ((editedResearch - aiResearch) / aiResearch) * 100 : (editedResearch > 0 ? 100 : 0);
-                    return (
-                      <p className={`text-sm ${researchChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        변경률: {researchChange.toFixed(1)}%
-                      </p>
-                    )
-                  })()}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="editCoral" className="text-black font-medium">수정값: 코랄</Label>
+                  <Label htmlFor="editCoral" className="text-sm font-medium">수정값: 코랄</Label>
                   <Input
                     id="editCoral"
                     type="number"
                     value={editForm.coral}
                     onChange={(e) => setEditForm(prev => ({ ...prev, coral: e.target.value }))}
-                    className="border-2 border-gray-300 rounded-lg"
+                    className="bg-white"
                   />
-                  {(() => {
-                    const aiCoral = currentEditAiRec.recommended_coral;
-                    const editedCoral = Number(editForm.coral) || 0;
-                    const coralChange = aiCoral > 0 ? ((editedCoral - aiCoral) / aiCoral) * 100 : (editedCoral > 0 ? 100 : 0);
-                    return (
-                      <p className={`text-sm ${coralChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        변경률: {coralChange.toFixed(1)}%
-                      </p>
-                    )
-                  })()}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="editMemo" className="text-black font-medium">메모 (선택)</Label>
+                  <Label htmlFor="editMemo" className="text-sm font-medium">메모 (선택)</Label>
                   <Textarea
                     id="editMemo"
                     value={editForm.memo}
                     onChange={(e) => setEditForm(prev => ({ ...prev, memo: e.target.value }))}
-                    placeholder="수정 사유를 입력하세요 (예: 최근 성적 향상으로 상향 조정)"
-                    className="border-2 border-gray-300 rounded-lg"
+                    placeholder="수정 사유를 입력하세요"
+                    className="bg-white"
                   />
                 </div>
               </>
             ) : (
-              <p>AI 추천 정보를 불러올 수 없습니다.</p>
+              <p className="text-sm text-gray-500">AI 추천 정보를 불러올 수 없습니다.</p>
             )}
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 border-t pt-4">
               <Button
                 variant="outline"
                 onClick={handleCancelEdit}
-                className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+                className="border-gray-200 hover:bg-gray-50"
               >
                 취소
               </Button>
               <Button
                 onClick={handleConfirmEdit}
-                className="bg-black hover:bg-gray-800 text-white rounded-lg"
+                className="bg-black hover:bg-gray-800 text-white"
               >
                 확인
               </Button>
@@ -907,6 +883,6 @@ export function IndividualQuestCreatePage() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

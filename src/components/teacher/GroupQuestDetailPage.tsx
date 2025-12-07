@@ -145,61 +145,69 @@ export function GroupQuestDetailPage() {
   const { completion_status } = questData;
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b-2 border-gray-300 p-6">
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
-            className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
+            className="border-gray-200 hover:bg-gray-50 h-9 px-3"
             onClick={() => navigate('/teacher/quest/group/manage')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             목록으로
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-black flex items-center gap-2">
-              {questData.title}
-              {questData.status === 'COMPLETED' && <Badge className="bg-black text-white">완료됨</Badge>}
-              {questData.status === 'EXPIRED' && <Badge className="bg-red-100 text-red-800">만료됨</Badge>}
-            </h1>
-            <p className="text-gray-600 mt-1">{questData.content}</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight text-gray-900">
+                {questData.title}
+              </h1>
+              {questData.status === 'COMPLETED' && <Badge className="bg-black text-white hover:bg-gray-800">완료됨</Badge>}
+              {questData.status === 'EXPIRED' && <Badge variant="destructive" className="bg-red-500 hover:bg-red-600">만료됨</Badge>}
+            </div>
+            <p className="text-sm text-gray-500 mt-1 line-clamp-1">{questData.content}</p>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="p-6 space-y-6">
+      <main className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* 퀘스트 정보 */}
-        <Card className="border-2 border-gray-300">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-black">
-              <Target className="w-5 h-5" />
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-3 border-b border-gray-100">
+            <CardTitle className="flex items-center gap-2 text-base font-bold text-gray-900">
+              <Target className="w-4 h-4 text-gray-500" />
               퀘스트 정보
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                  <Award className="w-5 h-5 text-yellow-600" />
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="p-2 bg-yellow-100 rounded-full">
+                    <Award className="w-4 h-4 text-yellow-700" />
+                  </div>
                   <div>
                     <span className="text-xs text-gray-500 block">보상</span>
-                    <span className="text-black font-medium">{questData.reward_coral} 코랄</span>
+                    <span className="text-gray-900 font-semibold">{questData.reward_coral} 코랄</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                  <Calendar className="w-5 h-5 text-blue-600" />
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="p-2 bg-blue-100 rounded-full">
+                    <Calendar className="w-4 h-4 text-blue-700" />
+                  </div>
                   <div>
                     <span className="text-xs text-gray-500 block">마감일</span>
-                    <span className="text-black font-medium">{questData.deadline}</span>
+                    <span className="text-gray-900 font-semibold">{questData.deadline}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                  <Users className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <Users className="w-4 h-4 text-green-700" />
+                  </div>
                   <div>
                     <span className="text-xs text-gray-500 block">달성 현황</span>
-                    <span className="text-black font-medium">
+                    <span className="text-gray-900 font-semibold">
                       {completion_status.completed_count} / {completion_status.total_count}명
                     </span>
                   </div>
@@ -207,18 +215,19 @@ export function GroupQuestDetailPage() {
               </div>
 
               {/* 완료 조건 및 액션 */}
-              <div className={`border-2 rounded-lg p-4 flex flex-col md:flex-row justify-between items-center gap-4 ${completion_status.is_achievable ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-                }`}>
+              <div className={`border rounded-lg p-5 flex flex-col md:flex-row justify-between items-center gap-4 ${
+                completion_status.is_achievable ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'
+              }`}>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`font-bold ${completion_status.is_achievable ? 'text-green-800' : 'text-gray-700'}`}>
+                    <span className={`font-bold text-sm ${completion_status.is_achievable ? 'text-green-800' : 'text-gray-900'}`}>
                       완료 조건: {completion_status.required_count}명 이상 달성
                     </span>
                     {completion_status.is_achievable && (
-                      <Badge className="bg-green-600 text-white border-none">조건 달성!</Badge>
+                      <Badge className="bg-green-600 text-white border-none hover:bg-green-700">조건 달성!</Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs text-gray-500">
                     현재 {completion_status.completed_count}명이 달성했습니다. (진행률: {completion_status.completion_rate}%)
                   </p>
                 </div>
@@ -226,14 +235,14 @@ export function GroupQuestDetailPage() {
                 {/* 완료 처리 버튼 */}
                 {questData.status !== 'COMPLETED' && questData.status !== 'EXPIRED' && (
                   <Button
-                    className={`min-w-[150px] ${completion_status.is_achievable
+                    className={`min-w-[160px] ${completion_status.is_achievable
                       ? 'bg-black hover:bg-gray-800 text-white'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-100'
                       }`}
                     disabled={!completion_status.is_achievable || isProcessing}
                     onClick={handleCompleteQuest}
                   >
-                    {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                    {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle className="w-4 h-4 mr-2" />}
                     퀘스트 완료 처리
                   </Button>
                 )}
@@ -243,45 +252,57 @@ export function GroupQuestDetailPage() {
         </Card>
 
         {/* 학생 목록 */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-black">학생별 달성 현황</h2>
-            <span className="text-sm text-gray-500">클릭하여 달성 여부를 변경하세요</span>
+        <div className="space-y-4">
+          <div className="flex justify-between items-end">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">학생별 달성 현황</h3>
+              <p className="text-sm text-gray-500 mt-1">학생 카드를 클릭하여 달성 여부를 변경할 수 있습니다.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {questData.students.map((student) => (
-              <Card
+              <div
                 key={student.student_id}
-                className={`border-2 cursor-pointer transition-all ${student.is_completed
-                    ? 'border-green-500 bg-green-50/30'
-                    : 'border-gray-200 hover:border-gray-400'
+                className={`group border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                  student.is_completed
+                    ? 'border-green-200 bg-green-50/50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
                 onClick={() => handleToggleCheck(student)}
               >
-                <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${student.is_completed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border transition-colors ${
+                      student.is_completed 
+                        ? 'bg-green-100 text-green-700 border-green-200' 
+                        : 'bg-gray-100 text-gray-500 border-gray-200 group-hover:bg-white'
                       }`}>
                       {student.student_name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-medium text-black">{student.student_name}</p>
-                      <p className="text-xs text-gray-500">{student.is_completed ? student.completed_at?.split('T')[0] : '미달성'}</p>
+                      <p className={`font-semibold text-sm ${student.is_completed ? 'text-green-900' : 'text-gray-900'}`}>
+                        {student.student_name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {student.is_completed ? student.completed_at?.split('T')[0] : '미달성'}
+                      </p>
                     </div>
                   </div>
 
                   {student.is_completed ? (
-                    <CheckCircle className="w-6 h-6 text-green-600 fill-green-100" />
+                    <div className="bg-green-600 rounded-full p-1">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
                   ) : (
-                    <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
+                    <div className="w-6 h-6 rounded-full border-2 border-gray-200 group-hover:border-gray-400 transition-colors" />
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }

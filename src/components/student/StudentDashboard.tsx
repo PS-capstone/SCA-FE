@@ -221,7 +221,7 @@ export function StudentDashboard() {
       {/* 1. 이벤트 & 공지 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
         <div className="title-bar">
-          <div className="title-bar-text">&nbsp;이벤트 & 공지</div>
+          <div className="title-bar-text">이벤트 & 공지</div>
           <div className="title-bar-controls">
             <button aria-label="Minimize" />
             <button aria-label="Maximize" />
@@ -254,7 +254,7 @@ export function StudentDashboard() {
       {/* 2. 레이드 현황 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
         <div className="title-bar">
-          <div className="title-bar-text">&nbsp;현재 레이드: {active_raid ? active_raid.raid_name : '진행 중 아님'}</div>
+          <div className="title-bar-text">현재 레이드: {active_raid ? active_raid.raid_name : '진행 중 아님'}</div>
           <div className="title-bar-controls">
             <button aria-label="Help" />
           </div>
@@ -315,7 +315,7 @@ export function StudentDashboard() {
       {/* 3. 단체 퀘스트 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
         <div className="title-bar">
-          <div className="title-bar-text">&nbsp;단체 퀘스트 현황</div>
+          <div className="title-bar-text">단체 퀘스트 현황</div>
         </div>
         <div className="window-body">
           <p style={{ marginBottom: "10px" }}>우리 반 달성률</p>
@@ -359,7 +359,7 @@ export function StudentDashboard() {
       {/* 4. 내 정보 및 로그 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
         <div className="title-bar">
-          <div className="title-bar-text">&nbsp;내 정보</div>
+          <div className="title-bar-text">내 정보</div>
         </div>
         <div className="window-body">
           <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>

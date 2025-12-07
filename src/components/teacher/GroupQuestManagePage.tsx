@@ -62,10 +62,9 @@ export function GroupQuestManagePage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "IN_PROGRESS": return <Badge className="bg-blue-100 text-blue-800 border-blue-200">진행 중</Badge>;
-      case "ACHIEVABLE": return <Badge className="bg-green-100 text-green-800 border-green-200 animate-pulse">달성 가능</Badge>;
-      case "COMPLETED": return <Badge className="bg-gray-800 text-white border-black">완료됨</Badge>;
-      case "EXPIRED": return <Badge className="bg-red-100 text-red-800 border-red-200">만료됨</Badge>;
+      case "ACTIVE": return <Badge className="bg-blue-100 text-blue-800 border-blue-200">진행 중</Badge>;
+      case "COMPLETED": return <Badge className="bg-green-100 text-green-800 border-green-200">완료됨</Badge>;
+      case "FAILED": return <Badge className="bg-red-100 text-red-800 border-red-200">실패</Badge>;
       default: return <Badge>{status}</Badge>;
     }
   };
@@ -75,10 +74,10 @@ export function GroupQuestManagePage() {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b-2 border-gray-300 p-6">
-        <div className="flex items-center justify-between">
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-black">단체 퀘스트 관리</h1>
             <p className="text-gray-600 mt-1">진행 중인 단체 퀘스트를 관리합니다</p>
@@ -91,7 +90,7 @@ export function GroupQuestManagePage() {
             단체 퀘스트 등록
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
       <div className="p-6 space-y-6">
@@ -102,7 +101,7 @@ export function GroupQuestManagePage() {
           {error && <div className="text-red-600">{error}</div>}
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-black">퀘스트 목록</h2>
+            <h1 className="text-xl font-semibold text-black">퀘스트 목록</h1>
 
             {quests.length === 0 ? (
               <div className="text-center py-10 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
@@ -179,6 +178,6 @@ export function GroupQuestManagePage() {
         </div>
 
       </div>
-    </>
+    </div>
   );
 }

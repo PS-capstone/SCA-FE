@@ -168,19 +168,11 @@ export function StudentGacha() {
   const getRarityBadge = (grade: Fish['grade']) => {
     switch (grade) {
       case 'COMMON':
-        return <Badge className="bg-gray-400">커먼</Badge>;
+        return <Badge className="bg-gray-400">COMMON</Badge>;
       case 'RARE':
-        return <Badge className="bg-blue-500">레어</Badge>;
+        return <Badge className="bg-blue-500">RARE</Badge>;
       case 'LEGENDARY':
-        return <Badge className="bg-yellow-600">레전더리</Badge>;
-    }
-  };
-
-  const getRarityText = (grade: Fish['grade']) => {
-    switch (grade) {
-      case 'COMMON': return <span style={{ color: "gray", fontWeight: "bold" }}>[커먼]</span>;
-      case 'RARE': return <span style={{ color: "blue", fontWeight: "bold" }}>[레어]</span>;
-      case 'LEGENDARY': return <span style={{ color: "#ffd700", fontWeight: "bold" }}>[레전더리]</span>;
+        return <Badge className="bg-yellow-600 animate-pulse">LEGENDARY</Badge>;
     }
   };
 
@@ -227,7 +219,7 @@ export function StudentGacha() {
         {/* 가챠 머신 윈도우 */}
         <div className="window" style={{ width: "100%" }}>
           <div className="title-bar">
-            <div className="title-bar-text">&nbsp;가챠 머신</div>
+            <div className="title-bar-text">가챠 머신</div>
             <div className="title-bar-controls">
               <button aria-label="Help" onClick={() => setIsProbabilityOpen(true)} />
             </div>
@@ -325,7 +317,7 @@ export function StudentGacha() {
               <h3 style={{ margin: "5px 0", wordBreak: "keep-all", fontFamily: "inherit" }}>
                 {resultFish.fish_name || '알 수 없는 물고기'}
               </h3>
-              <div style={{ marginBottom: "10px" }}>{getRarityText(resultFish.grade)}</div>
+              <div style={{ marginBottom: "10px" }}>{getRarityBadge(resultFish.grade)}</div>
 
               <p style={{ fontSize: "12px", color: "#666", marginBottom: "15px" }}>
                 (현재 보유: {resultFish.current_count}마리)

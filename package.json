@@ -30,6 +30,7 @@
     "@radix-ui/react-toggle-group": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@supabase/supabase-js": "^2.49.8",
+    "@tailwindcss/vite": "^4.1.17",
     "admin-lte": "^4.0.0-rc3",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
@@ -52,6 +53,7 @@
     "sonner": "^2.0.3",
     "styled-components": "^6.1.19",
     "tailwind-merge": "*",
+    "tailwindcss": "^4.1.17",
     "vaul": "^1.1.2"
   },
   "devDependencies": {

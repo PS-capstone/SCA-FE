@@ -140,14 +140,14 @@ export function SignupPage() {
         <div className="retro-layout min-h-screen flex items-center justify-center p-4" style={{ backgroundImage: "var(--bg-url)" }}>
             <div className="window" style={{ width: "100%", maxWidth: "450px" }}>
                 <div className="title-bar">
-                    <div className="title-bar-text">&nbsp;회원가입</div>
+                    <div className="title-bar-text">회원가입</div>
                     <div className="title-bar-controls">
                         <button aria-label="Minimize" />
                         <button aria-label="Maximize" />
                         <button aria-label="Close" />
                     </div>
                 </div>
-                <div className="window-body">
+                <div className="window-body system">
                     <div style={{ marginBottom: "15px" }}>
                         <button
                             onClick={() => navigate('/')}

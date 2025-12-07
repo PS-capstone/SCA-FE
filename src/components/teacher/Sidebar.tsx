@@ -7,13 +7,17 @@ import {
   Swords,
   CheckCircle,
   Menu,
-  LogOut
+  LogOut,
+  X
 } from "lucide-react";
-import { useState } from "react";
 import { useAuth } from "../../contexts/AppContext";
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface SidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const location = useLocation();
@@ -35,23 +39,35 @@ export function Sidebar() {
   const isDashboard = location.pathname === '/teacher/dashboard';
   const navItems = isDashboard ? homeNavItems : allNavItems;
 
-  return (
-    <div className={`max-h-screen bg-white border-r-2 border-gray-300 transition-all ${collapsed ? 'w-20' : 'w-64'} flex flex-col`}>
-      {/* Tabler 스타일 적용: 사이드바 헤더 */}
-      <div className="p-4 border-b-2 border-gray-300 navbar-brand">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCollapsed(!collapsed)}
-            className="btn btn-icon border border-gray-300 hover:bg-gray-100"
-          >
-            <Menu className="w-4 h-4" />
-          </Button>
-        </div>
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    if (onMobileClose) onMobileClose();
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    if (onMobileClose) onMobileClose();
+  };
+
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full bg-white border-r-2 border-gray-300">
+      {/* 헤더: 모바일에서만 닫기 버튼 표시 */}
+      <div className="p-4 border-b-2 border-gray-300 flex justify-between items-center h-14 shrink-0">
+        <span className="font-bold text-lg">메뉴</span>
+        {/* 모바일 전용 닫기 버튼 */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={onMobileClose}
+        >
+          <X className="w-5 h-5" />
+        </Button>
       </div>
-      {/* Tabler 스타일 적용: 네비게이션 메뉴 */}
-      <nav className="p-4 space-y-2 flex-1 overflow-y-auto nav nav-pills nav-vertical">
+
+      {/* 메뉴 목록 */}
+      <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.id;
@@ -59,32 +75,54 @@ export function Sidebar() {
             <Button
               key={item.id}
               variant={isActive ? "default" : "ghost"}
-              className={`w-full justify-start rounded-none nav-link ${isActive
-                ? 'bg-black text-white hover:bg-gray-800 active'
-                : 'hover:bg-gray-100 border border-transparent hover:border-gray-300'
+              className={`w-full justify-start rounded-none h-10 px-3 ${isActive
+                ? 'bg-black text-white hover:bg-gray-800'
+                : 'hover:bg-gray-100'
                 }`}
-              onClick={() => navigate(item.id)}
+              onClick={() => handleNavClick(item.id)}
             >
-              <Icon className="w-4 h-4 mr-2" />
-              {!collapsed && item.label}
+              <Icon className="w-4 h-4 mr-2 shrink-0" />
+              <span className="truncate">{item.label}</span>
             </Button>
           );
         })}
       </nav>
-      {/* Tabler 스타일 적용: 푸터 */}
-      <div className="p-4 border-t-2 border-gray-300">
+
+      {/* 푸터: 로그아웃 */}
+      <div className="p-4 border-t-2 border-gray-300 shrink-0">
         <Button
           variant="ghost"
-          className="w-full justify-start rounded-none text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-300 btn btn-danger"
-          onClick={() => {
-            logout();
-            navigate('/');
-          }}
+          className="w-full justify-start rounded-none text-red-600 hover:bg-red-50 hover:text-red-700"
+          onClick={handleLogout}
         >
-          <LogOut className="w-4 h-4 mr-2" />
-          {!collapsed && "로그아웃"}
+          <LogOut className="w-4 h-4 mr-2 shrink-0" />
+          로그아웃
         </Button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar: md 이상에서 항상 보임, 고정 너비 */}
+      <div className="hidden md:block w-64 shrink-0 h-full">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile Sidebar Overlay: md 미만에서 조건부 렌더링 */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 transition-opacity"
+            onClick={onMobileClose}
+          />
+          {/* Drawer */}
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+            <SidebarContent />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

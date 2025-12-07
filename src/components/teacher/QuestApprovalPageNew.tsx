@@ -240,29 +240,29 @@ export function QuestApprovalPageNew() {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b-2 border-gray-300 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">퀘스트 승인</h1>
-            <p className="text-gray-600 mt-1">승인 대기 중: {pendingQuests.length}건</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={fetchPendingQuests}
-            className="border-2 border-gray-300"
-          >
-            새로고침
-          </Button>
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">퀘스트 승인</h1>
+          <p className="text-sm text-gray-500 mt-1">승인이 필요한 퀘스트: <span className="font-semibold text-blue-600">{pendingQuests.length}건</span></p>
         </div>
-      </div>
+        <Button
+          variant="outline"
+          onClick={fetchPendingQuests}
+          className="border-gray-200 hover:bg-gray-50"
+        >
+          새로고침
+        </Button>
+      </header>
 
       {/* Main Content */}
-      <div className="p-6">
-        <div className="space-y-4 max-w-4xl">
+      <main className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto flex flex-col gap-4">
+        <div className="space-y-4">
           {pendingQuests.length === 0 && !isLoading && (
-            <p className="text-gray-500 text-center py-10">승인 대기 중인 퀘스트가 없습니다.</p>
+            <div className="text-center py-20 border border-dashed border-gray-200 rounded-lg bg-gray-50">
+              <p className="text-gray-500">현재 승인 대기 중인 퀘스트가 없습니다.</p>
+            </div>
           )}
 
           {pendingQuests.map((quest) => {
@@ -272,46 +272,49 @@ export function QuestApprovalPageNew() {
             };
 
             return (
-              <Card key={quest.assignment_id} className="border-2 border-gray-300 rounded-lg transition-all hover:border-gray-400">
-                <CardContent className="p-4">
+              <Card key={quest.assignment_id} className="border border-gray-200 shadow-sm transition-all hover:border-gray-300">
+                <CardContent className="p-5">
                   <div
                     className="cursor-pointer"
                     onClick={toggleExpansion}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-lg">{quest.student_name}</h4>
-                          <Badge variant="outline" className="border-2 border-gray-300 rounded-lg bg-white">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900">{quest.student_name}</span>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                             {quest.class_name}
-                          </Badge>
+                          </span>
                         </div>
                         <p className="text-sm text-gray-600 font-medium">{quest.title}</p>
                       </div>
-                      <Badge className="bg-yellow-100 text-yellow-800 border-2 border-yellow-200 rounded-lg hover:bg-yellow-100">
+                      <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100">
                         승인 대기
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="text-sm text-gray-500">
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="text-xs text-gray-400">
                         제출: {formatDateTime(quest.submitted_at)}
                       </div>
-                      <ChevronDown
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
-                      />
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-gray-100">
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
+                        />
+                      </Button>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t-2 border-gray-300 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="mt-4 pt-4 border-t border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
-                          <span className="font-semibold text-gray-700">보상:</span>
-                          <span className="text-blue-600 font-medium">코랄 {quest.reward_coral_personal}</span>
-                          <span className="text-purple-600 font-medium">탐사데이터 {quest.reward_research_data_personal}</span>
+                        <div className="flex items-center gap-3 text-sm bg-gray-50 px-4 py-3 rounded-md border border-gray-100 sm:w-auto">
+                          <span className="font-semibold text-gray-600">보상:</span>
+                          <span className="text-blue-600 font-medium">C {quest.reward_coral_personal}</span>
+                          <span className="text-gray-300">|</span>
+                          <span className="text-purple-600 font-medium">R {quest.reward_research_data_personal}</span>
                         </div>
                         <Button
-                          className="bg-black text-white hover:bg-gray-800 rounded-lg"
+                          className="bg-black text-white hover:bg-gray-800 sm:w-auto"
                           onClick={(e: any) => {
                             e.stopPropagation();
                             handleOpenDetailModal(quest.assignment_id);
@@ -327,11 +330,11 @@ export function QuestApprovalPageNew() {
             )
           })}
         </div>
-      </div>
+      </main>
 
       {/* Quest Detail Dialog */}
       <Dialog open={showDetailModal} onOpenChange={(isOpen: boolean) => { if (!isOpen) handleCloseDetailModal(); }}>
-        <DialogContent className="border-2 border-gray-300 rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="border border-gray-200 shadow-lg rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>퀘스트 승인</DialogTitle>
           </DialogHeader>
@@ -352,91 +355,64 @@ export function QuestApprovalPageNew() {
           {selectedQuestDetail && !isModalLoading && (
             <div className="space-y-6">
               {/* Quest Info */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h4 className="font-bold text-lg">{selectedQuestDetail.quest.title}</h4>
-                    <p className="text-sm text-gray-600">
+                    <h4 className="font-bold text-base text-gray-900">{selectedQuestDetail.quest.title}</h4>
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {selectedQuestDetail.student.student_name} ({selectedQuestDetail.student.class_name})
                     </p>
                   </div>
-                  <div className="text-right text-sm text-gray-500">
+                  <div className="text-right text-xs text-gray-400">
                     {formatDateTime(selectedQuestDetail.submission.submitted_at)}
                   </div>
                 </div>
                 <div className="text-sm text-gray-700 border-t border-gray-200 pt-3 mt-2">
-                  <span className="font-semibold block mb-1">퀘스트 내용:</span>
+                  <span className="text-xs font-semibold text-gray-500 block mb-1">퀘스트 내용</span>
                   {selectedQuestDetail.quest.teacher_content || "내용 없음"}
                 </div>
               </div>
 
               {/* Student Submission */}
               <div className="space-y-2">
-                <h5 className="font-semibold text-gray-900 flex items-center gap-2">
+                <h5 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-600" />
                   학생 수행 결과
                 </h5>
 
-                <div className="border-2 border-gray-300 rounded-lg p-4 bg-white min-h-[100px]">
-                  <p className="text-gray-800 whitespace-pre-wrap">
+                <div className="border border-gray-200 rounded-lg p-4 bg-white min-h-[100px] shadow-sm">
+                  <p className="text-gray-800 text-sm whitespace-pre-wrap leading-relaxed">
                     {selectedQuestDetail.submission.student_content || "텍스트 내용 없음"}
                   </p>
                 </div>
 
                 {/* Attachment */}
-                <div className="mt-3">
-                  <p className="text-sm text-gray-600 mb-2 font-medium">첨부 파일</p>
+                <div className="mt-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">첨부 파일</p>
                   {selectedQuestDetail.submission?.attachment_url ? (() => {
                     const fileUrl = selectedQuestDetail.submission.attachment_url!;
-                    console.log('[퀘스트 승인] 첨부파일 URL:', fileUrl);
                     const fileType = getFileType(fileUrl);
-                    console.log('[퀘스트 승인] 감지된 파일 타입:', fileType);
                     const fileName = getFileName(fileUrl);
 
                     if (fileType === 'image') {
                       return (
-                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-gradient-to-br from-white to-gray-50/50 hover:border-blue-300 hover:shadow-sm transition-all">
+                        <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
                           <a
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block"
+                            className="block hover:opacity-95 transition-opacity"
                           >
-                            <div className="bg-gray-50 p-6 flex flex-col items-center justify-center text-center min-h-[200px]">
+                            <div className="p-4 flex flex-col items-center justify-center min-h-[200px]">
                               <img
                                 src={fileUrl}
                                 alt="첨부파일 미리보기"
-                                className="max-w-full max-h-[400px] object-contain shadow-md rounded-lg"
+                                className="max-w-full max-h-[300px] object-contain rounded shadow-sm bg-white"
                                 crossOrigin="anonymous"
-                                onLoad={() => {
-                                  console.log('[퀘스트 승인] 이미지 로드 성공:', fileUrl);
-                                }}
-                                onError={(e) => {
-                                  console.error('[퀘스트 승인] 이미지 로드 실패:', fileUrl, e);
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = `
-                                      <div class="flex flex-col items-center gap-3 text-gray-500 py-8">
-                                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                                          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                          </svg>
-                                        </div>
-                                        <p class="text-sm font-medium">이미지를 불러올 수 없습니다</p>
-                                        <p class="text-xs text-gray-400 mt-1">URL: ${fileUrl.substring(0, 50)}...</p>
-                                        <a href="${fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-700 hover:underline text-sm font-medium">
-                                          직접 열기 →
-                                        </a>
-                                      </div>
-                                    `;
-                                  }
-                                }}
                               />
-                              <p className="mt-4 text-sm text-blue-600 font-medium flex items-center gap-2 hover:text-blue-700 transition-colors">
-                                <ImageIcon className="w-4 h-4" />
-                                새 창에서 이미지 열기
+                              <p className="mt-3 text-xs text-blue-600 font-medium flex items-center gap-1.5">
+                                <ImageIcon className="w-3.5 h-3.5" />
+                                크게 보기
                               </p>
                             </div>
                           </a>
@@ -444,105 +420,61 @@ export function QuestApprovalPageNew() {
                       );
                     } else if (fileType === 'pdf') {
                       return (
-                        <div className="border border-gray-200 rounded-lg bg-gradient-to-br from-white to-gray-50/50 hover:border-blue-300 hover:shadow-sm transition-all">
-                          <div className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0">
-                                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-sm">
-                                  <FileText className="w-6 h-6 text-white" />
-                                </div>
+                        <div className="border border-gray-200 rounded-lg bg-white p-4 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-red-600" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-900 truncate text-base">{fileName}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">PDF 문서</p>
-                                <div className="flex gap-2 mt-3">
-                                  <Button
-                                    asChild
-                                    variant="default"
-                                    size="sm"
-                                    className="flex-1 sm:flex-initial"
-                                  >
-                                    <a
-                                      href={fileUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <FileText className="w-4 h-4" />
-                                      새 창에서 열기
-                                    </a>
-                                  </Button>
-                                  <Button
-                                    asChild
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 sm:flex-initial border-gray-300"
-                                  >
-                                    <a
-                                      href={fileUrl}
-                                      download={fileName}
-                                    >
-                                      <Download className="w-4 h-4" />
-                                      다운로드
-                                    </a>
-                                  </Button>
-                                </div>
+                                <p className="text-sm font-medium text-gray-900 truncate">{fileName}</p>
+                                <p className="text-xs text-gray-500">PDF 문서</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+                                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">열기</a>
+                                </Button>
+                                <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+                                  <a href={fileUrl} download={fileName}><Download className="w-3 h-3" /></a>
+                                </Button>
                               </div>
                             </div>
-                          </div>
                         </div>
                       );
                     } else {
                       return (
-                        <div className="border border-gray-200 rounded-lg bg-gradient-to-br from-white to-gray-50/50 hover:border-blue-300 hover:shadow-sm transition-all">
-                          <div className="p-4">
-                            <div className="flex items-start gap-4">
-                              <div className="flex-shrink-0">
-                                <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center shadow-sm">
-                                  <FileText className="w-6 h-6 text-white" />
-                                </div>
+                         <div className="border border-gray-200 rounded-lg bg-white p-4 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-gray-600" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-900 truncate text-base">{fileName}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">첨부 파일</p>
-                                <div className="mt-3">
-                                  <Button
-                                    asChild
-                                    variant="default"
-                                    size="sm"
-                                    className="w-full sm:w-auto"
-                                  >
-                                    <a
-                                      href={fileUrl}
-                                      download={fileName}
-                                    >
-                                      <Download className="w-4 h-4" />
-                                      다운로드
-                                    </a>
-                                  </Button>
-                                </div>
+                                <p className="text-sm font-medium text-gray-900 truncate">{fileName}</p>
+                                <p className="text-xs text-gray-500">파일</p>
                               </div>
+                              <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+                                <a href={fileUrl} download={fileName}><Download className="w-3 h-3 mr-1" /> 다운로드</a>
+                              </Button>
                             </div>
-                          </div>
                         </div>
                       );
                     }
                   })() : (
-                    <div className="border-2 border-gray-300 rounded-lg p-4 bg-gray-50 text-center min-h-[100px] flex items-center justify-center">
-                      <p className="text-gray-500 text-sm">첨부파일이 없습니다.</p>
+                    <div className="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 text-center">
+                      <p className="text-gray-500 text-xs">첨부파일이 없습니다.</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Teacher Feedback Section */}
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 space-y-4">
-                <h5 className="font-semibold text-blue-900">피드백 작성</h5>
+              <div className="bg-blue-50/50 p-5 rounded-lg border border-blue-100 space-y-4">
+                <h5 className="text-sm font-semibold text-blue-900">피드백 작성</h5>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-semibold text-blue-700 mb-1 block">빠른 코멘트</label>
+                    <label className="text-xs font-medium text-blue-700 mb-1.5 block">빠른 코멘트</label>
                     <Select onValueChange={(value: any) => setCustomComment(value)}>
-                      <SelectTrigger className="bg-white border-blue-200">
+                      <SelectTrigger className="bg-white border-blue-200 h-9">
                         <SelectValue placeholder="자주 쓰는 코멘트 선택" />
                       </SelectTrigger>
                       <SelectContent>
@@ -554,12 +486,12 @@ export function QuestApprovalPageNew() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-blue-700 mb-1 block">직접 입력</label>
+                    <label className="text-xs font-medium text-blue-700 mb-1.5 block">직접 입력</label>
                     <Textarea
                       placeholder="학생에게 전달할 피드백을 입력하세요..."
                       value={customComment}
                       onChange={(e) => setCustomComment(e.target.value)}
-                      className="bg-white border-blue-200 min-h-[80px]"
+                      className="bg-white border-blue-200 min-h-[80px] text-sm"
                     />
                   </div>
                 </div>
@@ -568,12 +500,12 @@ export function QuestApprovalPageNew() {
                 <div className="flex gap-3 pt-2">
                   <Button
                     variant="outline"
-                    className="flex-1 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 hover:border-red-300"
+                    className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
                     onClick={() => handleApproveOrReject('reject')}
                     disabled={isSubmitting}
                   >
                     <X className="w-4 h-4 mr-2" />
-                    {isSubmitting ? "처리 중..." : "반려하기"}
+                    {isSubmitting ? "처리 중..." : "반려"}
                   </Button>
                   <Button
                     className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white"
@@ -593,17 +525,17 @@ export function QuestApprovalPageNew() {
           )}
         </DialogContent>
       </Dialog>
-
+      
       {/* Approval Success Modal */}
-      <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
-        <DialogContent className="border-2 border-gray-300 rounded-lg max-w-sm">
-          <div className="text-center py-6">
+       <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
+        <DialogContent className="border border-gray-200 shadow-lg rounded-lg max-w-sm">
+          <div className="text-center py-8 px-4">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="text-lg font-bold text-gray-900">승인 완료!</h3>
             <p className="text-sm text-gray-500 mt-2">
-              퀘스트 승인이 완료되었습니다.<br />
+              퀘스트 승인이 정상적으로 완료되었습니다.<br />
               학생에게 보상이 지급되었습니다.
             </p>
             <Button
@@ -615,6 +547,6 @@ export function QuestApprovalPageNew() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

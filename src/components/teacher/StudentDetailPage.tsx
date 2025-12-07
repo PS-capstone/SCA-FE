@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Plus, CheckCircle } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Progress } from "../ui/progress";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AppContext";
@@ -168,136 +168,141 @@ export function StudentDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b-2 border-gray-300 p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <h1>{student.name}</h1>
-              <p className="text-gray-600 mt-1">{student.className || "반 정보 없음"}</p>
-            </div>
-            <Button 
-              className="border-2 border-gray-300 rounded-lg hover:bg-gray-100"
-              variant="outline"
-              onClick={() => navigate('/teacher/quest')}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              퀘스트 등록
-            </Button>
-          </div>
+      <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">{student.name}</h1>
+          <p className="text-sm text-gray-500 mt-1">{student.className || "반 정보 없음"}</p>
         </div>
+        <Button 
+          className="bg-black hover:bg-gray-800 text-white shadow-sm"
+          onClick={() => navigate('/teacher/quest')}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          퀘스트 등록
+        </Button>
+      </header>
 
-        {/* Main Content */}
-        <div className="p-6 space-y-6 max-w-4xl">
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="max-w-5xl space-y-6">
           {/* Stats */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <h3 className="mb-4">학생 스테이터스</h3>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">코랄</p>
-                  <h3>{student.coral}</h3>
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 border-b border-gray-100">
+              <CardTitle className="text-base font-bold text-gray-900">학생 스테이터스</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">코랄</p>
+                  <h3 className="text-2xl font-bold text-gray-900">{student.coral}</h3>
                 </div>
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">탐사데이터</p>
-                  <h3>{student.explorationData}</h3>
+                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">탐사데이터</p>
+                  <h3 className="text-2xl font-bold text-gray-900">{student.explorationData}</h3>
                 </div>
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">퀘스트 달성률</p>
-                  <h3>{student.questCompletion}%</h3>
+                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">퀘스트 달성률</p>
+                  <h3 className="text-2xl font-bold text-blue-600">{student.questCompletion}%</h3>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 border-t-2 border-gray-300 pt-4">
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">달성한 퀘스트</p>
-                  <h3>{student.completedQuests}개</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col items-center justify-center p-3 border border-dashed border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">달성한 퀘스트</p>
+                  <h3 className="text-lg font-semibold text-green-600">{student.completedQuests}개</h3>
                 </div>
-                <div className="text-center border-2 border-gray-300 p-3">
-                  <p className="text-sm text-gray-600 mb-1">달성 못한 퀘스트</p>
-                  <h3>{student.incompleteQuests}개</h3>
+                <div className="flex flex-col items-center justify-center p-3 border border-dashed border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">미달성 퀘스트</p>
+                  <h3 className="text-lg font-semibold text-gray-600">{student.incompleteQuests}개</h3>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Pending Approvals */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3>승인 대기 중인 퀘스트</h3>
-                <Badge className="bg-black text-white rounded-lg">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pending Approvals */}
+            <Card className="border border-gray-200 shadow-sm flex flex-col h-full">
+              <CardHeader className="pb-3 border-b border-gray-100 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base font-bold text-gray-900">승인 대기 중</CardTitle>
+                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200">
                   {pendingApprovals.length}건
                 </Badge>
-              </div>
-              <div className="space-y-3">
-                {pendingApprovals.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">승인 대기 중인 퀘스트가 없습니다.</p>
-                ) : (
-                  pendingApprovals.map((quest) => (
-                    <Card key={quest.id} className="border-2 border-gray-300 rounded-lg">
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between mb-2">
+              </CardHeader>
+              <CardContent className="pt-4 flex-1 overflow-y-auto max-h-[400px]">
+                <div className="space-y-3">
+                  {pendingApprovals.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500">
+                      <p className="text-sm">승인 대기 중인 퀘스트가 없습니다.</p>
+                    </div>
+                  ) : (
+                    pendingApprovals.map((quest) => (
+                      <div key={quest.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h4>{quest.title}</h4>
-                            <p className="text-sm text-gray-600">제출: {quest.submittedAt}</p>
+                            <h4 className="font-semibold text-sm text-gray-900 line-clamp-1">{quest.title}</h4>
+                            <p className="text-xs text-gray-500 mt-1">제출: {quest.submittedAt}</p>
                           </div>
                           <Button 
                             size="sm"
-                            className="bg-black text-white hover:bg-gray-800 rounded-lg"
+                            className="h-8 bg-black text-white hover:bg-gray-800 text-xs"
                             onClick={() => navigate('/teacher/quest/approval')}
                           >
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            승인
+                            승인하기
                           </Button>
                         </div>
-                        <div className="flex gap-2 text-sm border-t-2 border-gray-300 pt-2">
-                          <span className="text-gray-600">보상:</span>
-                          <span>코랄 {quest.coral}</span>
-                          <span>탐사데이터 {quest.explorationData}</span>
+                        <div className="flex items-center gap-3 text-xs bg-gray-50 p-2 rounded border border-gray-100">
+                          <span className="font-medium text-gray-500">보상:</span>
+                          <span className="text-blue-600 font-medium">C {quest.coral}</span>
+                          <span className="text-gray-300">|</span>
+                          <span className="text-purple-600 font-medium">R {quest.explorationData}</span>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Ongoing Quests */}
-          <Card className="border-2 border-gray-300 rounded-lg">
-            <CardContent className="p-4">
-              <h3 className="mb-4">현재 진행 중인 퀘스트</h3>
-              <div className="space-y-3">
-                {ongoingQuests.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">진행 중인 퀘스트가 없습니다.</p>
-                ) : (
-                  ongoingQuests.map((quest) => (
-                    <Card key={quest.id} className="border-2 border-gray-300 rounded-lg">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4>{quest.title}</h4>
-                          <span className="text-sm text-gray-600">마감: {quest.deadline}</span>
+            {/* Ongoing Quests */}
+            <Card className="border border-gray-200 shadow-sm flex flex-col h-full">
+              <CardHeader className="pb-3 border-b border-gray-100 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base font-bold text-gray-900">진행 중인 퀘스트</CardTitle>
+                <Badge variant="outline" className="text-gray-600 border-gray-300">
+                  {ongoingQuests.length}건
+                </Badge>
+              </CardHeader>
+              <CardContent className="pt-4 flex-1 overflow-y-auto max-h-[400px]">
+                <div className="space-y-3">
+                  {ongoingQuests.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500">
+                      <p className="text-sm">진행 중인 퀘스트가 없습니다.</p>
+                    </div>
+                  ) : (
+                    ongoingQuests.map((quest) => (
+                      <div key={quest.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-sm text-gray-900 line-clamp-1">{quest.title}</h4>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 h-5 font-normal">
+                             마감: {quest.deadline}
+                          </Badge>
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">진행률</span>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>진행률</span>
                             <span>{quest.progress}%</span>
                           </div>
-                          <div className="border-2 border-gray-300 h-4 overflow-hidden">
-                            <div 
-                              className="h-full bg-black transition-all"
-                              style={{ width: `${quest.progress}%` }}
-                            />
-                          </div>
+                          <Progress value={quest.progress} className="h-1.5" />
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-      </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
