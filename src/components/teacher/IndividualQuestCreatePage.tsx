@@ -453,7 +453,7 @@ export function IndividualQuestCreatePage() {
                 />
                 {formErrors.teacher_content && <p className="text-xs text-red-600 mt-1">{formErrors.teacher_content}</p>}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:!grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
                     난이도 <span className="text-red-500">*</span>
@@ -699,7 +699,7 @@ export function IndividualQuestCreatePage() {
               </div>
 
               {!aiModeEnabled && (
-                <div className="grid grid-cols-1 gap-6 pt-4 border-t border-gray-100">
+                <div className="grid grid-cols-1 sm:!grid-cols-2 gap-6 pt-4 border-t border-gray-100">
                   <div className="space-y-2">
                     <Label htmlFor="reward_coral_default" className="text-sm font-medium text-gray-700">기본 코랄 보상</Label>
                     <Input

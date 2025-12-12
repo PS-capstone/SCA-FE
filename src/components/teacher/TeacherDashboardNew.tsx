@@ -110,7 +110,7 @@ export function TeacherDashboardNew() {
           </div>
           {/* Responsive Grid Layout */}
           {classes.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 sm:!grid-cols-2 gap-6">
               {classes.map((classItem) => (
                 <div key={classItem.class_id} className="h-full">
                   <ClassCard

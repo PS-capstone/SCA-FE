@@ -302,10 +302,10 @@ export function RaidManagePage() {
                     <p className="text-right text-xs text-red-600 font-medium">{raidDetail.progress_percent}% 남음</p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 md:!grid-cols-2 gap-4">
                     <div className="space-y-1 p-3 border border-gray-100 rounded-md">
                       <p className="text-xs text-gray-500">기본 보상</p>
-                      <p className="font-semibold text-gray-900">{raidDetail.reward_coral} Coral</p>
+                      <p className="font-semibold text-gray-900">{raidDetail.reward_coral} 코랄</p>
                     </div>
                     <div className="space-y-1 p-3 border border-gray-100 rounded-md">
                       <p className="text-xs text-gray-500">참여자</p>

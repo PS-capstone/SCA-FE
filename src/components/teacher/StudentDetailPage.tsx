@@ -193,7 +193,7 @@ export function StudentDetailPage() {
               <CardTitle className="text-base font-bold text-gray-900">학생 스테이터스</CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:!grid-cols-2 gap-4 mb-6">
                 <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">코랄</p>
                   <h3 className="text-2xl font-bold text-gray-900">{student.coral}</h3>
@@ -203,7 +203,7 @@ export function StudentDetailPage() {
                   <h3 className="text-2xl font-bold text-gray-900">{student.explorationData}</h3>
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:!grid-cols-2 gap-4">
                 <div className="flex flex-col items-center justify-center p-3 border border-dashed border-gray-200 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">달성한 퀘스트</p>
                   <h3 className="text-lg font-semibold text-green-600">{student.completedQuests}개</h3>

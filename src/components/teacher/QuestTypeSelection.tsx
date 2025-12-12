@@ -30,7 +30,7 @@ export function QuestTypeSelection() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 sm:!grid-cols-2 gap-6">
             {/* 개인 퀘스트 */}
             <Card className="border border-gray-200 shadow-sm hover:border-blue-400 hover:shadow-md transition-all cursor-default">
               <CardHeader className="pb-2">

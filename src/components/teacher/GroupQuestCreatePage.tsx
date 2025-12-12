@@ -155,7 +155,7 @@ export function GroupQuestCreatePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:!grid-cols-2 gap-4">
                 {templates.map((template) => (
                   <div
                     key={template.code}
@@ -245,7 +245,7 @@ export function GroupQuestCreatePage() {
               </Button>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:!grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">보상: 코랄</Label>
                   <Input

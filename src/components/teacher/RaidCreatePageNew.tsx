@@ -341,7 +341,7 @@ export function RaidCreatePageNew() {
                   <RadioGroup
                     value={formState.template}
                     onValueChange={(val: any) => setFormState(prev => ({ ...prev, template: val }))}
-                    className="grid grid-cols-1 gap-4"
+                    className="grid grid-cols-1 sm:!grid-cols-2 gap-4"
                   >
                     {creationInfo.templates.map(tmpl => (
                       <div key={tmpl.code}
@@ -376,7 +376,7 @@ export function RaidCreatePageNew() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 md:!grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-base font-semibold">시작 일시</Label>
                     <Input
@@ -399,7 +399,7 @@ export function RaidCreatePageNew() {
 
                 <div className="h-px bg-gray-100 my-4" />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:!grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-base font-semibold">난이도 설정</Label>
                     <Select

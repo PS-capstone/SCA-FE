@@ -180,7 +180,7 @@ export function GroupQuestDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              <div className="grid !grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:!grid-cols-3 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="p-2 bg-white border border-gray-200 rounded-full shadow-sm">
                     <Award className="w-4 h-4 text-orange-500" />
@@ -253,7 +253,7 @@ export function GroupQuestDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:!grid-cols-2 gap-4">
                 {questData.students.map((student) => (
                   <div
                     key={student.student_id}

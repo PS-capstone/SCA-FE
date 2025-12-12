@@ -305,9 +305,9 @@ export function ClassManagePage() {
       <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Quick Actions Grid */}
-          <section className="grid !grid-cols-3 sm:grid-cols-1 gap-4">
+          <section className="grid grid-cols-1 sm:!grid-cols-3 gap-4">
             <Button
-              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all"
+              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all whitespace-normal"
               variant="ghost"
               onClick={() => {
                 const classIdToUse = classDetails?.class_id ?? selectedClassId ?? (currentClassId ? Number(currentClassId) : null);
@@ -325,7 +325,7 @@ export function ClassManagePage() {
             </Button>
 
             <Button
-              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all"
+              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all whitespace-normal"
               variant="ghost"
               onClick={() => navigate('/teacher/quest')}
             >
@@ -339,7 +339,7 @@ export function ClassManagePage() {
             </Button>
 
             <Button
-              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all"
+              className="h-auto py-5 justify-start bg-white border border-gray-200 text-black hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all whitespace-normal"
               variant="ghost"
               onClick={() => navigate('/teacher/raid/create')}
             >
@@ -437,7 +437,7 @@ export function ClassManagePage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 sm:!grid-cols-2 gap-3">
                       <Button variant="outline" onClick={() => setIsRaidModalOpen(true)}>
                         상세 보기
                       </Button>

@@ -273,16 +273,16 @@ export function StudentListPage() {
       <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto space-y-6">
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:!grid-cols-2 gap-6">
             {isEditing ? (
               // 수정 모드
               editedStudents.map((student) => (
                 <div key={student.student_id} className="border border-blue-200 bg-white rounded-lg p-5 shadow-sm ring-1 ring-blue-100">
                   <div className="font-bold text-lg text-gray-900 mb-4">{student.name}</div>
                   <div className="space-y-4">
-                     <div className="grid grid-cols-2 gap-3 text-sm bg-gray-50 p-2 rounded border border-gray-100">
-                        <div><span className="block text-xs text-gray-500">코랄</span><span className="font-mono font-bold">{student.coral}</span></div>
-                        <div><span className="block text-xs text-gray-500">탐사 데이터</span><span className="font-mono font-bold">{student.research_data}</span></div>
+                     <div className="grid !grid-cols-2 gap-3 text-sm bg-gray-50 p-2 rounded border border-gray-100">
+                        <div><span className="text-xs text-gray-500">코랄: </span><span className="font-mono font-bold"> {student.coral}</span></div>
+                        <div><span className="text-xs text-gray-500">탐사 데이터: </span><span className="font-mono font-bold"> {student.research_data}</span></div>
                      </div>
                      <div>
                         <label className="block text-xs font-semibold text-blue-700 mb-1">성적</label>

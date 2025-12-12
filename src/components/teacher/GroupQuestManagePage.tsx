@@ -101,7 +101,7 @@ export function GroupQuestManagePage() {
               <Button variant="outline" onClick={() => navigate('/teacher/quest/group')}>퀘스트 등록</Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:!grid-cols-2 gap-6">
               {quests.map((quest) => (
                 <Card key={quest.quest_id} className="border border-gray-200 shadow-sm hover:border-gray-300 transition-all flex flex-col h-full bg-white">
                   <CardHeader className="pb-2">
@@ -138,7 +138,7 @@ export function GroupQuestManagePage() {
                     </div>
 
                     {/* 보상 및 마감일 */}
-                    <div className="grid grid-cols-2 gap-4 text-sm pt-2">
+                    <div className="grid grid-cols-1 gap-4 text-sm pt-2">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Award className="w-4 h-4 text-orange-500" />
                         <span className="font-medium">{quest.reward_coral} 코랄</span>
