@@ -78,7 +78,7 @@ export function TeacherDashboardNew() {
   const currentUser = user as TeacherUser;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -96,54 +96,55 @@ export function TeacherDashboardNew() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h3 className="text-lg font-bold text-gray-900">나의 반 목록</h3>
-          <Button
-            className="sm:w-auto bg-black hover:bg-gray-800 text-white shadow-sm"
-            onClick={() => navigate('/teacher/class/create')}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            반 생성하기
-          </Button>
-        </div>
-
-        {/* Responsive Grid Layout */}
-        {classes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {classes.map((classItem) => (
-              <div key={classItem.class_id} className="h-full">
-                <ClassCard
-                  class_id={Number(classItem.class_id)}
-                  class_name={classItem.class_name}
-                  student_count={classItem.student_count}
-                  pending_quests={classItem.pending_quests}
-                  onClick={() => {
-                    const classId = String(classItem.class_id);
-                    if (setCurrentClass) {
-                      setCurrentClass(classId);
-                    }
-                    navigate(`/teacher/class/${classItem.class_id}`);
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          // Empty State
-          <div className="flex flex-col items-center justify-center py-20 bg-gray-50 border border-dashed border-gray-200 rounded-lg">
-            <p className="text-gray-500 text-center mb-4">
-              생성된 반이 없습니다.<br/>
-              새로운 반을 만들어 학생들을 관리해보세요.
-            </p>
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h3 className="text-xl font-bold text-gray-900">나의 반 목록</h3>
             <Button
-              variant="outline"
+              className="sm:w-auto bg-black hover:bg-gray-800 text-white shadow-sm"
               onClick={() => navigate('/teacher/class/create')}
             >
-              첫 반 만들기
+              <Plus className="w-4 h-4 mr-2" />
+              반 생성하기
             </Button>
           </div>
-        )}
+          {/* Responsive Grid Layout */}
+          {classes.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              {classes.map((classItem) => (
+                <div key={classItem.class_id} className="h-full">
+                  <ClassCard
+                    class_id={Number(classItem.class_id)}
+                    class_name={classItem.class_name}
+                    student_count={classItem.student_count}
+                    pending_quests={classItem.pending_quests}
+                    onClick={() => {
+                      const classId = String(classItem.class_id);
+                      if (setCurrentClass) {
+                        setCurrentClass(classId);
+                      }
+                      navigate(`/teacher/class/${classItem.class_id}`);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Empty State
+            <div className="flex flex-col items-center justify-center py-20 bg-gray-50 border border-dashed border-gray-200 rounded-lg">
+              <p className="text-gray-500 text-center mb-4">
+                생성된 반이 없습니다.<br />
+                새로운 반을 만들어 학생들을 관리해보세요.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/teacher/class/create')}
+              >
+                첫 반 만들기
+              </Button>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

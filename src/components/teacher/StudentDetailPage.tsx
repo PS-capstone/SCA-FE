@@ -168,7 +168,7 @@ export function StudentDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -185,8 +185,8 @@ export function StudentDetailPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="max-w-5xl space-y-6">
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {/* Stats */}
           <Card className="border border-gray-200 shadow-sm">
             <CardHeader className="pb-3 border-b border-gray-100">
@@ -202,12 +202,8 @@ export function StudentDetailPage() {
                   <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">탐사데이터</p>
                   <h3 className="text-2xl font-bold text-gray-900">{student.explorationData}</h3>
                 </div>
-                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-100">
-                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">퀘스트 달성률</p>
-                  <h3 className="text-2xl font-bold text-blue-600">{student.questCompletion}%</h3>
-                </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="flex flex-col items-center justify-center p-3 border border-dashed border-gray-200 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">달성한 퀘스트</p>
                   <h3 className="text-lg font-semibold text-green-600">{student.completedQuests}개</h3>
@@ -286,13 +282,6 @@ export function StudentDetailPage() {
                           <Badge variant="secondary" className="text-[10px] px-1.5 h-5 font-normal">
                              마감: {quest.deadline}
                           </Badge>
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="flex justify-between text-xs text-gray-500">
-                            <span>진행률</span>
-                            <span>{quest.progress}%</span>
-                          </div>
-                          <Progress value={quest.progress} className="h-1.5" />
                         </div>
                       </div>
                     ))

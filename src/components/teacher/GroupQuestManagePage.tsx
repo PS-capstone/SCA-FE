@@ -74,110 +74,100 @@ export function GroupQuestManagePage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-black">단체 퀘스트 관리</h1>
-            <p className="text-gray-600 mt-1">진행 중인 단체 퀘스트를 관리합니다</p>
-          </div>
-          <Button
-            className="bg-black hover:bg-gray-800 text-white rounded-lg border-2 border-gray-300"
-            onClick={() => navigate('/teacher/quest/group')}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            단체 퀘스트 등록
-          </Button>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">단체 퀘스트 관리</h1>
+          <p className="text-sm text-gray-500 mt-1">진행 중인 단체 퀘스트를 관리합니다</p>
         </div>
+        <Button
+          className="bg-black hover:bg-gray-800 text-white h-10"
+          onClick={() => navigate('/teacher/quest/group')}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          단체 퀘스트 등록
+        </Button>
       </header>
 
       {/* Main Content */}
-      <div className="p-6 space-y-6">
-        {error && <div className="text-red-600">{error}</div>}
-
-        {/* Main Content */}
-        <div className="p-6 space-y-6">
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
           {error && <div className="text-red-600">{error}</div>}
 
-          <div className="space-y-4">
-            <h1 className="text-xl font-semibold text-black">퀘스트 목록</h1>
-
-            {quests.length === 0 ? (
-              <div className="text-center py-10 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-                등록된 단체 퀘스트가 없습니다.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {quests.map((quest) => (
-                  <Card key={quest.quest_id} className="border-2 border-gray-300 hover:border-gray-500 transition-colors">
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline">{quest.template}</Badge>
-                        {getStatusBadge(quest.status)}
+          {quests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white border border-dashed border-gray-200 rounded-lg shadow-sm">
+              <p className="text-gray-500 mb-4">등록된 단체 퀘스트가 없습니다.</p>
+              <Button variant="outline" onClick={() => navigate('/teacher/quest/group')}>퀘스트 등록</Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-6">
+              {quests.map((quest) => (
+                <Card key={quest.quest_id} className="border border-gray-200 shadow-sm hover:border-gray-300 transition-all flex flex-col h-full bg-white">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge variant="outline" className="border-gray-200 text-gray-500">{quest.template}</Badge>
+                      {getStatusBadge(quest.status)}
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-900 leading-tight">{quest.title}</CardTitle>
+                    <p className="text-sm text-gray-500 line-clamp-2 mt-1 min-h-[40px]">{quest.content}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4 flex-1 flex flex-col justify-end">
+                    {/* 진행률 */}
+                    <div className="space-y-2 bg-gray-50 p-3 rounded-md border border-gray-100">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 font-medium">달성 현황</span>
+                        <span className="text-gray-900 font-bold">
+                          {quest.completion_status.completed_count} / {quest.completion_status.total_count}명
+                        </span>
                       </div>
-                      <CardTitle className="text-lg text-black">{quest.title}</CardTitle>
-                      <p className="text-sm text-gray-600 line-clamp-2">{quest.content}</p>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* 진행률 */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">달성 현황</span>
-                          <span className="text-black font-semibold">
-                            {quest.completion_status.completed_count} / {quest.completion_status.total_count}명
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${quest.completion_status.is_achievable ? 'bg-green-600' : 'bg-blue-600'}`}
+                          style={{ width: `${(quest.completion_status.completed_count / quest.completion_status.total_count) * 100}%` }}
+                        />
+                      </div>
+                      <div className="text-xs flex justify-between items-center pt-1">
+                        <span>목표: {quest.completion_status.required_count}명 이상</span>
+                        {quest.completion_status.is_achievable && (
+                          <span className="text-green-600 font-bold flex items-center">
+                            <CheckCircle className="w-3 h-3 mr-1" /> 조건 달성!
                           </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ${quest.completion_status.is_achievable ? 'bg-green-600' : 'bg-black'
-                              }`}
-                            style={{ width: `${(quest.completion_status.completed_count / quest.completion_status.total_count) * 100}%` }}
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500 flex justify-between">
-                          <span>목표: {quest.completion_status.required_count}명 이상</span>
-                          {quest.completion_status.is_achievable && (
-                            <span className="text-green-600 font-bold flex items-center">
-                              <CheckCircle className="w-3 h-3 mr-1" /> 조건 달성!
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
+                    </div>
 
-                      {/* 보상 및 마감일 */}
-                      <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-100">
-                        <div className="flex items-center gap-1 text-blue-600 font-medium">
-                          <Award className="w-4 h-4" />
-                          <span>{quest.reward_coral} 코랄</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-500">
-                          <Calendar className="w-4 h-4" />
-                          <span>~{quest.deadline.split('T')[0]}</span>
-                        </div>
+                    {/* 보상 및 마감일 */}
+                    <div className="grid grid-cols-2 gap-4 text-sm pt-2">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Award className="w-4 h-4 text-orange-500" />
+                        <span className="font-medium">{quest.reward_coral} 코랄</span>
                       </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span>~{quest.deadline.split('T')[0]}</span>
+                      </div>
+                    </div>
 
-                      {/* 액션 버튼 */}
-                      <Button
-                        variant="outline"
-                        className={`w-full border-2 rounded-lg ${quest.status === 'ACHIEVABLE'
-                            ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100 hover:border-green-300'
-                            : 'border-gray-300 hover:bg-gray-100'
-                          }`}
-                        onClick={() => navigate(`/teacher/quest/group/detail/${quest.quest_id}`)}
-                      >
-                        <Target className="w-4 h-4 mr-2" />
-                        {quest.status === 'ACHIEVABLE' ? '달성 확인 및 완료' : '달성 현황 관리'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+                    {/* 액션 버튼 */}
+                    <Button
+                      variant="outline"
+                      className={`w-full h-10 mt-2 ${quest.status === 'ACHIEVABLE'
+                        ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
+                        : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                      onClick={() => navigate(`/teacher/quest/group/detail/${quest.quest_id}`)}
+                    >
+                      <Target className="w-4 h-4 mr-2" />
+                      {quest.status === 'ACHIEVABLE' ? '달성 확인 및 완료' : '달성 현황 관리'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-
-      </div>
+      </main>
     </div>
   );
 }
