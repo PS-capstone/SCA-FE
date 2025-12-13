@@ -303,7 +303,7 @@ export function ClassManagePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* Quick Actions Grid */}
           <section className="grid grid-cols-1 sm:!grid-cols-3 gap-4">
             <Button
@@ -415,7 +415,7 @@ export function ClassManagePage() {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col justify-center">
                 {activeRaid && isActiveRaid ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     <div>
                       <h4 className="text-xl font-bold text-gray-900 mb-1">{activeRaid.title}</h4>
                       <p className="text-xs text-gray-500">종료일: {endDateLabel}</p>
@@ -485,7 +485,7 @@ export function ClassManagePage() {
           </DialogHeader>
 
           {activeRaid && (
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-center">
                   <div className="text-xs text-gray-500 mb-1">남은 HP</div>

@@ -258,7 +258,7 @@ export function QuestApprovalPageNew() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
         <div className="space-y-4">
           {pendingQuests.length === 0 && !isLoading && (
             <div className="text-center py-20 border border-dashed border-gray-200 rounded-lg bg-gray-50">
@@ -355,7 +355,7 @@ export function QuestApprovalPageNew() {
           )}
 
           {selectedQuestDetail && !isModalLoading && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Quest Info */}
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div className="flex justify-between items-start mb-3">

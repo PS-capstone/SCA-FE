@@ -248,7 +248,7 @@ export function TeacherProfilePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* 1. 기본 정보 카드 */}
           <Card className="border border-gray-200 shadow-sm">
             <CardHeader className="pb-3 border-b border-gray-100 flex flex-row items-center justify-between space-y-0 py-4">
@@ -262,7 +262,7 @@ export function TeacherProfilePage() {
                 </Button>
               )}
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="pt-6 space-y-4">
               {/* 프로필 요약 (Read-only view) */}
               <div className="flex items-center gap-5 p-5 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="w-16 h-16 bg-white border border-gray-200 rounded-full flex items-center justify-center text-2xl font-bold text-gray-600 shadow-sm">

@@ -285,7 +285,7 @@ export function RaidCreatePageNew() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* 에러 메시지 */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg flex items-start gap-3">
@@ -301,7 +301,7 @@ export function RaidCreatePageNew() {
                 기본 설정
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-6 space-y-4">
               {/* 대상 반 선택 */}
               <div className="space-y-2">
                 <Label className="text-base font-semibold text-gray-900">대상 반 선택</Label>
@@ -375,7 +375,7 @@ export function RaidCreatePageNew() {
                   일정 및 난이도
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:!grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-base font-semibold">시작 일시</Label>
@@ -466,7 +466,7 @@ export function RaidCreatePageNew() {
                   보상 설정
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-base font-semibold">기본 보상 (Coral)</Label>

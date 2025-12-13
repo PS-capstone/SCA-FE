@@ -97,7 +97,7 @@ export function TeacherDashboardNew() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h3 className="text-xl font-bold text-gray-900">나의 반 목록</h3>
             <Button

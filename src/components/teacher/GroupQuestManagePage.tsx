@@ -92,7 +92,7 @@ export function GroupQuestManagePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {error && <div className="text-red-600">{error}</div>}
 
           {quests.length === 0 ? (

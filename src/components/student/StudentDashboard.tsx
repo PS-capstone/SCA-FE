@@ -217,7 +217,7 @@ export function StudentDashboard() {
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
-    <div className="p-4 space-y-6 min-h-screen pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
+    <div className="p-4 space-y-3 min-h-screen pb-20 max-w-screen-xl mx-auto" style={{ minHeight: "100vh" }}>
       {/* 1. 이벤트 & 공지 윈도우 */}
       <div className="window" style={{ width: "100%" }}>
         <div className="title-bar">
@@ -319,7 +319,7 @@ export function StudentDashboard() {
         </div>
         <div className="window-body">
           <p style={{ marginBottom: "10px" }}>우리 반 달성률</p>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {group_quests.length > 0 ? (
               group_quests.map((quest) => (
                 <fieldset key={quest.quest_id} style={{ padding: "10px", marginBottom: "10px" }}>

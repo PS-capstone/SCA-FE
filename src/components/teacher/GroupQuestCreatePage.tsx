@@ -145,7 +145,7 @@ export function GroupQuestCreatePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* 1. 템플릿 선택 */}
           <Card className="border border-gray-200 shadow-sm">
             <CardHeader className="border-b border-gray-100 py-4">
@@ -181,7 +181,7 @@ export function GroupQuestCreatePage() {
                 퀘스트 상세 정보
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-6 space-y-4">
               <div className="space-y-2">
                 <Label className="text-base font-semibold">퀘스트 제목 <span className="text-red-500">*</span></Label>
                 <Input
@@ -244,7 +244,7 @@ export function GroupQuestCreatePage() {
                 보상 가이드
               </Button>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:!grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">보상: 코랄</Label>

@@ -415,7 +415,7 @@ export function IndividualQuestCreatePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* 1. 기본 정보 카드 */}
           <Card className="border border-gray-200 shadow-sm">
             <CardHeader className="border-b border-gray-100 py-4">
@@ -424,14 +424,38 @@ export function IndividualQuestCreatePage() {
                 퀘스트 기본 정보
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-6 space-y-4">
               <div className="space-y-2">
-                <Label className="text-base font-semibold">
-                  퀘스트 제목 <span className="text-red-500">*</span>
-                </Label>
+                <div className="flex justify-between items-center">
+                  <Label className="text-base font-semibold">
+                    퀘스트 제목 <span className="text-red-500">*</span>
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs border-gray-200 hover:bg-gray-50 text-gray-500"
+                    onClick={() => {
+                      setQuestData((prev) => ({
+                        ...prev,
+                        title: "쎈 미적분1 숙제",
+                        teacher_content: "쎈 미적분1 2단원 03 미분계수와 도함수 A,B단계 풀어오기",
+                      }));
+                      // 입력 시 관련 에러 메시지 초기화 (선택 사항)
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        title: null,
+                        teacher_content: null,
+                      }));
+                    }}
+                  >
+                    [시연] 퀘스트 입력
+                  </Button>
+                </div>
                 <Input
+                  id="title"
                   value={questData.title}
-                  onChange={(e) => setQuestData({ ...questData, title: e.target.value })}
+                  onChange={handleQuestDataChange}
                   placeholder="퀘스트 제목을 입력하세요"
                   className="h-11 bg-white"
                 />
@@ -498,7 +522,7 @@ export function IndividualQuestCreatePage() {
                 대상 및 보상 설정
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-6 space-y-4">
 
               {/* 학생 선택 영역 */}
               <div className="space-y-3">

@@ -170,7 +170,7 @@ export function GroupQuestDetailPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* 1. 퀘스트 정보 카드 */}
           <Card className="border border-gray-200 shadow-sm">
             <CardHeader className="pb-3 border-b border-gray-100 py-4">
@@ -179,7 +179,7 @@ export function GroupQuestDetailPage() {
                 퀘스트 정보
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="pt-6 space-y-4">
               <div className="grid grid-cols-1 md:!grid-cols-3 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="p-2 bg-white border border-gray-200 rounded-full shadow-sm">
@@ -252,7 +252,7 @@ export function GroupQuestDetailPage() {
                 학생별 달성 현황
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="pt-6 space-y-4">
               <div className="grid grid-cols-1 sm:!grid-cols-2 gap-4">
                 {questData.students.map((student) => (
                   <div

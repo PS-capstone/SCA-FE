@@ -186,7 +186,7 @@ export function StudentDetailPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* Stats */}
           <Card className="border border-gray-200 shadow-sm">
             <CardHeader className="pb-3 border-b border-gray-100">

@@ -219,7 +219,7 @@ export function RaidManagePage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           {actionMessage && (
             <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-md text-sm border border-blue-100 mb-4">
               {actionMessage}
@@ -282,7 +282,7 @@ export function RaidManagePage() {
                   <p>불러오는 중...</p>
                 </div>
               ) : raidDetail ? (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Badge variant="outline" className="text-xs font-normal border-gray-300">{raidDetail.difficulty}</Badge>

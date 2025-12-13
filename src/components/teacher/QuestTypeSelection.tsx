@@ -29,7 +29,7 @@ export function QuestTypeSelection() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           <div className="grid grid-cols-1 sm:!grid-cols-2 gap-6">
             {/* 개인 퀘스트 */}
             <Card className="border border-gray-200 shadow-sm hover:border-blue-400 hover:shadow-md transition-all cursor-default">
@@ -39,7 +39,7 @@ export function QuestTypeSelection() {
                   개인 퀘스트
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <p className="text-gray-600 text-sm leading-relaxed">
                   특정 학생에게만 할당되는 개별 퀘스트입니다.
                   학생의 수준에 맞는 맞춤형 과제를 부여할 때 사용합니다.
@@ -75,7 +75,7 @@ export function QuestTypeSelection() {
                   단체 퀘스트
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <p className="text-gray-600 text-sm leading-relaxed">
                   반 전체 학생에게 할당되는 공통 퀘스트입니다.
                   학급 전체의 목표 달성을 독려할 때 사용합니다.
