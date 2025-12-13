@@ -22,7 +22,7 @@ export const FISH_ICONS: { [key: number]: {
     // 1. 해파리 - jellyfish
     1: { column: 4, row: 4 },
 
-    // 2. 열대어 - Banded Butterflyfish
+    // 2. 나비고기 - Banded Butterflyfish
     2: { column: 0, row: 0 },
 
     // 3. 해마 - Sea Horse
@@ -34,10 +34,10 @@ export const FISH_ICONS: { [key: number]: {
     // 5. 흰동가리 - clown fish
     5: { column: 7, row: 0 },
 
-    // 6. 금붕어 - blue tang
+    // 6. 블루탱 - blue tang
     6: { column: 8, row: 1 },
 
-    // 7. 구피 - Sea Angel
+    // 7. 클리오네 - Sea Angel
     7: { column: 9, row: 4 },
 
     // 8. 바다거북 - turtle (animated)

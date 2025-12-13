@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import { User, Plus, X, Info, Sparkles, Loader2 } from "lucide-react";
+import { User, Plus, Info, Sparkles, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -24,6 +24,8 @@ interface AiRecommendation {
   recommended_coral: number;
   recommended_research_data: number;
   reason: string;
+  global_factor?: number;
+  difficulty_factor?: number;
 }
 
 type FormErrors = {
@@ -391,12 +393,18 @@ export function IndividualQuestCreatePage() {
     }
   };
 
+  const getCommonAiReason = () => {
+    if (aiRecommendations.size === 0) return null;
+    const firstRec = aiRecommendations.values().next().value;
+    return firstRec?.reason || null;
+  };
+
   // 수정 모달용 데이터
   const currentEditStudent = currentEditingStudentId ? allStudents.find(s => s.id === currentEditingStudentId) : null;
   const currentEditAiRec = currentEditingStudentId ? aiRecommendations.get(currentEditingStudentId) : null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -406,306 +414,376 @@ export function IndividualQuestCreatePage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* 퀘스트 기본 정보 */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 border-b border-gray-100">
-            <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-900">
-              <User className="w-5 h-5 text-gray-500" />
-              퀘스트 기본 정보
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm font-medium text-gray-700">
-                퀘스트 제목 <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="title"
-                value={questData.title}
-                onChange={handleQuestDataChange}
-                placeholder="퀘스트 제목을 입력하세요"
-                className="bg-white"
-              />
-              {formErrors.title && (
-                <p className="text-xs text-red-600 mt-1">{formErrors.title}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="teacher_content" className="text-sm font-medium text-gray-700">
-                퀘스트 설명 <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="teacher_content"
-                value={questData.teacher_content}
-                onChange={handleQuestDataChange}
-                placeholder="퀘스트에 대한 자세한 설명을 입력하세요"
-                className="bg-white min-h-32 resize-none"
-              />
-              {formErrors.teacher_content && <p className="text-xs text-red-600 mt-1">{formErrors.teacher_content}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="difficulty" className="text-sm font-medium text-gray-700">
-                난이도 <span className="text-red-500">*</span>
-              </Label>
-              <div className="flex items-center gap-3">
-                <Select
-                  value={questData.difficulty.toString()}
-                  onValueChange={handleDifficultyChange}
-                >
-                  <SelectTrigger className="w-[300px] bg-white">
-                    <SelectValue placeholder="난이도 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1점 (EASY/개념 확인)</SelectItem>
-                    <SelectItem value="2">2점 (BASIC/유형 적용)</SelectItem>
-                    <SelectItem value="3">3점 (MEDIUM/복합 응용)</SelectItem>
-                    <SelectItem value="4">4점 (HARD/심화 분석)</SelectItem>
-                    <SelectItem value="5">5점 (VERY_HARD/창의적 해결)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-200 hover:bg-gray-50"
-                  onClick={() => setShowDifficultyGuide(true)}
-                >
-                  <Info className="w-4 h-4 mr-2" />
-                  가이드
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="students" className="text-sm font-medium text-gray-700">
-                  대상 학생 선택 <span className="text-red-500">*</span>
-                </Label>
-                <div className="flex items-center gap-3">
-                  {!isLoadingStudents && !fetchError && allStudents.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={toggleSelectAll}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      {selectedStudents.length === allStudents.length ? '전체 해제' : '전체 선택'}
-                    </button>
-                  )}
-                  <span className="text-xs text-gray-500">
-                    {selectedStudents.length > 0 ? `${selectedStudents.length}명 선택됨` : '선택 안됨'}
-                  </span>
-                </div>
-              </div>
-
-              {isLoadingStudents ? (
-                <div className="flex items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-100">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-400 mr-2" />
-                  <p className="text-sm text-gray-500">학생 목록을 불러오는 중...</p>
-                </div>
-              ) : fetchError ? (
-                <div className="p-4 bg-red-50 border border-red-100 rounded-lg text-center">
-                  <p className="text-red-600 text-sm font-medium">{fetchError}</p>
-                </div>
-              ) : allStudents.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg bg-gray-50">
-                  <p className="text-sm text-gray-500">등록된 학생이 없습니다.</p>
-                </div>
-              ) : (
-                <div className="border border-gray-200 rounded-lg bg-gray-50/50 overflow-hidden">
-                  <div className="max-h-[300px] overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar">
-                    {allStudents.map((student) => {
-                      const personalRec = personalRewards.get(student.id);
-                      const aiRec = aiRecommendations.get(student.id);
-                      const isSelected = selectedStudents.includes(student.id);
-
-                      return (
-                        <div
-                          key={student.id}
-                          className={`p-3 border rounded-md cursor-pointer transition-all ${isSelected
-                            ? 'border-blue-500 bg-blue-50/50 shadow-sm'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                            }`}
-                          onClick={() => toggleStudent(student.id)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => toggleStudent(student.id)}
-                              onClick={(e: any) => e.stopPropagation()}
-                              className="shrink-0"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <p className="text-sm font-medium text-gray-900">{student.real_name}</p>
-                                {isSelected && (
-                                  <span className="text-[10px] font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
-                                    선택됨
-                                  </span>
-                                )}
-                              </div>
-
-                              {isSelected && aiModeEnabled && personalRec && (
-                                <div className="mt-2 p-2 bg-white border border-blue-100 rounded text-xs">
-                                  <p className="font-semibold text-blue-700">
-                                    보상: C {personalRec.coral} / R {personalRec.research}
-                                  </p>
-                                  {aiRec?.reason && (
-                                    <p className="text-gray-500 mt-1 truncate" title={aiRec.reason}>
-                                      AI 사유: {aiRec.reason}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {formErrors.selectedStudents && (
-                <p className="text-xs text-red-600 mt-1">{formErrors.selectedStudents}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* 1. 기본 정보 카드 */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="border-b border-gray-100 py-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="w-5 h-5 text-gray-500" />
+                퀘스트 기본 정보
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="deadline" className="text-sm font-medium text-gray-700">마감일</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="deadline"
-                    type="datetime-local"
-                    value={questData.deadline}
-                    onChange={handleQuestDataChange}
-                    className="bg-white flex-1"
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
+                <div className="flex justify-between items-center">
+                  <Label className="text-base font-semibold">
+                    퀘스트 제목 <span className="text-red-500">*</span>
+                  </Label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="border-gray-200 hover:bg-gray-50 whitespace-nowrap"
+                    className="h-7 text-xs border-gray-200 hover:bg-gray-50 text-gray-500"
                     onClick={() => {
-                      const now = new Date();
-                      const tomorrow = new Date(now);
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      tomorrow.setHours(23, 59, 0, 0);
-                      const formatted = tomorrow.toISOString().slice(0, 16);
-                      setQuestData(prev => ({ ...prev, deadline: formatted }));
+                      setQuestData((prev) => ({
+                        ...prev,
+                        title: "쎈 미적분1 숙제",
+                        teacher_content: "쎈 미적분1 2단원 03 미분계수와 도함수 A,B단계 풀어오기",
+                      }));
+                      // 입력 시 관련 에러 메시지 초기화 (선택 사항)
+                      setFormErrors((prev) => ({
+                        ...prev,
+                        title: null,
+                        teacher_content: null,
+                      }));
                     }}
                   >
-                    내일 23:59
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-200 hover:bg-gray-50 whitespace-nowrap"
-                    onClick={() => {
-                      const now = new Date();
-                      const nextWeek = new Date(now);
-                      nextWeek.setDate(nextWeek.getDate() + 7);
-                      nextWeek.setHours(23, 59, 0, 0);
-                      const formatted = nextWeek.toISOString().slice(0, 16);
-                      setQuestData(prev => ({ ...prev, deadline: formatted }));
-                    }}
-                  >
-                    일주일 후
+                    [시연] 퀘스트 입력
                   </Button>
                 </div>
-                {questData.deadline && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    설정된 마감일: {new Date(questData.deadline).toLocaleString('ko-KR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
-                  </p>
+                <Input
+                  id="title"
+                  value={questData.title}
+                  onChange={handleQuestDataChange}
+                  placeholder="퀘스트 제목을 입력하세요"
+                  className="h-11 bg-white"
+                />
+                {formErrors.title && (
+                  <p className="text-xs text-red-600 mt-1">{formErrors.title}</p>
                 )}
               </div>
 
-              <div className="flex items-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-gray-200 hover:bg-gray-50"
-                  onClick={() => setShowAIReward(true)}
-                  disabled={selectedStudents.length === 0}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  AI 보상 추천받기
-                </Button>
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">
+                  퀘스트 설명 <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="teacher_content"
+                  value={questData.teacher_content}
+                  onChange={(e) => setQuestData({ ...questData, teacher_content: e.target.value })}
+                  placeholder="퀘스트에 대한 자세한 설명을 입력하세요"
+                  className="min-h-[120px] bg-white resize-none text-sm leading-relaxed"
+                />
+                {formErrors.teacher_content && <p className="text-xs text-red-600 mt-1">{formErrors.teacher_content}</p>}
               </div>
+              <div className="grid grid-cols-1 md:!grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    난이도 <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Select
+                      value={questData.difficulty.toString()}
+                      onValueChange={handleDifficultyChange}
+                    >
+                      <SelectTrigger className="w-[300px] bg-white">
+                        <SelectValue placeholder="난이도 선택" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1점 (EASY/개념 확인)</SelectItem>
+                        <SelectItem value="2">2점 (BASIC/유형 적용)</SelectItem>
+                        <SelectItem value="3">3점 (MEDIUM/복합 응용)</SelectItem>
+                        <SelectItem value="4">4점 (HARD/심화 분석)</SelectItem>
+                        <SelectItem value="5">5점 (VERY_HARD/창의적 해결)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-200 hover:bg-gray-50"
+                      onClick={() => setShowDifficultyGuide(true)}
+                    >
+                      <Info className="w-4 h-4 mr-2" />
+                      가이드
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 2. 대상 및 보상 카드 */}
+          <Card className="shadow-sm border-gray-200">
+            <CardHeader className="border-b border-gray-100 py-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="w-5 h-5 text-gray-500" />
+                대상 및 보상 설정
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+
+              {/* 학생 선택 영역 */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">
+                    대상 학생 선택 <span className="text-red-500">*</span>
+                  </Label>
+                  <span className="text-sm text-gray-500">{selectedStudents.length}명 선택됨</span>
+                </div>
+
+
+                <div className="border border-gray-200 rounded-lg bg-gray-50 max-h-[240px] overflow-y-auto p-2">
+                  <div className="flex items-center gap-3">
+                    {!isLoadingStudents && !fetchError && allStudents.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={toggleSelectAll}
+                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        {selectedStudents.length === allStudents.length ? '전체 해제' : '전체 선택'}
+                      </button>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      {selectedStudents.length > 0 ? `${selectedStudents.length}명 선택됨` : '선택 안됨'}
+                    </span>
+                  </div>
+                </div>
+
+                {isLoadingStudents ? (
+                  <div className="flex items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-100">
+                    <Loader2 className="w-5 h-5 animate-spin text-gray-400 mr-2" />
+                    <p className="text-sm text-gray-500">학생 목록을 불러오는 중...</p>
+                  </div>
+                ) : fetchError ? (
+                  <div className="p-4 bg-red-50 border border-red-100 rounded-lg text-center">
+                    <p className="text-red-600 text-sm font-medium">{fetchError}</p>
+                  </div>
+                ) : allStudents.length === 0 ? (
+                  <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-500">등록된 학생이 없습니다.</p>
+                  </div>
+                ) : (
+                  <div className="border border-gray-200 rounded-lg bg-gray-50/50 overflow-hidden">
+                    <div className="max-h-[300px] overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar">
+                      {allStudents.map((student) => {
+                        const personalRec = personalRewards.get(student.id);
+                        const aiRec = aiRecommendations.get(student.id);
+                        const isSelected = selectedStudents.includes(student.id);
+
+                        return (
+                          <div
+                            key={student.id}
+                            className={`p-3 border rounded-md cursor-pointer transition-all ${isSelected
+                              ? 'border-blue-500 bg-blue-50/50 shadow-sm'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
+                              }`}
+                            onClick={() => toggleStudent(student.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleStudent(student.id)}
+                                onClick={(e: any) => e.stopPropagation()}
+                                className="shrink-0 p-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-sm font-medium text-gray-900">{student.real_name}</p>
+                                  {isSelected && (
+                                    <span className="text-[10px] font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                      선택됨
+                                    </span>
+                                  )}
+                                </div>
+
+                                {isSelected && aiModeEnabled && personalRec && (
+                                  <div className="mt-2 p-2 bg-white border border-blue-100 rounded text-xs space-y-1">
+                                    {/* 값이 수정되었는지 확인 */}
+                                    {aiRec && (aiRec.recommended_coral !== personalRec.coral || aiRec.recommended_research_data !== personalRec.research) ? (
+                                      <>
+                                        {/* 수정된 경우: AI 원본 표시 (취소선) */}
+                                        <div className="flex justify-between items-center text-gray-400">
+                                          <span className="text-[10px] bg-gray-100 px-1.5 rounded">AI 원본</span>
+                                          <span className="line-through decoration-gray-300">
+                                            C {aiRec.recommended_coral} / R {aiRec.recommended_research_data}
+                                          </span>
+                                        </div>
+                                        {/* 수정된 경우: 실제 적용값 표시 */}
+                                        <div className="flex justify-between items-center font-semibold text-blue-700">
+                                          <span className="text-[10px] bg-blue-100 px-1.5 rounded">수정됨</span>
+                                          <span>
+                                            C {personalRec.coral} / R {personalRec.research}
+                                          </span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      /* 수정되지 않은 경우: 현재 값만 표시 (AI 추천값과 동일) */
+                                      <div className="flex justify-between items-center font-semibold text-blue-700">
+                                        <span className="text-[10px] bg-blue-100 px-1.5 rounded">보상</span>
+                                        <span>
+                                          C {personalRec.coral} / R {personalRec.research}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* 메모 */}
+                                    {personalRec.memo && (
+                                      <p className="text-amber-600 mt-1 truncate" title={personalRec.memo}>
+                                        📝 {personalRec.memo}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {formErrors.selectedStudents && (
+                  <p className="text-xs text-red-600 mt-1">{formErrors.selectedStudents}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="deadline" className="text-sm font-medium text-gray-700">마감일</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="deadline"
+                      type="datetime-local"
+                      value={questData.deadline}
+                      onChange={handleQuestDataChange}
+                      className="bg-white flex-1"
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-200 hover:bg-gray-50 whitespace-nowrap"
+                      onClick={() => {
+                        const now = new Date();
+                        const tomorrow = new Date(now);
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        tomorrow.setHours(23, 59, 0, 0);
+                        const formatted = tomorrow.toISOString().slice(0, 16);
+                        setQuestData(prev => ({ ...prev, deadline: formatted }));
+                      }}
+                    >
+                      내일 23:59
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-200 hover:bg-gray-50 whitespace-nowrap"
+                      onClick={() => {
+                        const now = new Date();
+                        const nextWeek = new Date(now);
+                        nextWeek.setDate(nextWeek.getDate() + 7);
+                        nextWeek.setHours(23, 59, 0, 0);
+                        const formatted = nextWeek.toISOString().slice(0, 16);
+                        setQuestData(prev => ({ ...prev, deadline: formatted }));
+                      }}
+                    >
+                      일주일 후
+                    </Button>
+                  </div>
+                  {questData.deadline && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      설정된 마감일: {new Date(questData.deadline).toLocaleString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-gray-200 hover:bg-gray-50"
+                    onClick={() => setShowAIReward(true)}
+                    disabled={selectedStudents.length === 0}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI 보상 추천받기
+                  </Button>
+                </div>
+              </div>
+
+              {!aiModeEnabled && (
+                <div className="grid grid-cols-1 sm:!grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                  <div className="space-y-2">
+                    <Label htmlFor="reward_coral_default" className="text-sm font-medium text-gray-700">기본 코랄 보상</Label>
+                    <Input
+                      id="reward_coral_default"
+                      type="number"
+                      value={questData.reward_coral_default}
+                      onChange={handleQuestDataChange}
+                      placeholder="예: 50"
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reward_research_data_default" className="text-sm font-medium text-gray-700">기본 탐사 데이터 보상</Label>
+                    <Input
+                      id="reward_research_data_default"
+                      type="number"
+                      value={questData.reward_research_data_default}
+                      onChange={handleQuestDataChange}
+                      placeholder="예: 30"
+                      className="bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {formErrors.formGeneral && (
+            <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
+              <p className="text-sm text-red-600">{formErrors.formGeneral}</p>
             </div>
+          )}
 
-            {!aiModeEnabled && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
-                <div className="space-y-2">
-                  <Label htmlFor="reward_coral_default" className="text-sm font-medium text-gray-700">기본 코랄 보상</Label>
-                  <Input
-                    id="reward_coral_default"
-                    type="number"
-                    value={questData.reward_coral_default}
-                    onChange={handleQuestDataChange}
-                    placeholder="예: 50"
-                    className="bg-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reward_research_data_default" className="text-sm font-medium text-gray-700">기본 탐사 데이터 보상</Label>
-                  <Input
-                    id="reward_research_data_default"
-                    type="number"
-                    value={questData.reward_research_data_default}
-                    onChange={handleQuestDataChange}
-                    placeholder="예: 30"
-                    className="bg-white"
-                  />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {formErrors.formGeneral && (
-          <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
-            <p className="text-sm text-red-600">{formErrors.formGeneral}</p>
+          {/* Footer */}
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/teacher/quest')}
+              className="border-gray-200 hover:bg-gray-50 px-8"
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="px-8 bg-black text-white hover:bg-gray-800 font-bold"
+              disabled={isSubmitting || isLoadingStudents}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  등록 중...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  개인 퀘스트 등록
+                </>
+              )}
+            </Button>
           </div>
-        )}
-
-        {/* 액션 버튼들 */}
-        <div className="flex gap-3 pt-6 border-t border-gray-200 bottom-0 pb-4">
-          <Button
-            onClick={handleSubmit}
-            className="bg-gray-900 hover:bg-gray-800 text-white flex-1"
-            disabled={isSubmitting || isLoadingStudents}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                등록 중...
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-2" />
-                개인 퀘스트 등록
-              </>
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/teacher/quest')}
-            className="border-gray-200 hover:bg-gray-50 px-8"
-          >
-            취소
-          </Button>
         </div>
       </main>
 
@@ -737,7 +815,7 @@ export function IndividualQuestCreatePage() {
         </DialogContent>
       </Dialog>
 
-      {/* AI 보상 추천 모달 */}
+      {/* AI 보상 추천 안내 모달 */}
       <Dialog open={showAIReward} onOpenChange={setShowAIReward}>
         <DialogContent className="max-w-2xl border border-gray-200 shadow-lg">
           <DialogHeader>
@@ -764,12 +842,22 @@ export function IndividualQuestCreatePage() {
         </DialogContent>
       </Dialog>
 
-      {/* AI 학생별 보상 추천 모달 및 수정 모달은 기존 구조 유지하되 디자인 톤만 일치시킴 (코드 생략 가능하나 요청에 따라 포함) */}
+      {/* AI 학생별 보상 추천 목록 모달 */}
       <Dialog open={showAiStudentModal} onOpenChange={setShowAiStudentModal}>
         <DialogContent className="max-w-2xl border border-gray-200 shadow-lg">
           <DialogHeader>
             <DialogTitle>학생별 추천 보상</DialogTitle>
           </DialogHeader>
+
+          {/* AI Reason */}
+          {getCommonAiReason() && (
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
+              <p className="text-sm font-semibold text-blue-800 mb-1">AI 분석</p>
+              <p className="text-sm text-blue-700 leading-relaxed">
+                {getCommonAiReason()}
+              </p>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto max-h-[500px] p-1">
             <div className="space-y-3">
@@ -782,10 +870,31 @@ export function IndividualQuestCreatePage() {
 
                 return (
                   <div key={studentId} className="p-4 border border-gray-200 rounded-lg flex justify-between items-start bg-white shadow-sm">
-                    <div>
-                      <p className="font-bold text-gray-900">{student.real_name}</p>
-                      <p className="text-xs text-gray-500 mt-1">{aiRec.reason}</p>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-gray-900">{student.real_name}</p>
+                        {(aiRec.global_factor !== undefined || aiRec.difficulty_factor !== undefined) && (
+                          <div className="flex gap-1">
+                            {aiRec.global_factor !== undefined && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded border border-gray-200" title="Global Factor">
+                                Global Factor: {aiRec.global_factor.toFixed(2)}
+                              </span>
+                            )}
+                            {aiRec.difficulty_factor !== undefined && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded border border-gray-200" title="Difficulty Factor">
+                                Difficulty Factor: {aiRec.difficulty_factor.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {personalRec.memo && (
+                        <p className="text-xs text-amber-600 font-medium mt-1">
+                          📝 {personalRec.memo}
+                        </p>
+                      )}
                     </div>
+
                     <div className="text-right">
                       <div className="text-sm font-semibold text-blue-600">
                         C {personalRec.coral} / R {personalRec.research}
@@ -822,32 +931,45 @@ export function IndividualQuestCreatePage() {
           <div className="space-y-4">
             {currentEditAiRec ? (
               <>
-                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <p className="text-sm font-medium text-blue-700">
-                    AI 추천: {currentEditAiRec.recommended_research_data} 탐사데이터, {currentEditAiRec.recommended_coral} 코랄
-                  </p>
+                <div className="grid grid-cols-2 gap-4 text-center text-sm">
+                  <div className="bg-gray-100 p-3 rounded-lg">
+                    <p className="text-gray-500 mb-1">AI 초기 추천값</p>
+                    <div className="font-semibold text-gray-700">
+                      <div>탐사데이터: {currentEditAiRec.recommended_research_data}</div>
+                      <div>코랄: {currentEditAiRec.recommended_coral}</div>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <p className="text-blue-500 mb-1 font-semibold">현재 설정값</p>
+                    <div className="font-bold text-blue-700">
+                      <div>탐사데이터: {editForm.research || 0}</div>
+                      <div>코랄: {editForm.coral || 0}</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="editResearch" className="text-sm font-medium">수정값: 탐사데이터</Label>
-                  <Input
-                    id="editResearch"
-                    type="number"
-                    value={editForm.research}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, research: e.target.value }))}
-                    className="bg-white"
-                  />
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="editResearch" className="text-sm font-medium">수정값: 탐사데이터</Label>
+                    <Input
+                      id="editResearch"
+                      type="number"
+                      value={editForm.research}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, research: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="editCoral" className="text-sm font-medium">수정값: 코랄</Label>
-                  <Input
-                    id="editCoral"
-                    type="number"
-                    value={editForm.coral}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, coral: e.target.value }))}
-                    className="bg-white"
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="editCoral" className="text-sm font-medium">수정값: 코랄</Label>
+                    <Input
+                      id="editCoral"
+                      type="number"
+                      value={editForm.coral}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, coral: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">

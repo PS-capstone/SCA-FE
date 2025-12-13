@@ -227,7 +227,7 @@ export function TeacherProfilePage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -237,7 +237,7 @@ export function TeacherProfilePage() {
             onClick={() => navigate(-1)}
             className="border border-gray-200 rounded-lg hover:bg-gray-50 h-9 w-9"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">회원정보 수정</h1>
@@ -247,139 +247,137 @@ export function TeacherProfilePage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* 기본 정보 카드 */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 border-b border-gray-100 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="flex items-center gap-2 text-base font-bold text-gray-900">
-              <User className="w-5 h-5 text-gray-500" />
-              기본 정보
-            </CardTitle>
-            {!isEditing && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="h-8 border-gray-200">
-                정보 수정
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="pt-6 space-y-6">
-            {/* 프로필 요약 */}
-            <div className="flex items-center gap-5 p-5 bg-gray-50 rounded-lg border border-gray-100">
-              <div className="w-16 h-16 bg-white border border-gray-200 rounded-full flex items-center justify-center text-2xl font-bold text-gray-600 shadow-sm">
-                {profile.real_name.charAt(0)}
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">{profile.real_name} ({profile.nickname})</h3>
-                <p className="text-sm text-gray-500">@{profile.username}</p>
-                <div className="flex gap-2 mt-2">
-                  <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
-                    가입일: {new Date(profile.created_at).toLocaleDateString()}
-                  </span>
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* 1. 기본 정보 카드 */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 border-b border-gray-100 flex flex-row items-center justify-between space-y-0 py-4">
+              <CardTitle className="flex items-center gap-2 text-base font-bold text-gray-900">
+                <User className="w-5 h-5 text-gray-500" />
+                기본 정보
+              </CardTitle>
+              {!isEditing && (
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="h-8 border-gray-200">
+                  정보 수정
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {/* 프로필 요약 (Read-only view) */}
+              <div className="flex items-center gap-5 p-5 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="w-16 h-16 bg-white border border-gray-200 rounded-full flex items-center justify-center text-2xl font-bold text-gray-600 shadow-sm">
+                  {profile.real_name.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{profile.real_name} ({profile.nickname})</h3>
+                  <p className="text-sm text-gray-500">@{profile.username}</p>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
+                      가입일: {new Date(profile.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 수정 가능한 정보 */}
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="real_name" className="text-sm font-medium text-gray-700">이름</Label>
+                  <Label htmlFor="real_name" className="text-base font-semibold text-gray-700">이름</Label>
                   <Input
                     id="real_name"
                     value={editForm.real_name}
                     onChange={(e) => setEditForm({ ...editForm, real_name: e.target.value })}
                     disabled={!isEditing}
-                    className={isEditing ? "bg-white" : "bg-gray-50 text-gray-500"}
+                    className={`h-11 ${isEditing ? "bg-white" : "bg-gray-50 text-gray-500"}`}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nickname" className="text-sm font-medium text-gray-700">닉네임</Label>
+                  <Label htmlFor="nickname" className="text-base font-semibold text-gray-700">닉네임</Label>
                   <Input
                     id="nickname"
                     value={editForm.nickname}
                     onChange={(e) => setEditForm({ ...editForm, nickname: e.target.value })}
                     disabled={!isEditing}
-                    className={isEditing ? "bg-white" : "bg-gray-50 text-gray-500"}
+                    className={`h-11 ${isEditing ? "bg-white" : "bg-gray-50 text-gray-500"}`}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">이메일</Label>
+                  <Label htmlFor="email" className="text-base font-semibold text-gray-700">이메일</Label>
                   <Input
                     id="email"
-                    type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     disabled={!isEditing}
-                    className={isEditing ? "bg-white" : "bg-gray-50 text-gray-500"}
+                    className={`h-11 ${isEditing ? "bg-white" : "bg-gray-50 text-gray-500"}`}
                   />
                 </div>
               </div>
-            </div>
+              {isEditing && (
+                <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditForm({
+                        real_name: profile.real_name,
+                        nickname: profile.nickname,
+                        email: profile.email
+                      });
+                    }}
+                    className="border-gray-200 hover:bg-gray-50"
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    onClick={handleUpdateProfile}
+                    disabled={isSaving}
+                    className="bg-black text-white hover:bg-gray-800"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    저장하기
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {isEditing && (
-              <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditForm({
-                      real_name: profile.real_name,
-                      nickname: profile.nickname,
-                      email: profile.email
-                    });
-                  }}
-                  className="border-gray-200 hover:bg-gray-50"
-                >
-                  취소
+          {/* 2. 보안 및 계정 관리 카드 */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="pb-3 border-b border-gray-100 py-4">
+              <CardTitle className="flex items-center gap-2 text-base font-bold text-gray-900">
+                <Lock className="w-5 h-5 text-gray-500" />
+                보안 및 계정 관리
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex justify-between items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors bg-white">
+                <div>
+                  <h4 className="font-semibold text-sm text-gray-900">비밀번호 변경</h4>
+                  <p className="text-xs text-gray-500 mt-0.5">주기적으로 비밀번호를 변경하여 계정을 보호하세요.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setIsPasswordModalOpen(true)} className="border-gray-200">
+                  변경
                 </Button>
+              </div>
+
+              <div className="flex justify-between items-center p-4 border border-red-100 bg-red-50 rounded-lg">
+                <div>
+                  <h4 className="font-semibold text-sm text-red-700">회원 탈퇴</h4>
+                  <p className="text-xs text-red-500 mt-0.5">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
+                </div>
                 <Button
-                  onClick={handleUpdateProfile}
-                  disabled={isSaving}
-                  className="bg-black text-white hover:bg-gray-800"
+                  variant="destructive"
+                  size="sm"
+                  className="bg-white text-red-600 border border-red-200 hover:bg-red-100 shadow-sm h-10"
+                  onClick={() => setIsDeleteModalOpen(true)}
                 >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                  저장하기
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  탈퇴하기
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* 계정 보안 및 관리 */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-3 border-b border-gray-100">
-            <CardTitle className="flex items-center gap-2 text-base font-bold text-gray-900">
-              <Lock className="w-5 h-5 text-gray-500" />
-              보안 및 계정 관리
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex justify-between items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              <div>
-                <h4 className="font-semibold text-sm text-gray-900">비밀번호 변경</h4>
-                <p className="text-xs text-gray-500 mt-1">주기적으로 비밀번호를 변경하여 계정을 보호하세요.</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setIsPasswordModalOpen(true)} className="border-gray-200">
-                변경
-              </Button>
-            </div>
-
-            <div className="flex justify-between items-center p-4 border border-red-100 bg-red-50/50 rounded-lg">
-              <div>
-                <h4 className="font-semibold text-sm text-red-700">회원 탈퇴</h4>
-                <p className="text-xs text-red-500 mt-1">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="bg-white text-red-600 border border-red-200 hover:bg-red-50 shadow-sm"
-                onClick={() => setIsDeleteModalOpen(true)}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                탈퇴하기
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </main>
 
       {/* 비밀번호 변경 모달 */}

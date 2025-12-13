@@ -227,7 +227,7 @@ export function StudentListPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-50/50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white p-4 md:px-6 md:py-5 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -271,71 +271,51 @@ export function StudentListPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isEditing ? (
-            // 수정 모드
-            editedStudents.length > 0 ? (
+        <div className="max-w-4xl mx-auto space-y-4">
+
+          <div className="grid grid-cols-1 lg:!grid-cols-2 gap-6">
+            {isEditing ? (
+              // 수정 모드
               editedStudents.map((student) => (
                 <div key={student.student_id} className="border border-blue-200 bg-white rounded-lg p-5 shadow-sm ring-1 ring-blue-100">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="font-bold text-lg text-gray-900">{student.name}</span>
-                  </div>
-
+                  <div className="font-bold text-lg text-gray-900 mb-4">{student.name}</div>
                   <div className="space-y-4">
-                    {/* 읽기 전용 정보 */}
-                    <div className="grid grid-cols-2 gap-3 text-sm bg-gray-50 p-3 rounded-md border border-gray-100">
-                      <div>
-                        <span className="block text-xs text-gray-500 mb-0.5">코랄</span>
-                        <span className="font-mono font-medium text-gray-900">{student.coral}</span>
-                      </div>
-                      <div>
-                        <span className="block text-xs text-gray-500 mb-0.5">탐사데이터</span>
-                        <span className="font-mono font-medium text-gray-900">{student.research_data}</span>
-                      </div>
-                    </div>
-
-                    {/* 수정 가능한 정보 */}
-                    <div>
-                      <label className="block text-xs font-semibold text-blue-700 mb-1.5">
-                        Grade (성적)
-                      </label>
-                      <input
-                        type="number"
-                        value={student.grade}
-                        onChange={(e) => handleInputChange(student.student_id, e.target.value)}
-                        placeholder="점수 입력"
-                        className="w-full p-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-right font-medium text-gray-900"
-                      />
-                    </div>
+                     <div className="grid !grid-cols-2 gap-3 text-sm bg-gray-50 p-2 rounded border border-gray-100">
+                        <div><span className="text-xs text-gray-500">코랄: </span><span className="font-mono font-bold"> {student.coral}</span></div>
+                        <div><span className="text-xs text-gray-500">탐사 데이터: </span><span className="font-mono font-bold"> {student.research_data}</span></div>
+                     </div>
+                     <div>
+                        <label className="block text-xs font-semibold text-blue-700 mb-1">성적</label>
+                        <input
+                          type="number"
+                          value={student.grade}
+                          onChange={(e) => handleInputChange(student.student_id, e.target.value)}
+                          className="w-full h-10 p-2 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-right font-bold"
+                        />
+                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                학생이 없습니다.
-              </div>
-            )
-          ) : (
-            // 조회 모드
-            listData.students.length > 0 ? (
-              listData.students.map((student) => (
-                <StudentListItem
-                  key={student.student_id}
-                  id={student.student_id}
-                  name={student.name}
-                  pending_quests={student.pending_quests}
-                  coral={student.coral}
-                  research_data={student.research_data}
-                  classId={listData.class_id}
-                  grade={student.grade}
-                />
-              ))
-            ) : (
-              <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                반에 등록된 학생이 없습니다.
-              </div>
-            )
-          )}
+              // 조회 모드
+              listData.students.length > 0 ? (
+                 listData.students.map((student) => (
+                    <StudentListItem
+                       key={student.student_id}
+                       id={student.student_id}
+                       name={student.name}
+                       pending_quests={student.pending_quests}
+                       coral={student.coral}
+                       research_data={student.research_data}
+                       classId={listData.class_id}
+                       grade={student.grade}
+                    />
+                 ))
+              ) : (
+                 <div className="col-span-full py-12 text-center text-gray-500 bg-white border border-dashed rounded-lg">학생 없음</div>
+              )
+            )}
+          </div>
         </div>
       </main>
     </div>
